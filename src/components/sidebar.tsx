@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import { Menu, X } from "lucide-react"; 
 
-const menuItems: { path: string; label: string }[] = [
+const menuItems = [
   { path: "/home", label: "🏠 Inicio" },
   { path: "/vehicles", label: "🚗 Vehículos" },
   { path: "/inventory", label: "📦 Inventario" },
@@ -13,47 +14,95 @@ const menuItems: { path: string; label: string }[] = [
 ];
 
 export default function Sidebar() {
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  // Estado para abrir/cerrar sidebar
+  const [isOpen, setIsOpen] = useState(true);
+  // Estado para detectar si es móvil
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Efecto para detectar el tamaño de la pantalla al cargar y al redimensionar
+  useEffect(() => {
+    const handleResize = () => {
+      // Si el ancho es menor a 768px (medida estándar de tablets/móviles), es móvil
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Si es móvil, iniciamos con el menú cerrado. Si es PC, abierto.
+      setIsOpen(!mobile);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
-    <aside
-      className={`bg-gray-900 text-white p-5 transition-all duration-300 flex flex-col 
-      ${sidebarOpen ? "w-60" : "w-16"}`}
-    >
-      <div className="flex items-center mb-5">
+    <>
+      {isMobile && !isOpen && (
         <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-md hover:bg-blue-500 focus:outline-none mr-2"
+          onClick={() => setIsOpen(true)}
+          className="fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-md shadow-lg md:hidden"
         >
-          <span className="block w-6 h-0.5 bg-white mb-1"></span>
-          <span className="block w-6 h-0.5 bg-white mb-1"></span>
-          <span className="block w-6 h-0.5 bg-white"></span>
+          <Menu size={24} />
         </button>
-        <h2 className={`text-xl font-bold ${sidebarOpen ? "block" : "hidden"}`}>
-          Panel
-        </h2>
-      </div>
-      <nav className="flex flex-col gap-3">
-        {menuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) => `
-              flex items-center rounded-lg transition-colors px-4 py-2
-              ${isActive ? "bg-blue-600" : "hover:bg-blue-500 hover:text-white"}
-              ${sidebarOpen ? "justify-start gap-2" : "justify-center"}
-            `}
+      )}
+
+      {isMobile && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`
+          bg-gray-900 text-white flex flex-col transition-all duration-300
+          
+          /* COMPORTAMIENTO MÓVIL (Fixed = flota sobre todo) */
+          fixed inset-y-0 left-0 z-50 h-screen shadow-2xl
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+
+          /* COMPORTAMIENTO DESKTOP (md:...) */
+          /* md:relative = empuja el contenido */
+          /* md:translate-x-0 = siempre visible (si isOpen es true) */
+          md:relative md:shadow-none
+          ${!isMobile && (isOpen ? "md:w-64" : "md:w-20")}
+          ${!isMobile && "translate-x-0"}
+        `}
+      >
+        <div className="flex items-center justify-between p-4 h-16 border-b border-gray-800">
+          <h2 className={`font-bold text-xl ${!isOpen && !isMobile ? "hidden" : "block"}`}>
+            Panel
+          </h2>
+          
+          <button 
+            onClick={() => setIsOpen(!isOpen)} 
+            className="p-1 rounded hover:bg-gray-800 text-gray-400 hover:text-white"
           >
-            {/* Emoji */}
-            <span>{item.label.split(" ")[0]}</span>
-            
-            {/* Texto ocultable */}
-            <span className={`${sidebarOpen ? "inline" : "hidden"}`}>
-               {item.label.replace(/^[^\s]+\s/, "")}
-            </span>
-          </NavLink>
-        ))}
-      </nav>
-    </aside>
+            {isMobile ? <X size={24} /> : (isOpen ? <Menu size={20} /> : <Menu size={20} />)}
+          </button>
+        </div>
+
+        {/* Navegación */}
+        <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-2 px-2">
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={() => isMobile && setIsOpen(false)} 
+              className={({ isActive }) => `
+                flex items-center px-3 py-3 rounded-lg transition-colors
+                ${isActive ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"}
+                ${!isOpen && !isMobile ? "justify-center" : "justify-start gap-3"}
+              `}
+            >
+              <span className="text-xl">{item.label.split(" ")[0]}</span>
+              
+              <span className={`whitespace-nowrap ${!isOpen && !isMobile ? "hidden" : "block"}`}>
+                {item.label.replace(/^[^\s]+\s/, "")}
+              </span>
+            </NavLink>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 }

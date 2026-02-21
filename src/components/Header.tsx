@@ -12,10 +12,8 @@ const routeTitles: Record<string, string> = {
 };
 
 export default function Header() {
-  // hook para obtener la url actual
   const location = useLocation(); 
   
-  // Buscamos el título en el diccionario. Si no existe, mostramos "Panel" por defecto.
   const currentTitle = routeTitles[location.pathname] || "Panel";
 
   return (
