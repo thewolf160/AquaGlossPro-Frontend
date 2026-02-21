@@ -69,7 +69,7 @@ function Login() {
           </div>
           <div className="mb-6">
             <h1 className="text-3xl sm:text-4xl text-white text-center font-bold mb-2">
-              Bienvenido
+              Inicio de sesión
             </h1>
             <p className="text-slate-400 text-center text-sm sm:text-base">
               Ingresa tus credenciales
