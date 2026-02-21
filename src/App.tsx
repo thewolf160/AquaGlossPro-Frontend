@@ -7,7 +7,7 @@ import Users from "./modules/users/Users";
 import Services from "./modules/services/Services";
 import Sales from "./modules/sales/Sales";
 import Roles from "./modules/roles/Roles";
-import Purchases from "./modules/purchases/Purchases"; // 👈 NUEVO módulo
+import Purchases from "./modules/purchases/Purchases";
 
 function App() {
   const [activeModule, setActiveModule] = useState("home");
@@ -22,19 +22,16 @@ function App() {
     services: "Servicios y Lavados",
     sales: "Ventas",
     roles: "Roles y Acceso",
-    purchases: "Compras", // 👈 NUEVO título
+    purchases: "Compras",
   };
 
   return (
     <div className="flex h-screen font-sans">
-      {/* Sidebar */}
       <aside
         className={`bg-gray-900 text-white p-5 transition-all duration-300 
     ${sidebarOpen ? "w-60" : "w-16"} flex flex-col`}
       >
-        {/* 👇 Contenedor con botón a la izquierda y título a la derecha */}
         <div className="flex items-center mb-5">
-          {/* Botón hamburguesa */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 rounded-md hover:bg-blue-500 focus:outline-none mr-2"
@@ -44,7 +41,6 @@ function App() {
             <span className="block w-6 h-0.5 bg-white"></span>
           </button>
 
-          {/* Título Panel */}
           <h2
             className={`text-xl font-bold ${sidebarOpen ? "block" : "hidden"}`}
           >
@@ -119,7 +115,6 @@ function App() {
         </nav>
       </aside>
 
-      {/* Contenido */}
       <main className="flex-1 bg-gray-100 flex flex-col">
         <header className="bg-blue-600 text-white px-6 py-4 text-lg font-bold flex items-center">
           {moduleTitles[activeModule]}
@@ -135,7 +130,6 @@ function App() {
           {activeModule === "sales" && <Sales />}
           {activeModule === "roles" && <Roles />}
           {activeModule === "purchases" && <Purchases />}{" "}
-          {/* 👈 NUEVO módulo */}
         </div>
       </main>
     </div>
@@ -157,9 +151,8 @@ function renderButton(
         ${isActive ? "bg-blue-600" : "hover:bg-blue-500 hover:text-white"}
         ${sidebarOpen ? "justify-start gap-2" : "justify-center"}`}
     >
-      {/* Ícono siempre visible */}
       <span>{label.split(" ")[0]}</span>
-      {/* Texto solo visible si sidebar está abierto */}
+
       <span className={`${sidebarOpen ? "inline" : "hidden"}`}>
         {label.replace(/^[^\s]+\s/, "")}
       </span>
