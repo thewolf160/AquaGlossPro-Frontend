@@ -7,7 +7,6 @@ import Users from "./modules/users/Users";
 import Services from "./modules/services/Services";
 import Sales from "./modules/sales/Sales";
 import Roles from "./modules/roles/Roles";
-import Purchases from "./modules/purchases/Purchases";
 
 function App() {
   const [activeModule, setActiveModule] = useState("home");
@@ -22,7 +21,6 @@ function App() {
     services: "Servicios y Lavados",
     sales: "Ventas",
     roles: "Roles y Acceso",
-    purchases: "Compras",
   };
 
   return (
@@ -99,13 +97,6 @@ function App() {
             sidebarOpen,
           )}
           {renderButton(
-            "purchases",
-            "🛒 Compras",
-            activeModule,
-            setActiveModule,
-            sidebarOpen,
-          )}
-          {renderButton(
             "roles",
             "🔑 Roles y Acceso",
             activeModule,
@@ -129,7 +120,6 @@ function App() {
           {activeModule === "services" && <Services />}
           {activeModule === "sales" && <Sales />}
           {activeModule === "roles" && <Roles />}
-          {activeModule === "purchases" && <Purchases />}{" "}
         </div>
       </main>
     </div>
