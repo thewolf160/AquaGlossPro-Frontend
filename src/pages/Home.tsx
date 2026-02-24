@@ -46,7 +46,7 @@ const statsData: StatCardProps[] = [
 
 const recentServices: VehicleService[] = [
   { id: 1, plate: "AB-123-CD", model: "Toyota Corolla", serviceType: "Lavado Completo", status: "Completado", time: "10:30 AM" },
-  { id: 2, plate: "XY-999-ZZ", model: "Ford Fiesta", serviceType: "Aspirado", status: "En proceso", time: "11:15 AM" },
+  { id: 2, plate: "XY-999-ZZ", model: "Ford Fiesta", serviceType: "Aspirado", status: "Pendiente", time: "11:15 AM" },
   { id: 3, plate: "VE-555-LA", model: "Jeep Cherokee", serviceType: "Lavado Motor", status: "En proceso", time: "11:45 AM" },
   { id: 4, plate: "LA-101-BB", model: "Chevrolet Aveo", serviceType: "Lavado Simple", status: "Completado", time: "09:00 AM" },
   { id: 5, plate: "ZZ-000-XX", model: "Honda Civic", serviceType: "Pulido", status: "En proceso", time: "12:00 PM" },
