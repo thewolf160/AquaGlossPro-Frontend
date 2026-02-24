@@ -88,7 +88,7 @@ export default function Home() {
               </section>
 
               {/* 4. TABLA DE SERVICIOS RECIENTES */}
-              <section className="bg-white rounded-xl shadow-sm border border-slate-800 overflow-hidden">
+              <section className="bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                    <h2 className="text-lg font-bold text-slate-800">Ultimos Vehiculos</h2>
                    <button className="text-sm text-blue-600 font-medium hover:underline">Ver todos</button>
