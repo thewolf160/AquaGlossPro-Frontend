@@ -1,17 +1,40 @@
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 export default function DashboardLayout() {
-    return (
-        <div className="flex h-screen font-sans">
-            <Sidebar />
-            <main className="flex-1 bg-gray-100 flex flex-col">
-            <Header />
-            <div className="flex-1 p-6 overflow-y-auto">
-            <Outlet />
-            </div>
-            </main>
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  return (
+    <div className="flex h-screen font-sans bg-slate-50 overflow-hidden">
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        toggleSidebar={toggleSidebar} 
+      />
+
+      <main className="flex-1 flex flex-col h-full relative transition-all duration-300">
+        <Header onMenuClick={toggleSidebar} />
+        
+        <div className="flex-1 p-6 overflow-y-auto">
+          <Outlet />
         </div>
-    );
+      </main>
+    </div>
+  );
 }

@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 
+interface SidebarProps {
+  isOpen: boolean;
+  toggleSidebar: () => void;
+}
+
 interface SidebarItem {
   label: string;
   path: string;
@@ -13,67 +18,62 @@ const menuItems: SidebarItem[] = [
   { path: "/inventory", label: "Inventario", icon: "bi bi-box-seam" },
   { path: "/employees", label: "Empleados", icon: "bi bi-people" },
   { path: "/users", label: "Usuarios", icon: "bi bi-person-circle" },
-  { path: "/services", label: "Servicios", icon: "bi bi-card-checklist" }, 
+  { path: "/services", label: "Servicios", icon: "bi bi-stars" },
   { path: "/sales", label: "Ventas", icon: "bi bi-currency-dollar" },
   { path: "/roles", label: "Roles y Acceso", icon: "bi bi-key" },
 ];
 
-export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(true);
+export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      setIsOpen(!mobile);
-    };
-
-    handleResize();
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize(); // Ejecutar al inicio
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
     <>
-      {isMobile && !isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-md shadow-lg md:hidden"
-        >
-          {/* Usamos el icono de menú de Bootstrap */}
-          <i className="bi bi-list text-2xl leading-none"></i>
-        </button>
-      )}
-
       {isMobile && isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+          onClick={toggleSidebar}
         />
       )}
 
       <aside
         className={`
-          bg-gray-900 text-white flex flex-col transition-all duration-300
+          bg-gray-900 text-white flex flex-col transition-all duration-300 ease-in-out
           fixed inset-y-0 left-0 z-50 h-screen shadow-2xl
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          md:relative md:shadow-none
-          ${!isMobile && (isOpen ? "md:w-64" : "md:w-20")}
-          ${!isMobile && "translate-x-0"}
+          
+          /* LÓGICA MÓVIL (< 768px) */
+          ${isMobile ? (isOpen ? "translate-x-0" : "-translate-x-full") : ""}
+
+          /* LÓGICA ESCRITORIO (>= 768px) */
+          /* Si no es móvil, siempre es relativo (ocupa espacio) */
+          md:relative md:translate-x-0 md:shadow-none
+          /* Aquí definimos el ancho: Grande (64) o Mini (20) */
+          ${!isMobile ? (isOpen ? "md:w-64" : "md:w-20") : "w-64"}
         `}
       >
-        <div className="flex items-center justify-between p-4 h-16 border-b border-gray-800">
-          <h2 className={`font-bold text-xl ${!isOpen && !isMobile ? "hidden" : "block"}`}>
-            Panel
-          </h2>
+        <div className={`flex items-center h-16 border-b border-gray-800 transition-all ${isOpen ? "justify-between px-4" : "justify-center"}`}>
           
+          <div className={`font-bold text-xl tracking-wide flex items-center gap-2 overflow-hidden whitespace-nowrap ${!isOpen && !isMobile ? "hidden" : "block"}`}>
+            <i className="bi bi-droplet-fill text-blue-500"></i>
+            <span>AutoLavado</span>
+          </div>
+
           <button 
-            onClick={() => setIsOpen(!isOpen)} 
-            className="p-1 rounded hover:bg-gray-800 text-gray-400 hover:text-white"
+            onClick={toggleSidebar} 
+            className="p-1 text-slate-400 hover:text-white rounded focus:outline-none"
           >
-            {/* Icono de cerrar (X) o de menú según el estado */}
-            <i className={`text-2xl leading-none ${isMobile ? 'bi bi-x-lg' : 'bi bi-list'}`}></i>
+           
+            {isMobile ? (
+              <i className="bi bi-x-lg text-xl"></i>
+            ) : (
+              <i className={`bi ${isOpen ? "bi-chevron-left" : "bi-list"} text-xl`}></i>
+            )}
           </button>
         </div>
 
@@ -82,16 +82,19 @@ export default function Sidebar() {
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={() => isMobile && setIsOpen(false)}
+              onClick={() => isMobile && toggleSidebar()} 
               className={({ isActive }) => `
-                flex items-center px-3 py-3 rounded-lg transition-colors
+                flex items-center py-3 rounded-lg transition-colors overflow-hidden whitespace-nowrap
                 ${isActive ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"}
-                ${!isOpen && !isMobile ? "justify-center" : "justify-start gap-3"}
+                
+                /* Alineación: Si está cerrado (y no es móvil), centramos el icono. Si no, alineamos a la izquierda */
+                ${!isOpen && !isMobile ? "justify-center px-0" : "justify-start px-3 gap-3"}
               `}
+              title={!isOpen && !isMobile ? item.label : ""} 
             >
-              <i className={`${item.icon} text-xl leading-none`}></i>
+              <i className={`${item.icon} text-xl leading-none flex-shrink-0`}></i>
               
-              <span className={`whitespace-nowrap font-medium ${!isOpen && !isMobile ? "hidden" : "block"}`}>
+              <span className={`${!isOpen && !isMobile ? "hidden" : "block"} transition-opacity duration-300`}>
                 {item.label}
               </span>
             </NavLink>
