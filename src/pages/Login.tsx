@@ -69,7 +69,7 @@ function Login() {
           </div>
           <div className="mb-6">
             <h1 className="text-3xl sm:text-4xl text-white text-center font-bold mb-2">
-              Bienvenido
+              Iniciar Sesión
             </h1>
             <p className="text-slate-400 text-center text-sm sm:text-base">
               Ingresa tus credenciales
@@ -146,7 +146,7 @@ function Login() {
               )}
             </div>
             <button className="btn w-full border border-transparent text-white font-bold text-md sm:text-lg bg-sky-600 hover:bg-sky-700 cursor-pointer rounded-md p-6 mt-1 transition-colors shadow-lg shadow-sky-900/20">
-              Iniciar Sesión
+              Acceder
             </button>
           </form>
         </div>
