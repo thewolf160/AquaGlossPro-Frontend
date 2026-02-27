@@ -54,9 +54,9 @@ function Login() {
 
   return (
     <>
-      <div className="flex min-h-screen justify-center items-center bg-slate-50 p-4">
+      <div className="flex min-h-screen justify-center items-center bg-slate-800 p-4">
         <div className="relative w-full max-w-sm sm:max-w-md bg-slate-900 shadow-2xl border border-slate-800 rounded-xl p-6 pt-16 sm:pt-12">
-          <div className="absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 rounded-full bg-slate-50 w-20 h-20 sm:w-24 sm:h-24 border-4 border-slate-800 flex items-center justify-center shadow-2xl">
+          <div className="absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 rounded-full bg-slate-50 w-20 h-20 sm:w-24 sm:h-24 border-4 border-slate-900 flex items-center justify-center shadow-2xl">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-10 h-10 sm:w-12 sm:h-12 text-slate-900"

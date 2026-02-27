@@ -22,7 +22,7 @@ function Employees() {
   ]
   return (
     <>
-    <div className="p-10">
+    <div className="">
       <Table columns={columns} data={data} onDelete={handleDelete} onEdit={handleEdit}/>
     </div>
       
