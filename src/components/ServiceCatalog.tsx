@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-// 1. DEFINICIÓN DE TIPOS SEPARADOS
+
 // Estructura para un servicio individual
 interface CatalogService {
   id: string;
@@ -13,9 +13,9 @@ interface CatalogService {
 interface ComboPackage {
   id: string;
   name: string;
-  includedServices: string[]; // Array con los nombres de los servicios
-  comboPrice: number;         // El precio con descuento
-  originalPrice: number;      // Lo que costaría por separado
+  includedServices: string[]; 
+  comboPrice: number;        
+  originalPrice: number;      
 }
 
 // 2. DATOS SIMULADOS

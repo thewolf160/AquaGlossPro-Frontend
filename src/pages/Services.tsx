@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ServiceCatalog from "../components/ServiceCatalog";
+import KanbanBoard from "../components/KanbanBoard";
 
 
 export default function Services() {
@@ -35,8 +36,8 @@ export default function Services() {
 
       <div className="flex-1 bg-white rounded-lg shadow p-4">
         {activeTab === "kanban" ? (
-          <div>Aqui ira el tablero kanban</div>
-        ) : (
+          <KanbanBoard />
+) : (
           <ServiceCatalog />
         )}
       </div>
