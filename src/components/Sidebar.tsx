@@ -66,7 +66,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
           <button 
             onClick={toggleSidebar} 
-            className="p-1 text-slate-400 hover:text-white rounded focus:outline-none"
+            className="p-1 text-slate-400 hover:text-white rounded focus:outline-none cursor-pointer"
           >
            
             {isMobile ? (

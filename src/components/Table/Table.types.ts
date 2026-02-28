@@ -13,4 +13,5 @@ export interface TableProps {
   emptyMessage?: string;
   onDelete?: (item: Item) => void;
   onEdit?: (item: Item) => void;
+  onView?: (item: Item) => void;
 }
