@@ -33,7 +33,6 @@ function Login() {
       error: false,
       errorText: "",
     }));
-
   };
 
   const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -55,9 +54,9 @@ function Login() {
 
   return (
     <>
-      <div className="flex min-h-screen justify-center items-center bg-slate-50 p-4">
+      <div className="flex min-h-screen justify-center items-center bg-slate-800 p-4">
         <div className="relative w-full max-w-sm sm:max-w-md bg-slate-900 shadow-2xl border border-slate-800 rounded-xl p-6 pt-16 sm:pt-12">
-          <div className="absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 rounded-full bg-slate-50 w-20 h-20 sm:w-24 sm:h-24 border-4 border-slate-800 flex items-center justify-center shadow-xl">
+          <div className="absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 rounded-full bg-slate-50 w-20 h-20 sm:w-24 sm:h-24 border-4 border-slate-900 flex items-center justify-center shadow-2xl">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-10 h-10 sm:w-12 sm:h-12 text-slate-900"
@@ -69,26 +68,40 @@ function Login() {
           </div>
           <div className="mb-6">
             <h1 className="text-3xl sm:text-4xl text-white text-center font-bold mb-2">
-              Inicio de sesión
+              Iniciar Sesión
             </h1>
             <p className="text-slate-400 text-center text-sm sm:text-base">
               Ingresa tus credenciales
             </p>
           </div>
-
+    
           <form className="space-y-5" onSubmit={handleSubmit}>
-            <div>
+            <div className="relative">
               <label className="block font-medium text-sm text-slate-300 mb-2">
                 Email:
               </label>
-              <input
-                type="email"
-                placeholder="correo@ejemplo"
-                name="email"
-                onChange={handleChange}
-                value={formState.form.email}
-                className="w-full bg-slate-800 border border-slate-700 text-white rounded-md px-4 py-3 outline-none focus:ring-2 focus:ring-sky-500 transition-all"
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  placeholder="correo@ejemplo.com"
+                  name="email"
+                  onChange={handleChange}
+                  value={formState.form.email}
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-md px-12 py-3 outline-none focus:ring-2 focus:ring-sky-500 transition-all"
+                />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center border-r border-slate-700 w-10 h-2/3 text-slate-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    className="bi bi-person"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z" />
+                  </svg>
+                </div>
+              </div>
             </div>
             <div className="relative">
               <label className="block font-medium text-sm text-slate-300 mb-2">
@@ -99,11 +112,27 @@ function Login() {
                 <input
                   type={viewPassword ? "text" : "password"}
                   placeholder=".  .  .  .  .  .  .  ."
+                  id="password"
                   name="password"
                   onChange={handleChange}
                   value={formState.form.password}
-                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-md px-4 pr-12 py-3 outline-none focus:ring-2 focus:ring-sky-500 transition-all"
+                  className="w-full bg-slate-800 border border-slate-700 text-white rounded-md px-12 py-3 outline-none focus:ring-2 focus:ring-sky-500 transition-all"
                 />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 flex justify-center items-center w-10 h-2/3 border-r border-slate-700 text-slate-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    className="bi bi-lock"
+                    viewBox="0 0 16 16"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7zM8 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3"
+                    />
+                  </svg>
+                </div>
                 <button
                   type="button"
                   onClick={handleViewPassWord}
@@ -146,7 +175,7 @@ function Login() {
               )}
             </div>
             <button className="btn w-full border border-transparent text-white font-bold text-md sm:text-lg bg-sky-600 hover:bg-sky-700 cursor-pointer rounded-md p-6 mt-1 transition-colors shadow-lg shadow-sky-900/20">
-              Iniciar Sesión
+              Acceder
             </button>
           </form>
         </div>
