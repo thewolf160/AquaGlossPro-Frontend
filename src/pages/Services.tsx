@@ -1,6 +1,6 @@
 import { useState } from "react";
-import ServiceCatalog from "../components/ServiceCatalog";
-import KanbanBoard from "../components/KanbanBoard";
+import ServiceCatalog from "../components/service/ServiceCatalog";
+import KanbanBoard from "../components/service/KanbanBoard";
 
 
 export default function Services() {
