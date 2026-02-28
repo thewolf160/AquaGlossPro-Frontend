@@ -9,7 +9,7 @@ interface SidebarProps {
 interface SidebarItem {
   label: string;
   path: string;
-  icon: string; 
+  icon: string;
 }
 
 const menuItems: SidebarItem[] = [
@@ -36,7 +36,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   return (
     <>
       {isMobile && isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 transition-opacity"
           onClick={toggleSidebar}
         />
@@ -57,26 +57,26 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           ${!isMobile ? (isOpen ? "md:w-64" : "md:w-20") : "w-64"}
         `}
       >
-        <div className={`flex items-center h-16 border-b border-gray-800 transition-all ${isOpen ? "justify-between px-4" : "justify-center"}`}>
-          
-          <div className={`font-bold text-xl tracking-wide flex items-center gap-2 overflow-hidden whitespace-nowrap ${!isOpen && !isMobile ? "hidden" : "block"}`}>
+        <div
+          className={`flex items-center h-16 border-b border-gray-800 transition-all ${isOpen ? "justify-between px-4" : "justify-center"}`}
+        >
+          <div
+            className={`font-bold text-xl tracking-wide flex items-center gap-2 overflow-hidden whitespace-nowrap ${!isOpen && !isMobile ? "hidden" : "block"}`}
+          >
             <i className="bi bi-droplet-fill text-blue-500"></i>
             <span>AutoLavado</span>
           </div>
 
-          <button 
-            onClick={toggleSidebar} 
-<<<<<<< HEAD
-            className="p-1 text-slate-400 hover:text-white rounded focus:outline-none"
-=======
+          <button
+            onClick={toggleSidebar}
             className="p-1 text-slate-400 hover:text-white rounded focus:outline-none cursor-pointer"
->>>>>>> origin/main
           >
-           
             {isMobile ? (
               <i className="bi bi-x-lg text-xl"></i>
             ) : (
-              <i className={`bi ${isOpen ? "bi-chevron-left" : "bi-list"} text-xl`}></i>
+              <i
+                className={`bi ${isOpen ? "bi-chevron-left" : "bi-list"} text-xl`}
+              ></i>
             )}
           </button>
         </div>
@@ -86,7 +86,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={() => isMobile && toggleSidebar()} 
+              onClick={() => isMobile && toggleSidebar()}
               className={({ isActive }) => `
                 flex items-center py-3 rounded-lg transition-colors overflow-hidden whitespace-nowrap
                 ${isActive ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white"}
@@ -94,11 +94,15 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                 /* Alineación: Si está cerrado (y no es móvil), centramos el icono. Si no, alineamos a la izquierda */
                 ${!isOpen && !isMobile ? "justify-center px-0" : "justify-start px-3 gap-3"}
               `}
-              title={!isOpen && !isMobile ? item.label : ""} 
+              title={!isOpen && !isMobile ? item.label : ""}
             >
-              <i className={`${item.icon} text-xl leading-none flex-shrink-0`}></i>
-              
-              <span className={`${!isOpen && !isMobile ? "hidden" : "block"} transition-opacity duration-300`}>
+              <i
+                className={`${item.icon} text-xl leading-none flex-shrink-0`}
+              ></i>
+
+              <span
+                className={`${!isOpen && !isMobile ? "hidden" : "block"} transition-opacity duration-300`}
+              >
                 {item.label}
               </span>
             </NavLink>
