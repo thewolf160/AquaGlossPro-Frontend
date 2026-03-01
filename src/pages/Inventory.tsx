@@ -24,7 +24,7 @@ const initialInventory: InventoryItem[] = [
 ];
 
 export default function Inventory() {
-    const [items,setItems] = useState<InventoryItem[]>(initialInventory);
+    const [items] = useState<InventoryItem[]>(initialInventory);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeFilter, setActiveFilter] = useState<"TODOS" | "CRITICOS" | "AGOTADOS">("TODOS");
     const [currentPage, setCurrentPage] = useState(1);
@@ -62,7 +62,7 @@ export default function Inventory() {
 
    const columns = [
       {
-        Headers: "Producto",
+        header: "Producto",
         key: "name",
         render: (item: Item) => {
           const inItem = item as unknown as InventoryItem;
@@ -89,9 +89,9 @@ export default function Inventory() {
           const fillPercentage = isOutOfStock ? 0 : Math.min(100, (inItem.stock / (inItem.minStock * 2)) * 100);
 
           return (
-             <div className="w-full max-w-[140px] mx-auto flex flex-col gap-1.5">
+             <div className="w-full max-w-35 mx-auto flex flex-col gap-1.5">
               <div className="flex justify-between items-end">
-                <span className={`font-black text-lg leading-none ${isOutOfStock ? 'text-red-600' : 'text-gray-800'}`}>
+                <span className={`font-black mr-2 text-lg leading-none text-gray-800`}>
                   {inItem.stock}
                 </span>
                 <span className="text-xs font-medium text-gray-500">{inItem.unit}</span>
@@ -110,9 +110,9 @@ export default function Inventory() {
       {
         header: "Minimo",
         key: "minStock",
-        render: (item: item) => {
+        render: (item: Item) => {
           const inItem = item as unknown as InventoryItem;
-          return <span className="text-sm font-medium text-gray-400">{inItem.minStock}</span>
+          return <span className="text-sm font-bold text-slate-800">{inItem.minStock}</span>
         }
       },
       {
@@ -127,7 +127,7 @@ export default function Inventory() {
       {
         header: "Acciones",
         key: "actions",
-        render: (item: Item) => {
+        render: () => {
           return (
             <div className="flex justify-center gap-2">
               <button className="btn bg-blue-50 text-blue-600 hover:bg-blue-100 border-none min-h-0 h-9 px-3" title="Registrar Entrada/Salida">
@@ -234,6 +234,36 @@ export default function Inventory() {
 
         </div>
       </div>
+
+     {/* Tabla */}
+     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1">
+        <Table 
+          columns={columns as any} 
+          data={paginatedItems as unknown as Item[]} 
+          emptyMessage="No hay productos que coincidan con los filtros."
+        />
+        
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center p-4 border-t border-gray-100">
+            <span className="text-sm text-gray-500">Página {currentPage} de {totalPages}</span>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+                className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Anterior
+              </button>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 text-sm"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+            
     </div>
   );
 }
