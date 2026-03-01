@@ -108,13 +108,88 @@ export default function Inventory() {
         }
       },
       {
+        header: "Minimo",
+        key: "minStock",
+        render: (item: item) => {
+          const inItem = item as unknown as InventoryItem;
+          return <span className="text-sm font-medium text-gray-400">{inItem.minStock}</span>
+        }
+      },
+      {
+        header: "Valor total",
+        key: "totalValue",
+        render: (item: Item) => {
+          const inItem = item as unknown as InventoryItem;
+          const totalValue = inItem.stock * inItem.price;
+          return <span className="font-bold text-gray-900">${totalValue.toFixed(2)}</span>
+        }
+      },
+      {
+        header: "Acciones",
+        key: "actions",
+        render: (item: Item) => {
+          return (
+            <div className="flex justify-center gap-2">
+              <button className="btn bg-blue-50 text-blue-600 hover:bg-blue-100 border-none min-h-0 h-9 px-3" title="Registrar Entrada/Salida">
+              <i className="bi bi-arrow-left-right font-bold"></i>
+              </button>
+              <button className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0">
+                <i className="bi bi-pencil-square"></i>
+              </button>
+            </div>
+          );
+        }
       }
-   ]
+   ];
   
   return (
-    <>
-      <h1>Inventario</h1>
-    </>
+    <div className="space-y-6 animate-fade-in">
+
+    {/* TARJETAS DE RESUMEN */}
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-200 flex items-center  gap-4">
+        <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+          <i className="bi bi-box-seam"></i>
+        </div>
+        <div>
+          <p className="text-sm text-blue-700 font-medium">Total Productos</p>
+          <p className="text-2xl font-black text-blue-800">{stats.totalItems}</p>
+        </div>
+      </div>
+
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-green-200 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl">
+            <i className="bi bi-currency-dollar"></i>
+          </div>
+          <div>
+            <p className="text-sm text-green-700 font-medium">Capital invertido</p>
+            <p className="text-2xl font-black text-green-900">${stats.totalValue.toFixed(2)}</p>
+          </div>
+      </div>
+
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-yellow-200 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl">
+            <i className="bi bi-exclamation-triangle"></i>
+          </div>
+          <div>
+            <p className="text-sm text-yellow-700 font-medium">Stock Bajo</p>
+            <p className="text-2xl font-black text-yellow-700">{stats.lowStock}</p>
+          </div>
+        </div>
+       
+       <div className="bg-white p-4 rounded-xl shadow-sm border border-red-200 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl">
+            <i className="bi bi-x-circle"></i>
+          </div>
+          <div>
+            <p className="text-sm text-red-700 font-medium">Agotados</p>
+            <p className="text-2xl font-black text-red-700">{stats.outOfStock}</p>
+          </div>
+        </div>
+
+
+    </div>
+    </div>
   );
 }
 
