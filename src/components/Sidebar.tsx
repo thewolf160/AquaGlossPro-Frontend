@@ -96,9 +96,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
               `}
               title={!isOpen && !isMobile ? item.label : ""}
             >
-              <i
-                className={`${item.icon} text-xl leading-none flex-shrink-0`}
-              ></i>
+              <i className={`${item.icon} text-xl leading-none shrink-0`}></i>
 
               <span
                 className={`${!isOpen && !isMobile ? "hidden" : "block"} transition-opacity duration-300`}
