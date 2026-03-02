@@ -38,7 +38,7 @@ function Table({
                       col.render(item)
                     ) : col.key === "actions" ? (
                       onDelete || onEdit || onView ? (
-                        <div className="flex justify-center items-center">
+                        <div className="flex justify-center items-cente gap-2">
                           {onView && (
                             <button
                               className="text-blue-600 hover:text-blue-800 transition-all cursor-pointer px-2 py-1"
@@ -46,8 +46,8 @@ function Table({
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="19"
-                                height="19"
+                                width="16"
+                                height="16"
                                 fill="currentColor"
                                 className="bi bi-eye"
                                 viewBox="0 0 16 16"
@@ -59,24 +59,28 @@ function Table({
                           )}
                           {onEdit && (
                             <button
-                              className="text-gray-700 hover:text-gray-800 cursor-pointer transition-all px-2 py-1"
+                              className="bg-sky-50 rounded-md p-4 text-sky-600 hover:bg-blue-100 cursor-pointer transition-all px-2.5 py-2.5"
                               onClick={() => onEdit(item)}
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="19"
-                                height="19"
+                                width="16"
+                                height="16"
                                 fill="currentColor"
-                                className="bi bi-pencil"
+                                className="bi bi-pencil-square"
                                 viewBox="0 0 16 16"
                               >
-                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325" />
+                                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                <path
+                                  fill-rule="evenodd"
+                                  d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"
+                                />
                               </svg>
                             </button>
                           )}
                           {onDelete && (
                             <button
-                              className="text-red-600 hover:text-red-700 transition-all cursor-pointer px-2 py-1"
+                              className="bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5"
                               onClick={() => onDelete(item)}
                             >
                               <svg
