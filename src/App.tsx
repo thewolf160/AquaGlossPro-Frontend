@@ -11,17 +11,26 @@ import Services from "./pages/Services";
 import Users from "./pages/Users";
 import Vehicles from "./pages/Vehicles";
 import Roles from "./pages/Roles";
+import ClientDisplay from "./pages/ClientHome";
+import ClientHeader from "./components/ClientHeader";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-
+        <Route
+          path="/client"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <ClientHeader />
+              <ClientDisplay />
+            </div>
+          }
+        />
         <Route path="/" element={<DashboardLayout />}>
-          
           <Route index element={<Navigate to="/home" replace />} />
-          
+
           <Route path="home" element={<Home />} />
           <Route path="employees" element={<Employees />} />
           <Route path="inventory" element={<Inventory />} />
@@ -31,7 +40,6 @@ export default function App() {
           <Route path="services" element={<Services />} />
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />
-           
         </Route>
       </Routes>
     </BrowserRouter>
