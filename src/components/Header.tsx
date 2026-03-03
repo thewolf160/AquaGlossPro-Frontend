@@ -21,7 +21,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header className="bg-blue-600 text-white shadow-md sticky top-0 z-30">
-      {/* Contenedor flexible para alinear botón y texto */}
       <div className="flex items-center px-6 py-4 gap-4">
         
         <button
@@ -32,10 +31,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <i className="bi bi-list text-2xl leading-none"></i>
         </button>
 
-        {/* 3. TÍTULO */}
-        <h1 className="text-lg font-bold tracking-wide">
-          {currentTitle}
-        </h1>
+        <div className="flex-1 flex items-center w-full">
+        
+          <div id="custom-header-portal" className="peer empty:hidden w-full flex justify-end"></div>
+          
+      
+          <h1 className="text-lg font-bold tracking-wide peer-empty:block hidden">
+            {currentTitle}
+          </h1>
+        </div>
         
       </div>
     </header>
