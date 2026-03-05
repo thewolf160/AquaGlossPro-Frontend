@@ -71,13 +71,10 @@ function Clients() {
   const [selectedClient, setSelectedClient] = useState<ClientData | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // --- LÓGICA DE NEGOCIO PARA LOS 4 KPIs ---
   const stats = useMemo(() => {
     const totalClients = mockClients.length;
-    // Sumamos la cantidad de vehículos de cada cliente
     const totalVehicles = mockClients.reduce((acc, client) => acc + client.vehicles.length, 0);
     const avgVehicles = totalClients > 0 ? (totalVehicles / totalClients).toFixed(1) : "0";
-    // Consideramos "Flota" a cualquier cliente con 3 o más vehículos
     const fleets = mockClients.filter(client => client.vehicles.length >= 3).length;
 
     return { totalClients, totalVehicles, avgVehicles, fleets };
@@ -110,7 +107,6 @@ function Clients() {
         const client = item as unknown as ClientData;
         return (
           <div className="flex justify-center gap-2">
-            {/* WhatsApp removido según tu instrucción */}
             <button className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0">
               <i className="bi bi-pencil-square"></i>
             </button>
