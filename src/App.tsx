@@ -13,6 +13,7 @@ import Vehicles from "./pages/Vehicles";
 import Roles from "./pages/Roles";
 import ClientDisplay from "./pages/ClientHome";
 import ClientHeader from "./components/ClientHeader";
+import Clients from "./pages/Client";
 
 export default function App() {
   return (
@@ -20,7 +21,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
-          path="/client"
+          path="/clientHome"
           element={
             <div className="min-h-screen bg-gray-50">
               <ClientHeader />
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="inventory" element={<Inventory />} />
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="purchases" element={<Purchases />} />
+          <Route path="clients" element={<Clients />} />
           <Route path="sales" element={<Sales />} />
           <Route path="services" element={<Services />} />
           <Route path="users" element={<Users />} />

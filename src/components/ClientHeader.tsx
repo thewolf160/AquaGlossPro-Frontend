@@ -5,11 +5,11 @@ export default function ClientHeader() {
         
         {/* Lado Izquierdo: Logo y Marca */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center text-white shadow-sm">
-            <i className="bi bi-car-front-fill"></i>
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-slate-900 shadow-sm">
+            <i className="bi bi-car-front-fill text-xl"></i>
           </div>
           <span className="font-black text-xl text-gray-900 tracking-tight">
-            Auto<span className="text-white">Lavado</span>
+            Aqua<span className="text-white">Gloss</span>
           </span>
         </div>
 
@@ -29,7 +29,7 @@ export default function ClientHeader() {
             </div>
             <div className="hidden sm:block text-left">
               <p className="text-sm font-bold text-gray-800 leading-none">Fabián Dacal</p>
-              <p className="text-xs text-gray-500 mt-0.5">Cliente Premium</p>
+              <p className="text-xs text-gray-500 mt-0.5 ">Cliente</p>
             </div>
             <i className="bi bi-chevron-down text-gray-400 text-xs hidden sm:block"></i>
           </div>

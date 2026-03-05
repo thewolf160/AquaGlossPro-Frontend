@@ -17,6 +17,7 @@ const menuItems: SidebarItem[] = [
   { path: "/vehicles", label: "Vehículos", icon: "bi bi-car-front" },
   { path: "/inventory", label: "Inventario", icon: "bi bi-box-seam" },
   { path: "/employees", label: "Empleados", icon: "bi bi-people" },
+  { path: "/clients", label: "Clientes", icon: "bi bi-person" },
   { path: "/users", label: "Usuarios", icon: "bi bi-person-circle" },
   { path: "/services", label: "Servicios", icon: "bi bi-stars" },
   { path: "/sales", label: "Ventas", icon: "bi bi-currency-dollar" },

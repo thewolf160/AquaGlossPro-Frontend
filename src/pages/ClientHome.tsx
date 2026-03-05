@@ -68,7 +68,6 @@ export default function ClientDashboard() {
       {/* 2. TARJETAS DE KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-          <div className="absolute top-4 right-4 bg-green-50 text-green-600 text-xs font-bold px-2 py-1 rounded-md">A Tiempo</div>
           <div className="text-blue-500 mb-4"><i className="bi bi-stopwatch text-2xl"></i></div>
           <p className="text-sm text-gray-500 font-medium">Tiempo de Espera Estimado</p>
           <p className="text-3xl font-black text-gray-900 mt-1">12 mins</p>
