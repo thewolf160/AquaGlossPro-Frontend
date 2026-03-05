@@ -148,7 +148,7 @@ function Clients() {
           />
         </HeaderPortal>
 
-        {/* --- SECCIÓN DE LAS 4 TARJETAS (KPIs) --- */}
+        {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-200 flex items-center  gap-4">
           <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
@@ -201,7 +201,7 @@ function Clients() {
         </div>
       </div>
 
-        {/* --- TABLA DE CLIENTES --- */}
+        {/*TABLA DE CLIENTES*/}
         <section className="shadow-md rounded-xl overflow-hidden border border-slate-300 bg-white">
           <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
             <h2 className="font-bold text-slate-800 text-xl tracking-tight">
@@ -216,7 +216,7 @@ function Clients() {
         </section>
       </div>
 
-      {/* --- MODALES --- */}
+      {/*MODALEs*/}
       <Modal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)} title="Nuevo Cliente" actions={<button className="btn bg-blue-600 text-white hover:bg-blue-700">Guardar</button>}>
         <form className="flex flex-col gap-4">
            <Input name="name" label="Nombre Completo:" type="text" />
