@@ -4,7 +4,7 @@ import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
 import { useState, useMemo } from "react";
 import Modal from "../components/Modal/Modal";
-import Input from "../components/Input";
+import Input from "../components/Modal/Input";
 
 interface Vehicle {
   plate: string;
