@@ -17,64 +17,90 @@ function Sales() {
             <Card title="Encerado" text="Acabado" price="$10.00" />
           </div>
         </section>
-        <section className="w-full flex flex-col gap-4">
-          <div className="border border-slate-200 shadow-sm rounded-md flex flex-col gap-2 p-2">
-            <div>
-              <p className="font-medium text-md text-slate-800 px-2 text-xl">
-                Cliente y Vehículo
-              </p>
-            </div>
-            <div className="flex gap-4 px-2">
-              <div className="p-3 bg-blue-200 rounded-full"></div>
+        <section className="w-full md:w-1/3 flex flex-col gap-4">
+          <div className="border border-slate-200 shadow-sm rounded-lg flex flex-col gap-3 p-4 bg-white">
+            <h2 className="font-semibold text-lg text-slate-800">
+              Cliente y Vehículo
+            </h2>
+            <div className="flex items-center gap-3">
+              <div className="px-3 py-2 bg-blue-200 rounded-full">
+                <i className="bi bi-person text-xl"></i>
+              </div>
               <select
-                name=""
-                id=""
-                className="px-2 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+                name="cliente_id"
+                id="cliente_id"
+                className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ease-in cursor-pointer"
+                defaultValue=""
               >
-                <option value="">Alexandra Nieves</option>
+                <option value="" disabled>
+                  Seleccionar cliente...
+                </option>
+                <option value="1">Alexandra Nieves</option>
               </select>
             </div>
           </div>
-          <div className="border border-slate-200 shadow-sm rounded-md p-2 h-120">
-            <div className="flex flex-col gap-4 px-4  border-b border-slate-200">
-              <p className="font-medium text-md text-slate-800 text-xl">
-                Orden
-              </p>
-              <div className="flex gap-2 items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <p className="bg-blue-100 border border-blue-200 px-3 py-1 rounded-sm">
-                    1
-                  </p>
 
-                  <p className="text-sm text-slate-800">Aspirado Profundo</p>
+          <div className="border border-slate-200 shadow-sm rounded-lg p-5 bg-white flex flex-col gap-5">
+            <div className="flex flex-col gap-3 border-b border-slate-200 pb-4">
+              <h2 className="font-semibold text-lg text-slate-800">Orden</h2>
+              <div className="flex gap-2 items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-md text-sm font-semibold">
+                    1
+                  </span>
+                  <p className="text-sm font-medium text-slate-700">
+                    Aspirado Profundo
+                  </p>
                 </div>
-                <p>$7.00</p>
+                <p className="font-medium text-slate-800">$7.00</p>
               </div>
             </div>
-            <div className="flex flex-col gap-4 px-4 border-b border-slate-200">
-              <p className="font-medium text-md text-slate-800 text-xl">
+
+            <div className="flex flex-col gap-3 border-b border-slate-200 pb-4">
+              <h2 className="font-semibold text-lg text-slate-800">
                 Empleados
-              </p>
-              <div className="flex items-center gap-1 border border-slate-200 rounded-xl w-20 mb-4">
-                <i className="bi bi-plus text-lg"></i>
-                <span className="text-sm">Agregar</span>
-              </div>
+              </h2>
+              <button className="flex items-center gap-2 border border-slate-300 hover:bg-slate-50 text-slate-700 w-fit px-3 py-1.5 rounded-lg transition-colors">
+                <i className="bi bi-plus text-xl leading-none"></i>
+                <span className="text-sm font-medium">Agregar</span>
+              </button>
             </div>
-            <div className="flex flex-row justify-between gap-4 px-4 py-2 border-b border-slate-200">
-              <p className="font-medium text-md text-slate-800 text-xl">Total</p>
-              <p>$7.00</p>
+
+            <div className="flex flex-row justify-between items-center border-b border-slate-200 pb-4">
+              <h2 className="font-bold text-xl text-slate-800">Total</h2>
+              <p className="font-bold text-2xl text-blue-600">$7.00</p>
             </div>
-            <div className="flex flex-col gap-4">
-              <p className="font-medium text-md text-slate-800 text-xl px-4">Métodos de Pago</p>
-              <div className="border flex items-center justify-between px-4 py-2 border-slate-400 rounded-md">
-                Pago Móvil
-                <input type="checkbox" name="" id="" />
-              </div>
-              <div className="border flex items-center justify-between px-4 py-2 border-slate-400 rounded-md">
-                Transferencia
-                <input type="checkbox" name="" id="" />
-              </div>
-              <button className="btn bg-blue-600 text-xl text-white">Registrar</button>
+
+            <div className="flex flex-col gap-3 pt-1">
+              <h2 className="font-semibold text-lg text-slate-800">
+                Métodos de Pago
+              </h2>
+
+              <label className="border flex items-center justify-between px-4 py-3 border-slate-300 rounded-md cursor-pointer hover:border-blue-500 hover:bg-slate-50 transition-all">
+                <span className="text-slate-700 font-medium">Pago Móvil</span>
+                <input
+                  type="radio"
+                  name="metodo_pago"
+                  value="pago_movil"
+                  className="w-4 h-4 text-blue-600"
+                />
+              </label>
+
+              <label className="border flex items-center justify-between px-4 py-3 border-slate-300 rounded-md cursor-pointer hover:border-blue-500 hover:bg-slate-50 transition-all">
+                <span className="text-slate-700 font-medium">
+                  Transferencia
+                </span>
+                <input
+                  type="radio"
+                  name="metodo_pago"
+                  value="transferencia"
+                  className="w-4 h-4 text-blue-600"
+                />
+              </label>
+
+              <button className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-lg font-medium text-white py-3 rounded-md transition-colors shadow-sm">
+                Registrar Venta
+              </button>
             </div>
           </div>
         </section>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 interface formState {
   form: {
@@ -54,7 +55,7 @@ function Login() {
 
   return (
     <>
-      <div className="flex min-h-screen justify-center items-center bg-slate-800 p-4">
+      <div className="flex min-h-screen justify-center items-center bg-slate-50 p-4">
         <div className="relative w-full max-w-sm sm:max-w-md bg-slate-900 shadow-2xl border border-slate-800 rounded-xl p-6 pt-16 sm:pt-12">
           <div className="absolute -top-10 sm:-top-12 left-1/2 -translate-x-1/2 rounded-full bg-slate-50 w-20 h-20 sm:w-24 sm:h-24 border-4 border-slate-900 flex items-center justify-center shadow-2xl">
             <svg
@@ -174,9 +175,9 @@ function Login() {
                 </span>
               )}
             </div>
-            <button className="btn w-full border border-transparent text-white font-bold text-md sm:text-lg bg-sky-600 hover:bg-sky-700 cursor-pointer rounded-md p-6 mt-1 transition-colors shadow-lg shadow-sky-900/20">
+            <Link to="/home" className="btn w-full border border-transparent text-white font-bold text-md sm:text-lg bg-sky-600 hover:bg-sky-700 cursor-pointer rounded-md p-6 mt-1 transition-colors shadow-lg shadow-sky-900/20">
               Acceder
-            </button>
+            </Link>
           </form>
         </div>
       </div>

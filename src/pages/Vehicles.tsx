@@ -211,7 +211,7 @@ function Vehicles() {
                 </svg>
               }
             />
-            <p className="text-sm text-slate-500 px-2">¿No encuentras al Cliente? <Link to="" className="text-blue-400 hover:text-blue-500">Crear Nuevo Cliente</Link></p>
+            <p className="text-sm text-slate-500 px-2">¿No encuentras al Cliente? <Link to="/clients" className="text-blue-400 hover:text-blue-500">Crear Nuevo Cliente</Link></p>
           </div>
         </form>
       </Modal>

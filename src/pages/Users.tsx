@@ -2,7 +2,7 @@ import { useState } from "react";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
 import Table from "../components/Table/Table";
-import Input from "../components/Input";
+import Input from "../components/Modal/Input";
 import Modal from "../components/Modal/Modal";
 
 function Users() {
@@ -104,7 +104,6 @@ function Users() {
     { key: "email", header: "Correo" },
     { key: "phone", header: "Teléfono" },
     { key: "rol", header: "Rol" },
-    { key: "salary", header: "Salario" },
     { key: "actions", header: "Acciones" },
   ];
 
@@ -120,7 +119,7 @@ function Users() {
         />
       </HeaderPortal>
 
-      <section className="flex flex-row gap-4">
+      <section className="grid grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-rose-200  hover:shadow-md transition-shadow flex items-center gap-4">
           <div className="p-3 rounded-full bg-rose-100">
             <svg
@@ -303,7 +302,7 @@ function Users() {
             salary: "",
           });
         }}
-        title="Registro de Nuevo Usuario"
+        title="Editar Usuario"
         actions={
           <div className="flex justify-end gap-3">
             <button

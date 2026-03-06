@@ -30,7 +30,7 @@ export default function App() {
           }
         />
         <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="/home" replace />} />
+          <Route index element={<Navigate to="/login" replace />} />
 
           <Route path="home" element={<Home />} />
           <Route path="employees" element={<Employees />} />
