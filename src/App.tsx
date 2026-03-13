@@ -1,6 +1,4 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import DashboardLayout from "./components/DashboardLayout";
-
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Employees from "./pages/Employees";
@@ -14,6 +12,7 @@ import Roles from "./pages/Roles";
 import ClientDisplay from "./pages/ClientHome";
 import ClientHeader from "./components/ClientHeader";
 import Clients from "./pages/Client";
+import ProtectedRoute from "./routes/ProtectedRoutes";
 
 export default function App() {
   return (
@@ -28,10 +27,9 @@ export default function App() {
               <ClientDisplay />
             </div>
           }
-        />
-        <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="/login" replace />} />
-
+        />{" "}
+        <Route index element={<Navigate to="/login" replace />} />
+        <Route element={<ProtectedRoute />}>
           <Route path="home" element={<Home />} />
           <Route path="employees" element={<Employees />} />
           <Route path="inventory" element={<Inventory />} />
