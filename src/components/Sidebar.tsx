@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,6 +26,12 @@ const menuItems: SidebarItem[] = [
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login", { replace: true });
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -106,6 +112,21 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
               </span>
             </NavLink>
           ))}
+
+          <button
+            onClick={handleLogout}
+            className={`flex items-center py-3 rounded-lg transition-colors overflow-hidden whitespace-nowrap mt-auto text-gray-400 hover:bg-gray-800 hover:text-white cursor-pointer
+              ${!isOpen && !isMobile ? "justify-center px-0" : "justify-start px-3 gap-3"}
+              `}
+            title={!isOpen && !isMobile ? "Cerrar Sesión" : ""}
+          >
+            <i className="bi bi-box-arrow-in-left"></i>
+            <span
+              className={`${!isOpen && !isMobile ? "hidden" : "block"} transition-opacity duration-300`}
+            >
+              Cerrar Sesión
+            </span>
+          </button>
         </nav>
       </aside>
     </>
