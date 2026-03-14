@@ -19,17 +19,18 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route
-          path="/clientHome"
-          element={
-            <div className="min-h-screen bg-gray-50">
-              <ClientHeader />
-              <ClientDisplay />
-            </div>
-          }
-        />{" "}
+
         <Route index element={<Navigate to="/login" replace />} />
         <Route element={<ProtectedRoute />}>
+          <Route
+            path="/clientHome"
+            element={
+              <div className="min-h-screen bg-gray-50">
+                <ClientHeader />
+                <ClientDisplay />
+              </div>
+            }
+          />{" "}
           <Route path="home" element={<Home />} />
           <Route path="employees" element={<Employees />} />
           <Route path="inventory" element={<Inventory />} />

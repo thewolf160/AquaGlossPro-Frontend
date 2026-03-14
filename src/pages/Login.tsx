@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { AuthService } from "../services/login.services";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 interface formState {
   form: {
@@ -43,7 +44,7 @@ function Login() {
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     if (!formState.form.email || !formState.form.password) {
       setFormState((prev) => ({
@@ -51,28 +52,49 @@ function Login() {
         error: true,
         errorText: "Todos los campos son obligatorios",
       }));
-      setIsLoading(false)
+      setIsLoading(false);
       return;
     }
 
     try {
-      const data = await AuthService.login({
+      await AuthService.login({
         email: formState.form.email,
         password: formState.form.password,
       });
-      console.log(data);
+
       navigate("/home", { replace: true });
-    } catch (error) {
-      console.error("error:", error);
+
+    } catch (error: unknown) {
+      let errorMessage = "Ocurrió un error inesperado";
+
+      if (axios.isAxiosError(error)) {
+        if (!error.response) {
+          errorMessage = "No se pudo conectar con el servidor";
+        } else {
+          const status = error.response.status;
+
+          switch (status) {
+            case 400:
+            case 401:
+            case 404:
+              errorMessage = "Credenciales incorrectas";
+              break;
+            case 500:
+              errorMessage = "Error interno del servidor. Inténtalo más tarde";
+              break;
+            default:
+              errorMessage = "Error al procesar la solicitud";
+          }
+        }
+      }
+
       setFormState((prev) => ({
         ...prev,
         error: true,
-        errorText: "Error al iniciar sesion",
+        errorText: errorMessage,
       }));
-       setIsLoading(false)
+      setIsLoading(false);
     }
-
-   
   };
 
   const handleViewPassWord = () => {
