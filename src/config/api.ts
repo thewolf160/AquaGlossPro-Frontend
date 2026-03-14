@@ -1,10 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.BACK_URL,
+  baseURL: import.meta.env.VITE_BACK_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -21,6 +18,17 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  },
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
     return Promise.reject(error);
   },
 );
