@@ -3,6 +3,11 @@ import Table from "../components/Table/Table";
 import type { Item } from "../types/models";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
+import Modal from "../components/Modal/Modal";
+import Input from "../components/Modal/Input";
+import ActionButton from "../components/Modal/ActionButton";
+import InventoryCards from "../components/inventory/InventoryCards";
+import  AddProductModal from "../components/inventory/AddProductModal";
 
 interface InventoryItem {
   id: number;
@@ -60,24 +65,6 @@ const initialInventory: InventoryItem[] = [
     unit: "Galones",
     price: 18.0,
   },
-  {
-    id: 6,
-    name: "Silicona para Tableros",
-    category: "Químicos",
-    stock: 7,
-    minStock: 5,
-    unit: "Litros",
-    price: 12.0,
-  },
-  {
-    id: 7,
-    name: "Abrillantador de Llantas",
-    category: "Químicos",
-    stock: 2,
-    minStock: 4,
-    unit: "Galones",
-    price: 22.0,
-  },
 ];
 
 export default function Inventory() {
@@ -89,9 +76,40 @@ export default function Inventory() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
+  };
+
+  const handleOpenStockModal = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setIsStockModalOpen(true);
+  };
+
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const handleCloseStockModal = () => {
+    setIsStockModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  const handleOpenEditModal = (item: InventoryItem) => {
+    setEditingItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingItem(null);
   };
 
   const stats = useMemo(() => {
@@ -162,9 +180,7 @@ export default function Inventory() {
         return (
           <div className="w-full max-w-35 mx-auto flex flex-col gap-1.5">
             <div className="flex justify-between items-end">
-              <span
-                className={`font-black mr-2 text-lg leading-none text-gray-800`}
-              >
+              <span className={`font-black mr-2 text-lg leading-none text-gray-800`}>
                 {inItem.stock}
               </span>
               <span className="text-xs font-medium text-gray-500">
@@ -219,16 +235,22 @@ export default function Inventory() {
     {
       header: "Acciones",
       key: "actions",
-      render: () => {
+      render: (item: Item) => {
+        const inItem = item as unknown as InventoryItem;
         return (
           <div className="flex justify-center gap-2">
             <button
+              onClick={() => handleOpenStockModal(inItem)}
               className="btn bg-blue-50 text-blue-600 hover:bg-blue-100 border-none min-h-0 h-9 px-3"
               title="Registrar Entrada/Salida"
             >
               <i className="bi bi-arrow-left-right font-bold"></i>
             </button>
-            <button className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0">
+            <button 
+              onClick={() => handleOpenEditModal(inItem)}
+              className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0"
+              title="Editar Producto"
+            >
               <i className="bi bi-pencil-square"></i>
             </button>
           </div>
@@ -241,66 +263,16 @@ export default function Inventory() {
     <div className="space-y-6 animate-fade-in">
       <HeaderPortal>
         <HeaderSearch
-         searchPlaceholder="Buscar producto..."
+          searchPlaceholder="Buscar producto..."
           buttonText="Agregar Producto"
           searchTerm={searchTerm}
           onSearchChange={handleSearch}
-          onAddClick={() => alert("Agregar nuevo producto")}></HeaderSearch>  
+          onAddClick={() => setIsAddModalOpen(true)}
+        />
       </HeaderPortal>
+      
       {/* TARJETAS DE RESUMEN */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-200 flex items-center  gap-4">
-          <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
-            <i className="bi bi-box-seam"></i>
-          </div>
-          <div>
-            <p className="text-sm text-blue-700 font-medium">Total Productos</p>
-            <p className="text-2xl font-black text-blue-800">
-              {stats.totalItems}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-green-200 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl">
-            <i className="bi bi-currency-dollar"></i>
-          </div>
-          <div>
-            <p className="text-sm text-green-700 font-medium">
-              Capital invertido
-            </p>
-            <p className="text-2xl font-black text-green-900">
-              ${stats.totalValue.toFixed(2)}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-yellow-200 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl">
-            <i className="bi bi-exclamation-triangle"></i>
-          </div>
-          <div>
-            <p className="text-sm text-yellow-700 font-medium">Stock Bajo</p>
-            <p className="text-2xl font-black text-yellow-700">
-              {stats.lowStock}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-red-200 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl">
-            <i className="bi bi-x-circle"></i>
-          </div>
-          <div>
-            <p className="text-sm text-red-700 font-medium">Agotados</p>
-            <p className="text-2xl font-black text-red-700">
-              {stats.outOfStock}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Controles y filtros */}
+      <InventoryCards stats={stats} />
 
       {/* SECCIÓN 2: Controles y Filtros */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
@@ -371,6 +343,137 @@ export default function Inventory() {
           )}
         </div>
       </div>
+
+      {/* MODAL 1: Agregar Producto */}
+      <AddProductModal isOpen={isAddModalOpen} onClose={handleCloseAddModal} />
+
+      {/* MODAL 2: Entrada y Salida de Stock */}
+      <Modal
+        isOpen={isStockModalOpen}
+        onClose={handleCloseStockModal}
+        title="Movimiento de Inventario"
+        actions={<button className="btn bg-blue-600 text-white hover:bg-blue-700 border-none">Confirmar Operación</button>}
+      >
+        {selectedItem && (
+          <form className="flex flex-col gap-5 pt-2">
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500 font-medium">Producto a modificar</p>
+                <p className="font-black text-xl text-slate-800">{selectedItem.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-slate-500 font-medium">Stock Actual</p>
+                <p className="font-bold text-lg text-blue-600">{selectedItem.stock} <span className="text-sm font-medium">{selectedItem.unit}</span></p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+               <label className="block text-sm font-medium text-slate-700">Tipo de movimiento:</label>
+               <div className="flex gap-4">
+                <label className="flex-1 border-2 flex items-center justify-between px-4 py-3 border-slate-200 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all group has-[:checked]:border-green-500 has-[:checked]:bg-green-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                      <i className="bi bi-box-arrow-in-right"></i>
+                    </div>
+                    <span className="text-green-700 font-bold">Entrada (+)</span>
+                  </div>
+                  <input type="radio" name="movementType" value="in" className="w-4 h-4 text-green-600 border-gray-300" defaultChecked />
+                </label>
+
+                <label className="flex-1 border-2 flex items-center justify-between px-4 py-3 border-slate-200 rounded-lg cursor-pointer hover:border-red-500 hover:bg-red-50 transition-all group has-[:checked]:border-red-500 has-[:checked]:bg-red-50">
+                   <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                      <i className="bi bi-box-arrow-right"></i>
+                    </div>
+                    <span className="text-red-700 font-bold">Salida (-)</span>
+                  </div>
+                  <input type="radio" name="movementType" value="out" className="w-4 h-4 text-red-600 border-gray-300" />
+                </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input name="quantity" label="Cantidad a mover:" type="number" placeholder={`Ej: 10`} />
+              <Input name="reason" label="Motivo u observación:" type="text" placeholder="Ej: Compra a proveedor..." />
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* MODAL 3: Editar Producto */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        title="Editar Producto"
+        actions={<ActionButton type="edit" />}
+      >
+        {/* Usamos renderizado condicional. El form solo existe si hay un editingItem seleccionado */}
+        {editingItem && (
+          <form className="flex flex-col gap-3">
+            <Input 
+              name="name" 
+              label="Nombre del Producto:" 
+              type="text" 
+              defaultValue={editingItem.name} 
+            />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="edit_category" className="block text-sm font-medium text-slate-700">Categoría:</label>
+                <select 
+                  id="edit_category" 
+                  name="category" 
+                  defaultValue={editingItem.category} 
+                  className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+                >
+                  <option value="" disabled>-- Selecciona una --</option>
+                  <option value="Químicos">Químicos</option>
+                  <option value="Herramientas">Herramientas</option>
+                  <option value="Venta">Artículos de Venta</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="edit_unit" className="block text-sm font-medium text-slate-700">Unidad de Medida:</label>
+                <select 
+                  id="edit_unit" 
+                  name="unit" 
+                  defaultValue={editingItem.unit} 
+                  className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+                >
+                  <option value="" disabled>-- Selecciona una --</option>
+                  <option value="Litros">Litros</option>
+                  <option value="Galones">Galones</option>
+                  <option value="Unidades">Unidades</option>
+                  <option value="Paquetes">Paquetes</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <Input 
+                name="stock" 
+                label="Stock Inicial:" 
+                type="number" 
+                defaultValue={editingItem.stock.toString()} 
+              />
+              <Input 
+                name="minStock" 
+                label="Stock Mínimo:" 
+                type="number" 
+                defaultValue={editingItem.minStock.toString()} 
+              />
+              <Input 
+                name="price" 
+                label="Precio Unitario:" 
+                type="number" 
+                defaultValue={editingItem.price.toString()} 
+                icon={<i className="bi bi-currency-dollar"></i>} 
+              />
+            </div>
+          </form>
+        )}
+      </Modal>
+
     </div>
   );
 }

@@ -30,7 +30,7 @@ export default function App() {
                 <ClientDisplay />
               </div>
             }
-          />{" "}
+          />{/* Rutas protegidas para usuarios autenticados */}
           <Route path="home" element={<Home />} />
           <Route path="employees" element={<Employees />} />
           <Route path="inventory" element={<Inventory />} />
