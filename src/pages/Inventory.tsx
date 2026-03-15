@@ -4,9 +4,10 @@ import type { Item } from "../types/models";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
 import InventoryCards from "../components/inventory/InventoryCards";
-import  AddProductModal from "../components/inventory/AddProductModal";
+import AddProductModal from "../components/inventory/AddProductModal";
 import StockMovementModal from "../components/inventory/StockMovementModal";
 import EditProductModal from "../components/inventory/EditProductModal";
+import DeleteProductModal from "../components/inventory/DeleteProductModal";
 
 export interface InventoryItem {
   id: number;
@@ -79,6 +80,9 @@ export default function Inventory() {
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<InventoryItem | null>(null);
+  
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
 
@@ -109,6 +113,16 @@ export default function Inventory() {
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setEditingItem(null);
+  };
+
+  const handleOpenDeleteModal = (item: InventoryItem) => {
+    setDeletingItem(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeletingItem(null);
   };
 
   const stats = useMemo(() => {
@@ -252,6 +266,13 @@ export default function Inventory() {
             >
               <i className="bi bi-pencil-square"></i>
             </button>
+            <button 
+              onClick={() => handleOpenDeleteModal(inItem)}
+              className="btn bg-red-50 text-red-600 hover:bg-red-100 border-none min-h-0 h-9 w-9 p-0"
+              title="Eliminar Producto"
+            >
+              <i className="bi bi-trash"></i>
+            </button>
           </div>
         );
       },
@@ -270,10 +291,8 @@ export default function Inventory() {
         />
       </HeaderPortal>
       
-      {/* TARJETAS DE RESUMEN */}
       <InventoryCards stats={stats} />
 
-      {/* SECCIÓN 2: Controles y Filtros */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex bg-gray-100 p-1 rounded-lg">
@@ -307,7 +326,6 @@ export default function Inventory() {
           </div>
         </div>
 
-        {/* Tabla */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1">
           <Table
             columns={columns as any}
@@ -343,13 +361,13 @@ export default function Inventory() {
         </div>
       </div>
 
-      {/* MODAL 1: Agregar Producto */}
       <AddProductModal isOpen={isAddModalOpen} onClose={handleCloseAddModal} />
 
-      {/* MODAL 2: Entrada y Salida de Stock */}
       <StockMovementModal isOpen={isStockModalOpen} onClose={handleCloseStockModal} selectedItem={selectedItem} />
-      {/* MODAL 3: Editar Producto */}
-     <EditProductModal isOpen={isEditModalOpen} onClose={handleCloseEditModal} editingItem={editingItem} />
+      
+      <EditProductModal isOpen={isEditModalOpen} onClose={handleCloseEditModal} editingItem={editingItem} />
+
+      <DeleteProductModal isOpen={isDeleteModalOpen} onClose={handleCloseDeleteModal} deletingItem={deletingItem} />
     </div>
   );
 }

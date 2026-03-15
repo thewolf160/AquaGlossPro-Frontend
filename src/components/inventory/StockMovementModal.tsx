@@ -1,6 +1,5 @@
 import Modal from "../Modal/Modal";
 import Input from "../Modal/Input";
-import ActionButton from "../Modal/ActionButton";
 import type { InventoryItem } from "../../pages/Inventory";
 
 type StockMevementModalProps = {
