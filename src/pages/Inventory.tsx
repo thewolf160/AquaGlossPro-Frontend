@@ -3,13 +3,12 @@ import Table from "../components/Table/Table";
 import type { Item } from "../types/models";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
-import Modal from "../components/Modal/Modal";
-import Input from "../components/Modal/Input";
-import ActionButton from "../components/Modal/ActionButton";
 import InventoryCards from "../components/inventory/InventoryCards";
 import  AddProductModal from "../components/inventory/AddProductModal";
+import StockMovementModal from "../components/inventory/StockMovementModal";
+import EditProductModal from "../components/inventory/EditProductModal";
 
-interface InventoryItem {
+export interface InventoryItem {
   id: number;
   name: string;
   category: string;
@@ -348,132 +347,9 @@ export default function Inventory() {
       <AddProductModal isOpen={isAddModalOpen} onClose={handleCloseAddModal} />
 
       {/* MODAL 2: Entrada y Salida de Stock */}
-      <Modal
-        isOpen={isStockModalOpen}
-        onClose={handleCloseStockModal}
-        title="Movimiento de Inventario"
-        actions={<button className="btn bg-blue-600 text-white hover:bg-blue-700 border-none">Confirmar Operación</button>}
-      >
-        {selectedItem && (
-          <form className="flex flex-col gap-5 pt-2">
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500 font-medium">Producto a modificar</p>
-                <p className="font-black text-xl text-slate-800">{selectedItem.name}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-slate-500 font-medium">Stock Actual</p>
-                <p className="font-bold text-lg text-blue-600">{selectedItem.stock} <span className="text-sm font-medium">{selectedItem.unit}</span></p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-               <label className="block text-sm font-medium text-slate-700">Tipo de movimiento:</label>
-               <div className="flex gap-4">
-                <label className="flex-1 border-2 flex items-center justify-between px-4 py-3 border-slate-200 rounded-lg cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all group has-[:checked]:border-green-500 has-[:checked]:bg-green-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                      <i className="bi bi-box-arrow-in-right"></i>
-                    </div>
-                    <span className="text-green-700 font-bold">Entrada (+)</span>
-                  </div>
-                  <input type="radio" name="movementType" value="in" className="w-4 h-4 text-green-600 border-gray-300" defaultChecked />
-                </label>
-
-                <label className="flex-1 border-2 flex items-center justify-between px-4 py-3 border-slate-200 rounded-lg cursor-pointer hover:border-red-500 hover:bg-red-50 transition-all group has-[:checked]:border-red-500 has-[:checked]:bg-red-50">
-                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
-                      <i className="bi bi-box-arrow-right"></i>
-                    </div>
-                    <span className="text-red-700 font-bold">Salida (-)</span>
-                  </div>
-                  <input type="radio" name="movementType" value="out" className="w-4 h-4 text-red-600 border-gray-300" />
-                </label>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input name="quantity" label="Cantidad a mover:" type="number" placeholder={`Ej: 10`} />
-              <Input name="reason" label="Motivo u observación:" type="text" placeholder="Ej: Compra a proveedor..." />
-            </div>
-          </form>
-        )}
-      </Modal>
-
+      <StockMovementModal isOpen={isStockModalOpen} onClose={handleCloseStockModal} selectedItem={selectedItem} />
       {/* MODAL 3: Editar Producto */}
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={handleCloseEditModal}
-        title="Editar Producto"
-        actions={<ActionButton type="edit" />}
-      >
-        {/* Usamos renderizado condicional. El form solo existe si hay un editingItem seleccionado */}
-        {editingItem && (
-          <form className="flex flex-col gap-3">
-            <Input 
-              name="name" 
-              label="Nombre del Producto:" 
-              type="text" 
-              defaultValue={editingItem.name} 
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="edit_category" className="block text-sm font-medium text-slate-700">Categoría:</label>
-                <select 
-                  id="edit_category" 
-                  name="category" 
-                  defaultValue={editingItem.category} 
-                  className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
-                >
-                  <option value="" disabled>-- Selecciona una --</option>
-                  <option value="Químicos">Químicos</option>
-                  <option value="Herramientas">Herramientas</option>
-                  <option value="Venta">Artículos de Venta</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label htmlFor="edit_unit" className="block text-sm font-medium text-slate-700">Unidad de Medida:</label>
-                <select 
-                  id="edit_unit" 
-                  name="unit" 
-                  defaultValue={editingItem.unit} 
-                  className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
-                >
-                  <option value="" disabled>-- Selecciona una --</option>
-                  <option value="Litros">Litros</option>
-                  <option value="Galones">Galones</option>
-                  <option value="Unidades">Unidades</option>
-                  <option value="Paquetes">Paquetes</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <Input 
-                name="stock" 
-                label="Stock Inicial:" 
-                type="number" 
-                defaultValue={editingItem.stock.toString()} 
-              />
-              <Input 
-                name="minStock" 
-                label="Stock Mínimo:" 
-                type="number" 
-                defaultValue={editingItem.minStock.toString()} 
-              />
-              <Input 
-                name="price" 
-                label="Precio Unitario:" 
-                type="number" 
-                defaultValue={editingItem.price.toString()} 
-                icon={<i className="bi bi-currency-dollar"></i>} 
-              />
-            </div>
-          </form>
-        )}
-      </Modal>
-
+     <EditProductModal isOpen={isEditModalOpen} onClose={handleCloseEditModal} editingItem={editingItem} />
     </div>
   );
 }
