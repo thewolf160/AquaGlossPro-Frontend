@@ -30,11 +30,11 @@ export default function AddServiceModal({ isOpen, onClose }: AddServiceModalProp
             </select>
           </div>
           <Input 
-            name="price" 
-            label="Precio Base:" 
+            name="percentage" 
+            label="Porcentaje de Ganancia:" 
             type="number" 
-            placeholder="0.00" 
-            icon={<i className="bi bi-currency-dollar"></i>} 
+            placeholder="Ej: 20" 
+            icon={<i className="bi bi-percent"></i>} 
           />
         </div>
       </form>
