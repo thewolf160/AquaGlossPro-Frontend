@@ -6,12 +6,17 @@ import HeaderSearch from "../HeaderSearch";
 import AddServiceModal from "./AddServiceModal";
 import EditServiceModal from "./EditServiceModal";
 import DeleteServiceModal from "./DeleteServiceModal";
-
+import ServicePricesModal from "./ServicePricesModal";
 export interface CatalogService {
   id: number;
   name: string;
   category: string;
-  price: number;
+  comissionPercentage: number;
+  prices: {
+    moto: number | null;
+    carro: number | null;
+    camion: number | null;
+  };
 }
 
 interface ComboPackage {
@@ -23,10 +28,18 @@ interface ComboPackage {
 }
 
 const initialServices: CatalogService[] = [
-  { id: 1, name: "Lavado Sencillo", category: "Exterior", price: 5 },
-  { id: 2, name: "Encerado", category: "Acabado", price: 10 },
-  { id: 3, name: "Aspirado Profundo", category: "Interior", price: 7 },
-  { id: 4, name: "Pulitura de Faros", category: "Exterior", price: 15 },
+  { 
+    id: 1, name: "Lavado Sencillo", category: "Exterior", comissionPercentage: 10,
+    prices: { moto: 3, carro: 5, camion: 8 } 
+  },
+  { 
+    id: 2, name: "Encerado", category: "Acabado", comissionPercentage: 15,
+    prices: { moto: 5, carro: 10, camion: 15 } 
+  },
+  { 
+    id: 3, name: "Aspirado Profundo", category: "Interior", comissionPercentage: 20,
+    prices: { moto: null, carro: 7, camion: 10 } 
+  },
 ];
 
 const initialCombos: ComboPackage[] = [
@@ -54,6 +67,7 @@ export default function ServiceCatalog() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPricesModalOpen, setIsPricesModalOpen] = useState(false);
   
   const [selectedService, setSelectedService] = useState<CatalogService | null>(null);
 
@@ -70,7 +84,12 @@ export default function ServiceCatalog() {
       key: "name",
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
-        return <span className="font-medium text-gray-800">{servicio.name}</span>;
+        return (
+          <div>
+            <div className="font-bold text-gray-800">{servicio.name}</div>
+            <div className="text-xs font-medium text-blue-600">Comisión: {servicio.comissionPercentage}%</div>
+          </div>
+        );
       }
     },
     { 
@@ -86,11 +105,26 @@ export default function ServiceCatalog() {
       }
     },
     { 
-      header: "Precio", 
-      key: "price",
+      header: "Tarifas por Vehículo", 
+      key: "prices",
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
-        return <span className="font-bold text-gray-900">${servicio.price.toFixed(2)}</span>;
+        return (
+          <div className="flex flex-col gap-1 text-xs mx-auto w-fit">
+            <div className="flex items-center gap-4">
+              <span className="text-slate-500 w-16 text-left"><i className="bi bi-bicycle mr-1"></i> Moto:</span>
+              <span className="font-bold text-slate-800 w-12 text-right">{servicio.prices.moto ? `$${servicio.prices.moto.toFixed(2)}` : 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-slate-500 w-16 text-left"><i className="bi bi-car-front mr-1"></i> Carro:</span>
+              <span className="font-bold text-slate-800 w-12 text-right">{servicio.prices.carro ? `$${servicio.prices.carro.toFixed(2)}` : 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-slate-500 w-16 text-left"><i className="bi bi-truck mr-1"></i> Camión:</span>
+              <span className="font-bold text-slate-800 w-12 text-right">{servicio.prices.camion ? `$${servicio.prices.camion.toFixed(2)}` : 'N/A'}</span>
+            </div>
+          </div>
+        );
       }
     },
     { 
@@ -100,6 +134,16 @@ export default function ServiceCatalog() {
         const servicio = item as unknown as CatalogService;
         return (
           <div className="flex justify-center gap-2">
+            <button 
+              onClick={() => {
+                setSelectedService(servicio);
+                setIsPricesModalOpen(true);
+              }}
+              className="btn bg-green-50 text-green-600 hover:bg-green-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer"
+              title="Configurar Tarifas"
+            >
+              <i className="bi bi-tags-fill"></i>
+            </button>
             <button 
               onClick={() => {
                 setSelectedService(servicio);
@@ -150,7 +194,7 @@ export default function ServiceCatalog() {
         />
       </section>
 
-      <section>
+       <section>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800">Paquetes y Combos</h2>
           <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-600 transition-colors border-none flex items-center gap-2 cursor-pointer shadow-sm">
@@ -194,23 +238,17 @@ export default function ServiceCatalog() {
         </div>
       </section>
 
-      {/* Renderizado de Modales de Servicio */}
-      <AddServiceModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
-      />
+      {/* Modales */}
+      <AddServiceModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
       
-      <EditServiceModal 
-        isOpen={isEditModalOpen} 
-        onClose={() => setIsEditModalOpen(false)} 
-        editingService={selectedService}
+      <ServicePricesModal 
+        isOpen={isPricesModalOpen} 
+        onClose={() => setIsPricesModalOpen(false)} 
+        service={selectedService} 
       />
-      
-      <DeleteServiceModal 
-        isOpen={isDeleteModalOpen} 
-        onClose={() => setIsDeleteModalOpen(false)} 
-        deletingService={selectedService}
-      />
+
+      <EditServiceModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} editingService={selectedService} />
+      <DeleteServiceModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} deletingService={selectedService} />
     </div>
   );
 }

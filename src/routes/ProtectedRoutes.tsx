@@ -3,9 +3,8 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 function ProtectedRoute() {
   const location = useLocation();
-  //const isAuth = localStorage.getItem("token");
+  const isAuth = localStorage.getItem("token");
 
-  const isAuth = true;
 
 
   if (!isAuth) {
