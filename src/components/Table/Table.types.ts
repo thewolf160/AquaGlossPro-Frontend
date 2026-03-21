@@ -4,6 +4,7 @@ import type { Item } from "../../types/models";
 export interface ColumnsProps {
   key: string;
   header: string;
+  mobile: boolean;
   render?: (item: Item) => React.ReactNode;
 }
 

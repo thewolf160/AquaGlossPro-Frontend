@@ -4,6 +4,7 @@ interface ButtonProps {
   type: ActionType;
   onClick?: () => void;
   isLoading?: boolean;
+  form?: string;
 }
 
 interface ButtonConfig {
@@ -12,7 +13,7 @@ interface ButtonConfig {
   color: string;
 }
 
-function ActionButton({ type, onClick, isLoading = false }: ButtonProps) {
+function ActionButton({ type, onClick, isLoading = false, form }: ButtonProps) {
   const config: Record<ActionType, ButtonConfig> = {
     edit: {
       label: "Editar",
@@ -36,8 +37,8 @@ function ActionButton({ type, onClick, isLoading = false }: ButtonProps) {
   return (
     <>
       <button
-        type="submit"
         disabled={isLoading}
+        form={form}
         onClick={onClick}
         className={`btn text-white transition-all ease-in ${color}`}
       >

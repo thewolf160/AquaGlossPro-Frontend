@@ -9,8 +9,6 @@ export const AuthService = {
   login: async (credentials: Login) => {
     const { data } = await api.post("/auth/login", credentials);
 
-    localStorage.setItem("token", data.tokens);
-
     return data;
   },
 };

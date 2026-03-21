@@ -13,6 +13,7 @@ import ClientDisplay from "./pages/ClientHome";
 import ClientHeader from "./components/ClientHeader";
 import Clients from "./pages/Client";
 import ProtectedRoute from "./routes/ProtectedRoutes";
+import Settings from "./pages/Settings";
 
 export default function App() {
   return (
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="services" element={<Services />} />
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />
+          <Route path="settings" element={<Settings/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

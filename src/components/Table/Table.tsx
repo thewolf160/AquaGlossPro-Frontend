@@ -10,7 +10,7 @@ function Table({
   emptyMessage = "No hay datos para mostrar",
 }: TableProps) {
   if (data.length === 0) {
-    return <div>{emptyMessage}</div>;
+    return <div className="p-8 text-center bg-white">{emptyMessage}</div>;
   }
 
   return (
@@ -21,7 +21,7 @@ function Table({
             <tr>
               {columns.map((col: ColumnsProps) => (
                 <th
-                  className="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  className={`px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider ${!col.mobile && "hidden md:table-cell"}`}
                   key={col.key}
                 >
                   {col.header}
@@ -33,15 +33,15 @@ function Table({
             {data.map((item: Item) => (
               <tr key={item.id} className="hover:bg-slate-50">
                 {columns.map((col: ColumnsProps) => (
-                  <td key={col.key} className="px-6 py-3 text-center">
+                  <td key={col.key} className={`px-6 py-3 text-center ${!col.mobile && "hidden md:table-cell"}`}>
                     {col.render ? (
                       col.render(item)
                     ) : col.key === "actions" ? (
                       onDelete || onEdit || onView ? (
-                        <div className="flex justify-center items-cente gap-2">
+                        <div className="flex justify-center items-center gap-2">
                           {onView && (
                             <button
-                              className="text-blue-600 hover:text-blue-800 transition-all cursor-pointer px-2 py-1"
+                              className="bg-blue-50 rounded-md p-4 text-blue-600 hover:bg-blue-100 transition-all cursor-pointer px-2.5 py-2.5"
                               onClick={() => onView(item)}
                             >
                               <svg
@@ -59,7 +59,7 @@ function Table({
                           )}
                           {onEdit && (
                             <button
-                              className="bg-sky-50 rounded-md p-4 text-sky-600 hover:bg-blue-100 cursor-pointer transition-all px-2.5 py-2.5"
+                              className={`bg-sky-50 rounded-md p-4 text-sky-600 hover:bg-blue-100 cursor-pointer transition-all px-2.5 py-2.5 ${col.mobile && ("hidden sm:flex")}`}
                               onClick={() => onEdit(item)}
                             >
                               <svg
@@ -80,13 +80,13 @@ function Table({
                           )}
                           {onDelete && (
                             <button
-                              className="bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5"
+                              className={`bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5 ${col.mobile && ("hidden sm:flex")}`}
                               onClick={() => onDelete(item)}
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                width="19"
-                                height="19"
+                                width="16"
+                                height="16"
                                 fill="currentColor"
                                 className="bi bi-trash"
                                 viewBox="0 0 16 16"
