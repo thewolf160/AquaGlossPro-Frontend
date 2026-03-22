@@ -27,7 +27,7 @@ const menuItems: SidebarItem[] = [
 
 
 ];
-];
+
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
