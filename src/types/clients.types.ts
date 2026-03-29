@@ -1,19 +1,31 @@
+import type { Item } from "./models";
 
-export interface Client {
-  clientId: number;
+// Cliente
+export interface Client extends Item {
+  ci: string;
   names: string;
   lastnames: string;
-  ci: string;
   numberPhone: string;
-  active: boolean;
-  vehicles?: any[]; 
+  vehicles?: ClientVehicle[]; 
 }
 
-export interface ClientMapped extends Client {
-  name: string;
-  lastname: string;
+export interface ClientVehicle {
+  plate: string;
+  model?: { name: string };
+  typeVehicle?: { name: string };
 }
 
+// Valor inicial de Cliente
+export const InitialClient: Client = {
+  id: null,
+  ci: "",
+  names: "",
+  lastnames: "",
+  numberPhone: "",
+  vehicles: [],
+};
+
+// Formulario para agregar cliente
 export interface NewClientForm {
   form: {
     names: string;
@@ -23,17 +35,6 @@ export interface NewClientForm {
   };
   error: boolean;
   errorMsg: string;
-}
-
-export interface ClientsData {
-  data: ClientMapped[];
-  meta?: {
-    totalItems: number;
-    itemCount: number;
-    itemPerPage: number;
-    currentPage: number;
-    totalPages: number;
-  };
 }
 
 export const InitialNewClientForm: NewClientForm = {
@@ -47,15 +48,28 @@ export const InitialNewClientForm: NewClientForm = {
   errorMsg: "",
 };
 
-export const InitialClient: Client = {
-  clientId: 0,
-  names: "",
-  lastnames: "",
-  ci: "",
-  numberPhone: "",
-  active: true,
-};
+// Guardar registros de la API
+export interface ClientsData {
+  data: Item[];
+  totalClients: number | null;
+  error: boolean;
+  errorMsg: string;
+}
 
 export const InitialClientsData: ClientsData = {
-  data: [],
+  data: [] as Item[],
+  totalClients: null,
+  error: false,
+  errorMsg: "",
 };
+
+// Como llegan los datos de la API
+export interface ClientApi {
+  clientId: number;
+  names: string;
+  lastnames: string;
+  numberPhone: string;
+  ci: string;
+  active: boolean;
+  vehicles?: ClientVehicle[];
+}

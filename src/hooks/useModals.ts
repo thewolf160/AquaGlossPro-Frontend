@@ -6,6 +6,7 @@ export const useModals = () => {
     delete: false,
     edit: false,
     details: false,
+    vehicles: false
   });
 
   const toggleModal = (type: keyof typeof modals, state: boolean) => {

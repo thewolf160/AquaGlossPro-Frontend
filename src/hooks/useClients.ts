@@ -1,153 +1,186 @@
-import { useState,useCallback } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useRef } from "react";
 import { ClientService } from "../services/clients.services";
-import { formatCiForBackend, formatPhoneForBackend, transformClientData } from "../utils/clients.utils";
-import { 
-  type ClientsData, 
-  type NewClientForm, 
-  InitialClientsData, 
-  InitialNewClientForm 
+import {
+  type Client,
+  type ClientsData,
+  type NewClientForm,
+  InitialNewClientForm,
+  InitialClient,
+  InitialClientsData,
 } from "../types/clients.types";
+import { transformData } from "../utils/clients.utils";
+import axios from "axios";
 
 export const useClients = () => {
   const [clientsData, setClientsData] = useState<ClientsData>(InitialClientsData);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [newClientForm, setNewClientForm] = useState<NewClientForm>(InitialNewClientForm);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // 2. Obtener clientes
-  const getClients = useCallback(async (page: number = 1, param: string = "") => {
+  const [currentClient, setCurrentClient] = useState<Client>(InitialClient);
+  const [editClientState, setEditClientState] = useState<Client & { error?: boolean; errorMsg?: string }>(InitialClient);
+  const [changedFields, setChangedFields] = useState<Partial<Client>>({});
+  const [newClientForm, setNewClientForm] = useState<NewClientForm>(InitialNewClientForm);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  const [searchParameter, setSearchParameter] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+
+  const getClients = async (page: number = 1, currentSearch: string = "") => {
     setIsLoading(true);
     try {
       const response = await ClientService.getAll({
         page: page.toString(),
-        limit: "5",
-        param: param,
+        param: currentSearch,
       });
-      
-      const formattedData = transformClientData(response.data.data);
-      
-      setClientsData({
-        data: formattedData,
-        meta: response.data.meta,
-      });
-    } catch (error) {
-      console.error("Error al cargar clientes:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
 
+      const data = transformData(response.data.data);
 
-  const registerClient = async () => {
-    const { names, lastnames, ci, numberPhone } = newClientForm.form;
-
-    if (!names || !lastnames || !ci || !numberPhone) {
-      setNewClientForm((prev) => ({
+      setClientsData((prev) => ({
         ...prev,
-        error: true,
-        errorMsg: "Todos los campos son obligatorios",
+        data: data,
+        totalClients: response.data.meta.totalItems,
       }));
-      return false; 
-    }
 
-    setIsLoading(true);
-    try {
-      const cleanedCi = formatCiForBackend(ci);
-      const cleanedPhone = formatPhoneForBackend(numberPhone);
-
-      await ClientService.new({
-        names,
-        lastnames,
-        ci: cleanedCi,
-        numberPhone: cleanedPhone,
-      });
-
-      await getClients();
-      setNewClientForm(InitialNewClientForm);
-      return true; 
-
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        setNewClientForm((prev) => ({
-          ...prev,
-          error: true,
-          errorMsg: error.response?.data?.message || "Ocurrió un error al registrar el cliente",
-        }));
+      if (response.data.meta.totalPages) {
+        setTotalPages(response.data.meta.totalPages);
       }
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const editClient = async (
-    id: number, 
-    data: { names: string; lastnames: string; ci: string; numberPhone: string }
-  ) => {
-    setIsLoading(true);
-    try {
-      const cleanedCi = formatCiForBackend(data.ci);
-      const cleanedPhone = formatPhoneForBackend(data.numberPhone);
-
-      await ClientService.edit(id, {
-        names: data.names,
-        lastnames: data.lastnames,
-        ci: cleanedCi,
-        numberPhone: cleanedPhone,
-      });
-
-      await getClients(); 
-      return { success: true }; 
-
-    } catch (error: unknown) {
-      let msg = "Ocurrió un error al actualizar el cliente";
-      if (axios.isAxiosError(error)) {
-        msg = error.response?.data?.message || msg;
-      }
-      return { success: false, msg };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteClient = async (id: number) => {
-    setIsLoading(true);
-    try {
-      await ClientService.delete(id);
-      await getClients(); 
       return true;
     } catch (error) {
-      console.error("Error al eliminar cliente:", error);
-      return false;
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(searchParameter);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchParameter]);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      getClients(currentPage, debouncedSearch);
+      isFirstRender.current = false;
+      return;
+    }
+    getClients(currentPage, debouncedSearch);
+  }, [currentPage, debouncedSearch]);
+
+  const deleteClient = async (id: string) => {
+    setIsSubmitting(true);
+    try {
+      await ClientService.delete(id);
+      await getClients(currentPage, debouncedSearch);
+      return true;
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const registerClient = async () => {
+    setIsSubmitting(true);
+    if (!newClientForm.form.ci || !newClientForm.form.lastnames || !newClientForm.form.names || !newClientForm.form.numberPhone) {
+      setNewClientForm((prev) => ({ ...prev, error: true, errorMsg: "Todos los campos son obligatorios" }));
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await ClientService.new({
+        names: newClientForm.form.names,
+        lastnames: newClientForm.form.lastnames,
+        ci: newClientForm.form.ci,
+        numberPhone: newClientForm.form.numberPhone,
+      });
+      getClients(currentPage, debouncedSearch);
+      return true;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        setNewClientForm((prev) => ({ ...prev, error: true, errorMsg: error.response?.data.message }));
+        return;
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const editClient = async () => {
+    setIsSubmitting(true);
+    if (Object.keys(changedFields).length === 0) {
+      setEditClientState((prev) => ({ ...prev, error: true, errorMsg: "No se han detectado cambios" }));
+      setIsSubmitting(false);
+      return false;
+    }
+    if (changedFields.ci && changedFields.ci.length < 7) {
+      setEditClientState((prev) => ({ ...prev, error: true, errorMsg: "La cédula o RIF debe tener por lo menos 7 digitos" }));
+      setIsSubmitting(false);
+      return false;
+    }
+
+    try {
+      await ClientService.edit(String(editClientState.id), changedFields);
+      getClients(currentPage, debouncedSearch);
+      setChangedFields({});
+      setEditClientState((prev) => ({ ...prev, error: false, errorMsg: "" }));
+      return true;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        setEditClientState((prev) => ({ ...prev, error: true, errorMsg: error.response?.data.message }));
+        return false;
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditClientState((prev) => ({ ...prev, [name]: value, error: false, errorMsg: "" }));
+    setChangedFields((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    setNewClientForm((prev) => ({
-      ...prev,
-      form: {
-        ...prev.form,
-        [name]: value,
-      },
-      error: false, 
-      errorMsg: "",
-    }));
+    setNewClientForm((prev) => ({ ...prev, form: { ...prev.form, [name]: value }, error: false, errorMsg: "" }));
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchParameter(value);
+    setCurrentPage(1); 
   };
 
   return {
     clientsData,
     isLoading,
+    isSubmitting,
+    currentClient,
+    setCurrentClient,
+    editClientState,
+    setEditClientState,
+    handleEditChange,
+    deleteClient,
+    changedFields,
     newClientForm,
     setNewClientForm,
     handleChange,
     registerClient,
+    successMessage,
+    setSuccessMessage,
+    currentPage,
+    setCurrentPage,
+    totalPages,
     editClient,
-    deleteClient,
-    getClients,
+    handleSearchChange,
+    searchParameter,
   };
 };

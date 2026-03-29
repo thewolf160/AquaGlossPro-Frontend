@@ -1,108 +1,144 @@
-import { useState, useEffect } from "react";
+import React, {  useMemo } from "react";
+import type { Client, ClientVehicle } from "../types/clients.types";
 import Table from "../components/Table/Table";
-import type { Item } from "../types/models";
+import { type Item } from "../types/models";
+import { InitialClient, InitialNewClientForm } from "../types/clients.types";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
-import AddClientModal from "../components/client/AddClientModal";
-import DeleteClientModal from "../components/client/DeleteClientModal";
-import ClientVehiclesModal from "../components/client/ClientVehiclesModal";
-import EditClientModal from "../components/client/EditClientModal";
+import Modal from "../components/Modal/Modal";
+import Input from "../components/Modal/Input";
+import ActionButton from "../components/Modal/ActionButton";
+import Alert from "../components/Alert";
+
 import ClientCards from "../components/client/ClientCards";
+import ClientVehiclesModal from "../components/client/ClientVehiclesModal";
 
 import { useClients } from "../hooks/useClients";
-import type { ClientMapped } from "../types/clients.types";
+import { useModals } from "../hooks/useModals";
 
-export default function Clients() {
-  const { 
-    clientsData, 
-    isLoading, 
-    newClientForm, 
-    handleChange, 
-    registerClient, 
-    editClient,
+function Clients() {
+  const {
+    clientsData,
+    isLoading,
+    currentClient,
+    setCurrentClient,
+    editClientState,
+    setEditClientState,
+    handleEditChange,
     deleteClient,
-    getClients 
+    newClientForm,
+    setNewClientForm,
+    handleChange,
+    registerClient,
+    successMessage,
+    setSuccessMessage,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    editClient,
+    handleSearchChange,
+    searchParameter,
+    isSubmitting,
   } = useClients();
 
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isVehiclesModalOpen, setIsVehiclesModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
-  const [selectedClient, setSelectedClient] = useState<ClientMapped | null>(null);
+  const { modals, toggleModal } = useModals();
 
-  const [prevClientsData, setPrevClientsData] = useState(clientsData);
-  
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+const globalStats = useMemo(() => {
+  if (!clientsData.data || clientsData.data.length === 0) {
+    return { totalClients: 0, totalVehicles: 0, avgVehicles: "0", fleets: 0 };
+  } 
+  const clients = clientsData.data as Client[]; 
+  const totalClients = clientsData.totalClients || 0;
+  const totalVehicles = clients.reduce((acc, client) => acc + (client.vehicles?.length || 0), 0);
+  const avgVehicles = clients.length > 0 ? (totalVehicles / clients.length).toFixed(1) : "0";
+  const fleets = clients.filter((client) => (client.vehicles?.length || 0) >= 3).length;
 
-  const [globalStats, setGlobalStats] = useState({
-    totalClients: 0,
-    totalVehicles: 0,
-    avgVehicles: "0",
-    fleets: 0
-  });
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      getClients(currentPage, searchTerm);
-    }, 150); 
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, currentPage, getClients]);
+  return { totalClients, totalVehicles, avgVehicles, fleets };
+}, [clientsData]); 
 
   
-  if (clientsData !== prevClientsData) {
-    setPrevClientsData(clientsData); 
-    
-    if (searchTerm === "" && currentPage === 1 && clientsData.data.length > 0) {
-      const clients = clientsData.data;
-      const totalClients = clientsData.meta?.totalItems || 0; 
-      
-      const totalVehicles = clients.reduce((acc, client) => acc + (client.vehicles?.length || 0), 0);
-      const avgVehicles = clients.length > 0 ? (totalVehicles / clients.length).toFixed(1) : "0";
-      const fleets = clients.filter(client => (client.vehicles?.length || 0) >= 3).length;
-
-      setGlobalStats({ totalClients, totalVehicles, avgVehicles, fleets });
-    }
-  }
-
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1); 
-  };
+ 
 
   const handleDeleteVehicle = (plateToDelete: string) => {
-    if (selectedClient && selectedClient.vehicles) {
-      const updatedVehicles = selectedClient.vehicles.filter(
-        (vehicle) => vehicle.plate !== plateToDelete
+    if (currentClient && currentClient.vehicles) {
+      const updatedVehicles = currentClient.vehicles.filter(
+        (vehicle: ClientVehicle) => vehicle.plate !== plateToDelete
       );
-      setSelectedClient({ ...selectedClient, vehicles: updatedVehicles });
+      setCurrentClient({ ...currentClient, vehicles: updatedVehicles });
     }
   };
 
+
+  const handleOpenDelete = (item: Item) => {
+    setCurrentClient((prev) => ({ ...prev, ...item }));
+    toggleModal("delete", true);
+  };
+
+  const handleCloseDelete = () => {
+    toggleModal("delete", false);
+    setCurrentClient(InitialClient);
+  };
+
+  const handleDelete = async () => {
+    const success = await deleteClient(String(currentClient.id));
+    if (success) handleCloseDelete();
+  };
+
+  const handleOpenRegister = () => toggleModal("register", true);
+
+  const handleCloseRegister = () => {
+    toggleModal("register", false);
+    setNewClientForm(InitialNewClientForm);
+  };
+
+  const handleRegister = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const success = await registerClient();
+    if (success) {
+      handleCloseRegister();
+      setSuccessMessage("Cliente registrado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  };
+
+  const handleOpenEdit = (item: Item) => {
+    toggleModal("edit", true);
+    setEditClientState((prev) => ({ ...prev, ...item }));
+  };
+
+  const handleCloseEdit = () => {
+    toggleModal("edit", false);
+    setEditClientState(InitialClient);
+  };
+
+  const handleEdit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const success = await editClient();
+    if (success) {
+      handleCloseEdit();
+      setSuccessMessage("Cliente editado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  };
+
+  
   const columns = [
-    { key: "ci", header: "CI / RIF" },
-    { 
-      key: "fullname", 
-      header: "Nombre Completo",
-      render: (item: Item) => {
-        const client = item as unknown as ClientMapped;
-        return <span className="font-medium text-slate-800">{client.name} {client.lastname}</span>;
-      }
-    },
-    { key: "numberPhone", header: "Teléfono" },
-    { 
-      key: "vehicles", 
+    { key: "ci", header: "CI / RIF", mobile: true },
+    { key: "names", header: "Nombres", mobile: true },
+    { key: "lastnames", header: "Apellidos", mobile: true },
+    { key: "numberPhone", header: "Teléfono", mobile: false },
+    {
+      key: "vehicles",
       header: "Vehículos",
+      mobile: true,
       render: (item: Item) => {
-        const client = item as unknown as ClientMapped;
+        const client = item as any;
         const vehicleCount = client.vehicles?.length || 0;
         return (
-          <button 
+          <button
             onClick={() => {
-              setSelectedClient(client);
-              setIsVehiclesModalOpen(true);
+              setCurrentClient(client);
+              toggleModal("vehicles", true);
             }}
             className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-bold transition-colors flex items-center gap-2 mx-auto cursor-pointer"
           >
@@ -112,127 +148,152 @@ export default function Clients() {
         );
       }
     },
-    { 
-      key: "actions", 
-      header: "Acciones",
-      render: (item: Item) => {
-        const client = item as unknown as ClientMapped;
-        return (
-          <div className="flex justify-center gap-2">
-            <button 
-              onClick={() => {
-                setSelectedClient(client);
-                setIsEditModalOpen(true);
-              }}
-              className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer"
-              title="Editar Cliente"
-            >
-              <i className="bi bi-pencil-square"></i>
-            </button>
-            <button 
-              onClick={() => {
-                setSelectedClient(client);
-                setIsDeleteModalOpen(true);
-              }} 
-              className="btn bg-red-50 text-red-600 hover:bg-red-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer" 
-              title="Eliminar Cliente"
-            >
-              <i className="bi bi-trash"></i>
-            </button>
-          </div>
-        );
-      }
-    },
+    { key: "actions", header: "Acciones", mobile: true },
   ];
 
   return (
     <>
-      <div className="flex flex-col gap-6 animate-fade-in">
-        <HeaderPortal>
-          <HeaderSearch
-            searchPlaceholder="Buscar por nombre o CI..."
-            buttonText="Agregar Cliente"
-            searchTerm={searchTerm}
-            onSearchChange={handleSearch}
-            onAddClick={() => setIsRegisterModalOpen(true)}
-          />
-        </HeaderPortal>
-         
+      {successMessage && <Alert message={successMessage} />}
+      <HeaderPortal>
+        <HeaderSearch
+          searchPlaceholder="Buscar cliente por nombre o cédula..."
+          buttonText="Agregar Cliente"
+          searchTerm={searchParameter}
+          onSearchChange={handleSearchChange}
+          onAddClick={handleOpenRegister}
+        />
+      </HeaderPortal>
+      
+      <div className="flex flex-col gap-6">
+        
         <ClientCards stats={globalStats} />
 
-        <section className="shadow-md rounded-xl overflow-hidden border border-slate-300 bg-white">
-          <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-            <h2 className="font-bold text-slate-800 text-xl tracking-tight">Directorio de Clientes</h2>
+        <section className="shadow-md rounded-xl overflow-hidden border border-slate-200">
+          <div className="bg-white px-6 py-3 border-b border-slate-200">
+            <h2 className="font-bold text-slate-800 text-xl tracking-tight">
+              Directorio de Clientes
+            </h2>
+          </div>
+          <div className="relative min-h-75">
+            
+            {isLoading && (
+              <div className="absolute inset-0 z-10 bg-white/50 backdrop-blur-[1px] flex items-center justify-center rounded-b-xl">
+                <span className="loading loading-spinner loading-lg text-blue-600"></span>
+              </div>
+            )}
+            
+            <Table
+              columns={columns}
+              data={clientsData.data}
+              onDelete={handleOpenDelete}
+              onEdit={handleOpenEdit}
+            />
           </div>
           
-          <Table
-            columns={columns as any}
-            data={clientsData.data as unknown as Item[]}
-            emptyMessage={isLoading ? "Cargando clientes..." : "No hay clientes registrados."}
-          />
-
-          {clientsData.meta && clientsData.meta.totalPages > 1 && (
-            <div className="flex justify-between items-center p-4 border-t border-slate-200 bg-slate-50">
-              <span className="text-sm text-slate-500 font-medium">
-                Página {clientsData.meta.currentPage} de {clientsData.meta.totalPages} 
-                <span className="ml-2 hidden sm:inline">(Total: {clientsData.meta.totalItems} clientes)</span>
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={clientsData.meta.currentPage === 1 || isLoading}
-                  className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold text-slate-700 transition-colors"
-                >
-                  <i className="bi bi-chevron-left mr-1"></i> Anterior
-                </button>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(clientsData.meta!.totalPages, p + 1))}
-                  disabled={clientsData.meta.currentPage === clientsData.meta.totalPages || isLoading}
-                  className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold text-slate-700 transition-colors"
-                >
-                  Siguiente <i className="bi bi-chevron-right ml-1"></i>
-                </button>
-              </div>
+          <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
+            <p className="text-sm text-slate-500">
+              Página <span className="font-bold">{currentPage}</span> de{" "}
+              <span className="font-bold">{totalPages}</span>
+            </p>
+            <div className="join gap-2">
+              <button
+                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1 || isLoading}
+              >
+                <i className="bi bi-arrow-left-short text-xl" /> Anterior
+              </button>
+              <button
+                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages || isLoading}
+              >
+                Siguiente <i className="bi bi-arrow-right-short text-xl" />
+              </button>
             </div>
-          )}
+          </div>
         </section>
       </div>
 
-      <AddClientModal 
-        isOpen={isRegisterModalOpen} 
-        onClose={() => setIsRegisterModalOpen(false)} 
-        formState={newClientForm}
-        onChange={handleChange}
-        onSubmit={registerClient}
-        isLoading={isLoading}
+      <Modal
+        isOpen={modals.register}
+        onClose={handleCloseRegister}
+        title="Registro de Nuevo Cliente"
+        actions={<ActionButton type="register" isLoading={isSubmitting} form="RegisterForm" />}
+      >
+        <form className="flex flex-col gap-3" onSubmit={handleRegister} id="RegisterForm">
+          <div className="grid grid-cols-2 gap-4">
+            <Input name="names" label="Nombres:" type="text" placeholder="Ej: Juan" onChange={handleChange} value={newClientForm.form.names} />
+            <Input name="lastnames" label="Apellidos:" type="text" placeholder="Ej: Pérez" onChange={handleChange} value={newClientForm.form.lastnames} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input name="ci" label="Cédula / RIF:" type="text" placeholder="V12345678" onChange={handleChange} value={newClientForm.form.ci} icon={<i className="bi bi-person-vcard text-xl" />} />
+            <Input name="numberPhone" label="Teléfono:" type="tel" placeholder="+58-4121234567" onChange={handleChange} value={newClientForm.form.numberPhone} icon={<i className="bi bi-telephone text-xl" />} />
+          </div>
+          <div className="flex justify-center items-center h-8">
+            {newClientForm.error && (
+              <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+                {newClientForm.errorMsg}
+              </span>
+            )}
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        isOpen={modals.delete}
+        onClose={handleCloseDelete}
+        deleteText="Eliminar Cliente"
+        actions={<ActionButton type="delete" isLoading={isSubmitting} onClick={handleDelete} />}
+      >
+        <div className="pt-4">
+          <p className="text-center text-slate-700">
+            ¿Estás seguro de que deseas eliminar a{" "}
+            <span className="font-semibold text-slate-800">
+              {currentClient.names} {currentClient.lastnames}
+            </span>?
+          </p>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={modals.edit}
+        onClose={handleCloseEdit}
+        title="Editar Cliente"
+        actions={<ActionButton type="edit" isLoading={isSubmitting} form="EditForm" />}
+      >
+        <form className="flex flex-col gap-3" onSubmit={handleEdit} id="EditForm">
+          <div className="grid grid-cols-2 gap-4">
+            <Input name="names" label="Nombres:" type="text" onChange={handleEditChange} value={editClientState.names} />
+            <Input name="lastnames" label="Apellidos:" type="text" onChange={handleEditChange} value={editClientState.lastnames} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Input name="ci" label="Cédula / RIF:" type="text" onChange={handleEditChange} value={editClientState.ci} icon={<i className="bi bi-person-vcard text-xl" />} />
+            <Input name="numberPhone" label="Teléfono:" type="text" onChange={handleEditChange} value={editClientState.numberPhone} icon={<i className="bi bi-telephone text-xl" />} />
+          </div>
+          <div className="flex justify-center items-center h-8">
+            {editClientState.error && (
+              <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+                {editClientState.errorMsg}
+              </span>
+            )}
+          </div>
+        </form>
+      </Modal>
+
+      <ClientVehiclesModal 
+        isOpen={modals.vehicles || false} 
+        onClose={() => toggleModal("vehicles", false)} 
+        client={{
+          ...currentClient, 
+          name: currentClient.names, 
+          lastname: currentClient.lastnames,
+          vehicles: currentClient.vehicles || []
+        }} 
+        onDeleteVehicle={handleDeleteVehicle}
       />
-
-      {selectedClient && (
-        <>
-          <EditClientModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            editingClient={selectedClient}
-            onEdit={editClient}     
-            isLoading={isLoading}    
-          />
-
-          <DeleteClientModal 
-            isOpen={isDeleteModalOpen} 
-            onClose={() => setIsDeleteModalOpen(false)} 
-            deletingClient={selectedClient} 
-            onDelete={deleteClient}  
-            isLoading={isLoading}    
-          />
-
-          <ClientVehiclesModal 
-            isOpen={isVehiclesModalOpen} 
-            onClose={() => setIsVehiclesModalOpen(false)} 
-            client={{...selectedClient, vehicles: selectedClient.vehicles || []}} 
-            onDeleteVehicle={handleDeleteVehicle}
-          />
-        </>
-      )}
     </>
   );
 }
+
+export default Clients;

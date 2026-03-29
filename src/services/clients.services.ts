@@ -2,14 +2,14 @@ import api from "../config/api";
 import type { Client } from "../types/clients.types";
 
 interface ClientFilters {
+  active?: string;
   page?: string;
   limit?: string;
-  active?: string;
-  param?: string; 
+  param?: string;
 }
 
 export const ClientService = {
-  new: async (client: Omit<Client, "clientId" | "active">) => {
+  new: async (client: Omit<Client, "id" | "vehicles">): Promise<Client> => {
     const { data } = await api.post("/clients", client);
     return data;
   },
@@ -17,8 +17,7 @@ export const ClientService = {
   getAll: async (filters: ClientFilters) => {
     const { data } = await api.get("/clients", {
       params: {
-        page: "1",
-        limit: "10",
+        limit: "5",
         active: "true",
         ...filters,
       },
@@ -26,18 +25,13 @@ export const ClientService = {
     return data;
   },
 
-  edit: async (id: number, client: Partial<Client>) => {
-    const { data } = await api.patch(`/clients/${id}`, client);
-    return data;
-  },
-
-  delete: async (id: number) => {
+  delete: async (id: string | number) => {
     const { data } = await api.delete(`/clients/${id}`);
     return data;
   },
 
-  restore: async (id: number) => {
-    const { data } = await api.patch(`/clients/restore/${id}`);
+  edit: async (id: string, edited: Partial<Client>) => {
+    const { data } = await api.patch(`/clients/${id}`, edited);
     return data;
-  }
+  },
 };

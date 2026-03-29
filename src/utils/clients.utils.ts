@@ -1,26 +1,22 @@
-import type { Client, ClientMapped } from "../types/clients.types";
+import type { ClientApi } from "../types/clients.types";
 
-
-export const formatCiForBackend = (ci: string): string => {
-  return ci.replace(/-/g, "").replace(/\s/g, "").toUpperCase();
+const capitalizeFull = (text: string) => {
+  if (!text) return "";
+  return text
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 };
 
-
-export const formatPhoneForBackend = (phone: string): string => {
-  const cleanPhone = phone.replace(/\D/g, "");
-  
-  const baseNumber = cleanPhone.startsWith("0") 
-    ? cleanPhone.substring(1) 
-    : cleanPhone;
-
-  return `+58-${baseNumber}`;
-};
-
-
-export const transformClientData = (clients: Client[]): ClientMapped[] => {
-  return clients.map((client) => ({
-    ...client,
-    name: client.names,       
-    lastname: client.lastnames, 
-  }));
+export const transformData = (data: ClientApi[]) => {
+  return data.map((client) => {
+    return {
+      id: client.clientId,
+      ci: client.ci,
+      names: capitalizeFull(client.names),
+      lastnames: capitalizeFull(client.lastnames),
+      numberPhone: client.numberPhone,
+      vehicles: client.vehicles || [],
+    };
+  });
 };
