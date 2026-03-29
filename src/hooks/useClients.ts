@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState,useCallback } from "react";
 import axios from "axios";
 import { ClientService } from "../services/clients.services";
 import { formatCiForBackend, formatPhoneForBackend, transformClientData } from "../utils/clients.utils";
@@ -14,26 +14,30 @@ export const useClients = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [newClientForm, setNewClientForm] = useState<NewClientForm>(InitialNewClientForm);
 
-  const getClients = async () => {
+  // 2. Obtener clientes
+  const getClients = useCallback(async (page: number = 1, param: string = "") => {
     setIsLoading(true);
     try {
-      const response = await ClientService.getAll({});
-      const formattedData = transformClientData(response.data);
+      const response = await ClientService.getAll({
+        page: page.toString(),
+        limit: "5",
+        param: param,
+      });
+      
+      const formattedData = transformClientData(response.data.data);
       
       setClientsData({
         data: formattedData,
-        meta: response.meta,
+        meta: response.data.meta,
       });
     } catch (error) {
       console.error("Error al cargar clientes:", error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    getClients();
   }, []);
+  
+
 
   const registerClient = async () => {
     const { names, lastnames, ci, numberPhone } = newClientForm.form;
@@ -77,6 +81,36 @@ export const useClients = () => {
     }
   };
 
+  const editClient = async (
+    id: number, 
+    data: { names: string; lastnames: string; ci: string; numberPhone: string }
+  ) => {
+    setIsLoading(true);
+    try {
+      const cleanedCi = formatCiForBackend(data.ci);
+      const cleanedPhone = formatPhoneForBackend(data.numberPhone);
+
+      await ClientService.edit(id, {
+        names: data.names,
+        lastnames: data.lastnames,
+        ci: cleanedCi,
+        numberPhone: cleanedPhone,
+      });
+
+      await getClients(); 
+      return { success: true }; 
+
+    } catch (error: unknown) {
+      let msg = "Ocurrió un error al actualizar el cliente";
+      if (axios.isAxiosError(error)) {
+        msg = error.response?.data?.message || msg;
+      }
+      return { success: false, msg };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteClient = async (id: number) => {
     setIsLoading(true);
     try {
@@ -112,6 +146,7 @@ export const useClients = () => {
     setNewClientForm,
     handleChange,
     registerClient,
+    editClient,
     deleteClient,
     getClients,
   };

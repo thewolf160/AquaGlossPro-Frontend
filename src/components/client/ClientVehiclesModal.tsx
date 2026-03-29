@@ -1,14 +1,17 @@
 import Modal from "../Modal/Modal";
-import type { ClientData } from "../../pages/Client";
+import type { ClientMapped } from "../../types/clients.types";
 
 interface ClientVehiclesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  client: ClientData | null;
+  client: ClientMapped | null;
   onDeleteVehicle: (plate: string) => void;
 }
 
 export default function ClientVehiclesModal({ isOpen, onClose, client, onDeleteVehicle }: ClientVehiclesModalProps) {
+
+  const safeVehicles = client?.vehicles || [];
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -21,7 +24,7 @@ export default function ClientVehiclesModal({ isOpen, onClose, client, onDeleteV
       }
     >
       <div className="flex flex-col gap-3 pt-2 max-h-100 overflow-y-auto">
-        {client?.vehicles.map((vehiculo, index) => (
+        {safeVehicles.map((vehiculo, index) => (
           <div key={index} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-4 rounded-lg">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl shadow-sm">
@@ -43,7 +46,7 @@ export default function ClientVehiclesModal({ isOpen, onClose, client, onDeleteV
           </div>
         ))}
 
-        {client?.vehicles.length === 0 && (
+        {safeVehicles.length === 0 && (
           <p className="text-center text-slate-500 py-4 italic">Este cliente no tiene vehículos registrados.</p>
         )}
       </div>
