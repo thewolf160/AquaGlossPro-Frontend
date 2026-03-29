@@ -1,9 +1,9 @@
-function Purchases() {
+
+
+const Purchases = () => {
   return (
-    <>
-      <h1>Compras</h1>
-    </>
-  );
+    <div>hola</div>
+  )
 }
 
 export default Purchases;

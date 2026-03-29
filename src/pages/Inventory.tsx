@@ -3,8 +3,13 @@ import Table from "../components/Table/Table";
 import type { Item } from "../types/models";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
+import InventoryCards from "../components/inventory/InventoryCards";
+import AddProductModal from "../components/inventory/AddProductModal";
+import StockMovementModal from "../components/inventory/StockMovementModal";
+import EditProductModal from "../components/inventory/EditProductModal";
+import DeleteProductModal from "../components/inventory/DeleteProductModal";
 
-interface InventoryItem {
+export interface InventoryItem {
   id: number;
   name: string;
   category: string;
@@ -60,24 +65,6 @@ const initialInventory: InventoryItem[] = [
     unit: "Galones",
     price: 18.0,
   },
-  {
-    id: 6,
-    name: "Silicona para Tableros",
-    category: "Químicos",
-    stock: 7,
-    minStock: 5,
-    unit: "Litros",
-    price: 12.0,
-  },
-  {
-    id: 7,
-    name: "Abrillantador de Llantas",
-    category: "Químicos",
-    stock: 2,
-    minStock: 4,
-    unit: "Galones",
-    price: 22.0,
-  },
 ];
 
 export default function Inventory() {
@@ -89,9 +76,53 @@ export default function Inventory() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<InventoryItem | null>(null);
+  
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
+  };
+
+  const handleOpenStockModal = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setIsStockModalOpen(true);
+  };
+
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const handleCloseStockModal = () => {
+    setIsStockModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  const handleOpenEditModal = (item: InventoryItem) => {
+    setEditingItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleOpenDeleteModal = (item: InventoryItem) => {
+    setDeletingItem(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeletingItem(null);
   };
 
   const stats = useMemo(() => {
@@ -162,9 +193,7 @@ export default function Inventory() {
         return (
           <div className="w-full max-w-35 mx-auto flex flex-col gap-1.5">
             <div className="flex justify-between items-end">
-              <span
-                className={`font-black mr-2 text-lg leading-none text-gray-800`}
-              >
+              <span className={`font-black mr-2 text-lg leading-none text-gray-800`}>
                 {inItem.stock}
               </span>
               <span className="text-xs font-medium text-gray-500">
@@ -219,17 +248,30 @@ export default function Inventory() {
     {
       header: "Acciones",
       key: "actions",
-      render: () => {
+      render: (item: Item) => {
+        const inItem = item as unknown as InventoryItem;
         return (
           <div className="flex justify-center gap-2">
             <button
+              onClick={() => handleOpenStockModal(inItem)}
               className="btn bg-blue-50 text-blue-600 hover:bg-blue-100 border-none min-h-0 h-9 px-3"
               title="Registrar Entrada/Salida"
             >
               <i className="bi bi-arrow-left-right font-bold"></i>
             </button>
-            <button className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0">
+            <button 
+              onClick={() => handleOpenEditModal(inItem)}
+              className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0"
+              title="Editar Producto"
+            >
               <i className="bi bi-pencil-square"></i>
+            </button>
+            <button 
+              onClick={() => handleOpenDeleteModal(inItem)}
+              className="btn bg-red-50 text-red-600 hover:bg-red-100 border-none min-h-0 h-9 w-9 p-0"
+              title="Eliminar Producto"
+            >
+              <i className="bi bi-trash"></i>
             </button>
           </div>
         );
@@ -241,68 +283,16 @@ export default function Inventory() {
     <div className="space-y-6 animate-fade-in">
       <HeaderPortal>
         <HeaderSearch
-         searchPlaceholder="Buscar producto..."
+          searchPlaceholder="Buscar producto..."
           buttonText="Agregar Producto"
           searchTerm={searchTerm}
           onSearchChange={handleSearch}
-          onAddClick={() => alert("Agregar nuevo producto")}></HeaderSearch>  
+          onAddClick={() => setIsAddModalOpen(true)}
+        />
       </HeaderPortal>
-      {/* TARJETAS DE RESUMEN */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-200 flex items-center  gap-4">
-          <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
-            <i className="bi bi-box-seam"></i>
-          </div>
-          <div>
-            <p className="text-sm text-blue-700 font-medium">Total Productos</p>
-            <p className="text-2xl font-black text-blue-800">
-              {stats.totalItems}
-            </p>
-          </div>
-        </div>
+      
+      <InventoryCards stats={stats} />
 
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-green-200 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl">
-            <i className="bi bi-currency-dollar"></i>
-          </div>
-          <div>
-            <p className="text-sm text-green-700 font-medium">
-              Capital invertido
-            </p>
-            <p className="text-2xl font-black text-green-900">
-              ${stats.totalValue.toFixed(2)}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-yellow-200 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl">
-            <i className="bi bi-exclamation-triangle"></i>
-          </div>
-          <div>
-            <p className="text-sm text-yellow-700 font-medium">Stock Bajo</p>
-            <p className="text-2xl font-black text-yellow-700">
-              {stats.lowStock}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-red-200 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl">
-            <i className="bi bi-x-circle"></i>
-          </div>
-          <div>
-            <p className="text-sm text-red-700 font-medium">Agotados</p>
-            <p className="text-2xl font-black text-red-700">
-              {stats.outOfStock}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Controles y filtros */}
-
-      {/* SECCIÓN 2: Controles y Filtros */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex bg-gray-100 p-1 rounded-lg">
@@ -336,7 +326,6 @@ export default function Inventory() {
           </div>
         </div>
 
-        {/* Tabla */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1">
           <Table
             columns={columns as any}
@@ -371,6 +360,14 @@ export default function Inventory() {
           )}
         </div>
       </div>
+
+      <AddProductModal isOpen={isAddModalOpen} onClose={handleCloseAddModal} />
+
+      <StockMovementModal isOpen={isStockModalOpen} onClose={handleCloseStockModal} selectedItem={selectedItem} />
+      
+      <EditProductModal isOpen={isEditModalOpen} onClose={handleCloseEditModal} editingItem={editingItem} />
+
+      <DeleteProductModal isOpen={isDeleteModalOpen} onClose={handleCloseDeleteModal} deletingItem={deletingItem} />
     </div>
   );
 }

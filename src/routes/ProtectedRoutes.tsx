@@ -6,6 +6,7 @@ function ProtectedRoute() {
   const isAuth = localStorage.getItem("token");
 
 
+
   if (!isAuth) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
