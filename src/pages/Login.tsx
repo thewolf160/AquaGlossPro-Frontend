@@ -57,13 +57,15 @@ function Login() {
     }
 
     try {
-      await AuthService.login({
+
+      const response = await AuthService.login({
         email: formState.form.email,
         password: formState.form.password,
       });
 
-      navigate("/home", { replace: true });
+      localStorage.setItem("token", response.data.tokens)
 
+      navigate("/home", { replace: true });
     } catch (error: unknown) {
       let errorMessage = "Ocurrió un error inesperado";
 

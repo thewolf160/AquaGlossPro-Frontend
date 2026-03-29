@@ -62,7 +62,7 @@ function Modal({
 
           <div className="">{children}</div>
 
-          <div className="flex justify-end gap-8 mt-10">
+          <div className="flex justify-end gap-8 mt-5">
             <button className="btn" onClick={onClose}>
               Cerrar
             </button>
