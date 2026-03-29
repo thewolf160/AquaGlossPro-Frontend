@@ -13,6 +13,16 @@ import { useEmployees } from "../hooks/useEmployees";
 import { useModals } from "../hooks/useModals";
 import Alert from "../components/Alert";
 import type React from "react";
+import { useJobs } from "../hooks/useJobs";
+
+  const columns = [
+    { key: "ci", header: "CI", mobile: true },
+    { key: "names", header: "Nombre", mobile: true },
+    { key: "lastnames", header: "Apellido", mobile: true },
+    { key: "email", header: "Email", mobile: false },
+    { key: "numberPhone", header: "Número de Teléfono", mobile: false },
+    { key: "actions", header: "Acciones", mobile: true },
+  ];
 
 function Employees() {
   const {
@@ -29,19 +39,21 @@ function Employees() {
     handleChange,
     registerEmployee,
     successMessage,
-    setSuccessMessage
+    setSuccessMessage,
+    handleSelectChange,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    editEmployee,
+    handleSelectChangeEdit,
+    handleSearchChange,
+    searchParameter,
+    isSubmitting
   } = useEmployees();
 
-  const { modals, toggleModal } = useModals();
+  const { jobsData } = useJobs();
 
-  const columns = [
-    { key: "ci", header: "CI", mobile: true },
-    { key: "names", header: "Nombre", mobile: true },
-    { key: "lastnames", header: "Apellido", mobile: true },
-    { key: "email", header: "Email", mobile: false },
-    { key: "numberPhone", header: "Número de Teléfono", mobile: false },
-    { key: "actions", header: "Acciones", mobile: true },
-  ];
+  const { modals, toggleModal } = useModals();
 
   const handleOpenDelete = (item: Item) => {
     setCurrentEmployee((prev) => ({
@@ -59,8 +71,8 @@ function Employees() {
   };
 
   const handleDelete = async () => {
-    const success = await deleteEmployee(currentEmployee.id);
-    if (success) {
+    const success = await deleteEmployee(String(currentEmployee.id));
+    if (success) {  
       handleCloseDelete();
     }
   };
@@ -79,10 +91,10 @@ function Employees() {
     const success = await registerEmployee();
     if (success) {
       handleCloseRegister();
-      setSuccessMessage("Empleado registrado con exito")
+      setSuccessMessage("Empleado registrado con exito");
       setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
+        setSuccessMessage(null);
+      }, 3000);
     }
   };
 
@@ -109,13 +121,7 @@ function Employees() {
     toggleModal("edit", true);
     setEditEmployeeState((prev) => ({
       ...prev,
-      id: item.id,
-      ci: item.ci,
-      names: item.names,
-      lastnames: item.lastnames,
-      email: item.email,
-      numberPhone: item.numberPhone,
-      jobId: item.jobId,
+      ...item
     }));
   };
 
@@ -124,23 +130,27 @@ function Employees() {
     setEditEmployeeState(InitialEmployee);
   };
 
-  const searchTerm: string = "";
-
-  const handleSearch = () => {
-    console.log("buscando...");
-  };
+  const handleEdit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const success = await editEmployee()
+    if(success){
+      handleCloseEdit()
+      setSuccessMessage("Empleado editado con exito")
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 3000)
+    }
+  }
 
   return (
-    <>  
-    {successMessage && (
-      <Alert message={successMessage}/>
-    )}
+    <>
+      {successMessage && <Alert message={successMessage} />}
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar empleado..."
           buttonText="Agregar Empleado"
-          searchTerm={searchTerm}
-          onSearchChange={handleSearch}
+          searchTerm={searchParameter}
+          onSearchChange={handleSearchChange}
           onAddClick={handleOpenRegister}
         />
       </HeaderPortal>
@@ -151,7 +161,7 @@ function Employees() {
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
-                height="20" 
+                height="20"
                 fill="currentColor"
                 className="bi bi-people-fill text-blue-800"
                 viewBox="0 0 16 16"
@@ -164,7 +174,7 @@ function Employees() {
                 Total Empleados
               </p>
               <p className="text-2xl font-bold text-blue-900">
-                {employeesData.data.length}
+                {employeesData.totalEmployees}
               </p>
             </div>
           </div>
@@ -184,7 +194,7 @@ function Employees() {
             </div>
             <div>
               <p className="font-medium text-sm text-yellow-500">Inactivos</p>
-              <p className="text-2xl font-bold text-yellow-900">8</p>
+              <p className="text-2xl font-bold text-yellow-900">0</p>
             </div>
           </div>
         </section>
@@ -210,13 +220,24 @@ function Employees() {
             )}
           </div>
           <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
-            <p className="text-sm text-slate-500">Página 1 de 2</p>
+            <p className="text-sm text-slate-500">
+              Página <span className="font-bold">{currentPage}</span> de{" "}
+              <span className="font-bold">{totalPages}</span>
+            </p>
             <div className="join gap-2">
-              <button className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1">
+              <button
+                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1 || isLoading}
+              >
                 <i className="bi bi-arrow-left-short text-xl" />
                 Anterior
               </button>
-              <button className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1">
+              <button
+                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages || isLoading}
+              >
                 Siguiente
                 <i className="bi bi-arrow-right-short text-xl" />
               </button>
@@ -231,7 +252,7 @@ function Employees() {
         actions={
           <ActionButton
             type="register"
-            isLoading={isLoading}
+            isLoading={isSubmitting}
             form="RegisterForm"
           />
         }
@@ -291,20 +312,34 @@ function Employees() {
               value={newEmployeeForm.form.numberPhone}
               icon={<i className="bi bi-telephone text-xl" />}
             />
-            <Input
-              name="jobId"
-              label="Job:"
-              type="number"
-              onChange={handleChange}
-            />
+
+            <div className="flex flex-col gap-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Puesto de trabajo:
+              </label>
+              <select
+                className="w-full border border-slate-300 p-3 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in "
+                onChange={handleSelectChange}
+                value={newEmployeeForm.form.jobId || ""}
+              >
+                <option value="" disabled>
+                  -- Seleccione una opción --
+                </option>
+                {jobsData.data.map((job) => (
+                  <option key={job.id} value={job.id || ""}>
+                    {job.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="flex justify-center items-center h-8">
-          {newEmployeeForm.error && (
-            <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
-                    {newEmployeeForm.errorMsg}
-                  </span>
-          )}
-        </div>
+            {newEmployeeForm.error && (
+              <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+                {newEmployeeForm.errorMsg}
+              </span>
+            )}
+          </div>
         </form>
       </Modal>
       <Modal
@@ -314,7 +349,7 @@ function Employees() {
         actions={
           <ActionButton
             type="delete"
-            isLoading={isLoading}
+            isLoading={isSubmitting}
             onClick={handleDelete}
           />
         }
@@ -333,9 +368,9 @@ function Employees() {
         isOpen={modals.edit}
         onClose={handleCloseEdit}
         title="Editar Empleado"
-        actions={<ActionButton type="edit" />}
+        actions={<ActionButton type="edit" isLoading={isSubmitting} form="EditForm"/>}
       >
-        <form className="flex flex-col gap-3">
+        <form className="flex flex-col gap-3" onSubmit={handleEdit} id="EditForm">
           <div className="grid grid-cols-2 gap-4">
             <Input
               name="names"
@@ -386,6 +421,32 @@ function Employees() {
               value={editEmployeeState.numberPhone}
               icon={<i className="bi bi-telephone text-xl" />}
             />
+            <div className="flex flex-col gap-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Puesto de trabajo:
+              </label>
+              <select
+                className="w-full border border-slate-300 p-3 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in "
+                onChange={handleSelectChangeEdit}
+                value={editEmployeeState.jobId || ""}
+              >
+                <option value="" disabled>
+                  -- Seleccione una opción --
+                </option>
+                {jobsData.data.map((job) => (
+                  <option key={job.id} value={job.id || ""}>
+                    {job.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-center items-center h-8">
+            {editEmployeeState.error && (
+              <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+                {editEmployeeState.errorMsg}
+              </span>
+            )}
           </div>
         </form>
       </Modal>

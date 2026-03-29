@@ -55,12 +55,14 @@ export const InitialNewEmployeeForm: NewEmployeeForm = {
 //Guradar registros
 export interface EmployeesData {
   data: Item[];
+  totalEmployees: number | null;
   error: boolean;
   errorMsg: string;
 }
 
 export const InitialEmployeesData: EmployeesData = {
   data: [] as Item[],
+  totalEmployees: null,
   error: false,
   errorMsg: "",
 };
