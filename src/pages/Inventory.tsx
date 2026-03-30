@@ -7,7 +7,6 @@ import HeaderSearch from "../components/HeaderSearch";
 import InventoryCards from "../components/inventory/InventoryCards";
 import StockMovementModal from "../components/inventory/StockMovementModal";
 
-// Componentes Genéricos
 import Modal from "../components/Modal/Modal";
 import Input from "../components/Modal/Input";
 import ActionButton from "../components/Modal/ActionButton";
