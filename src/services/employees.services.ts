@@ -27,7 +27,7 @@ export const EmployeeService = {
     return data;
   },
 
-  delete: async (id: string | number) => {
+  delete: async (id: string) => {
     const { data } = await api.delete(`/employees/${id}`);
 
     return data;

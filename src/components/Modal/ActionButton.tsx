@@ -1,4 +1,4 @@
-type ActionType = "edit" | "delete" | "register";
+type ActionType = "edit" | "delete" | "register" | "restore";
 
 interface ButtonProps {
   type: ActionType;
@@ -9,7 +9,7 @@ interface ButtonProps {
 
 interface ButtonConfig {
   label: string;
-  icon: string;
+  icon?: string;
   color: string;
 }
 
@@ -30,6 +30,10 @@ function ActionButton({ type, onClick, isLoading = false, form }: ButtonProps) {
       icon: "bi bi-floppy-fill",
       color: "bg-blue-500 hover:bg-blue-600",
     },
+    restore: {
+      label: "Restaurar",
+      color: "bg-green-500 hover:bg-green-600"
+    }
   };
 
   const { icon, color, label } = config[type];

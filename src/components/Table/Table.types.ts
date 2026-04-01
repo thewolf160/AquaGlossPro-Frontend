@@ -15,4 +15,5 @@ export interface TableProps {
   onDelete?: (item: Item) => void;
   onEdit?: (item: Item) => void;
   onView?: (item: Item) => void;
+  onRestore?: (item: Item) => void;
 }

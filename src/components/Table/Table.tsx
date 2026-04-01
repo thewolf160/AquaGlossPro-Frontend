@@ -7,6 +7,7 @@ function Table({
   onDelete,
   onEdit,
   onView,
+  onRestore,
   emptyMessage = "No hay datos para mostrar",
 }: TableProps) {
   if (data.length === 0) {
@@ -33,16 +34,20 @@ function Table({
             {data.map((item: Item) => (
               <tr key={item.id} className="hover:bg-slate-50">
                 {columns.map((col: ColumnsProps) => (
-                  <td key={col.key} className={`px-6 py-3 text-center ${!col.mobile && "hidden md:table-cell"}`}>
+                  <td
+                    key={col.key}
+                    className={`px-6 py-3 text-center ${!col.mobile && "hidden md:table-cell"}`}
+                  >
                     {col.render ? (
                       col.render(item)
                     ) : col.key === "actions" ? (
-                      onDelete || onEdit || onView ? (
+                      onDelete || onEdit || onView || onRestore ? (
                         <div className="flex justify-center items-center gap-2">
                           {onView && (
                             <button
                               className="bg-blue-50 rounded-md p-4 text-blue-600 hover:bg-blue-100 transition-all cursor-pointer px-2.5 py-2.5"
                               onClick={() => onView(item)}
+                              title="Ver"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -59,8 +64,9 @@ function Table({
                           )}
                           {onEdit && (
                             <button
-                              className={`bg-sky-50 rounded-md p-4 text-sky-600 hover:bg-blue-100 cursor-pointer transition-all px-2.5 py-2.5 ${col.mobile && ("hidden sm:flex")}`}
+                              className={`bg-sky-50 rounded-md p-4 text-sky-600 hover:bg-blue-100 cursor-pointer transition-all px-2.5 py-2.5 ${col.mobile && "hidden sm:flex"}`}
                               onClick={() => onEdit(item)}
+                              title="Editar"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -80,8 +86,9 @@ function Table({
                           )}
                           {onDelete && (
                             <button
-                              className={`bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5 ${col.mobile && ("hidden sm:flex")}`}
+                              className={`bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5 ${col.mobile && "hidden sm:flex"}`}
                               onClick={() => onDelete(item)}
+                              title="Eliminar"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -93,6 +100,28 @@ function Table({
                               >
                                 <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
                                 <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                              </svg>
+                            </button>
+                          )}
+                          {onRestore && (
+                            <button
+                              className="bg-green-100 rounded-md text-green-500 hover:bg-green-200 transition-all cursor-pointer px-2.5 py-2.5"
+                              onClick={() => onRestore(item)}
+                              title="Restaurar"
+                            >
+                              <svg   
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill="currentColor"
+                                className="bi bi-arrow-clockwise"
+                                viewBox="0 0 16 16"
+                              >
+                                <path
+                                  fill-rule="evenodd"
+                                  d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"
+                                />
+                                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466" />
                               </svg>
                             </button>
                           )}

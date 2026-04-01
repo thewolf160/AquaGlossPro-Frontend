@@ -44,7 +44,7 @@ export default function App() {
           <Route path="services" element={<Services />} />
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />
-          <Route path="settings" element={<SettingsLayout/>}>
+          <Route path="settings">
             <Route index element={<SettingsMenu/>}/>
             <Route path="jobs" element={<Jobs/>}/>
           </Route>

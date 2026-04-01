@@ -29,6 +29,18 @@ export const InitialJobsData: JobsData = {
   errorMsg: "",
 };
 
+export interface InactiveJobsData {
+  data: Item[];
+  error: boolean;
+  errorMsg: string;
+}
+
+export const InitialInactiveJobsData: InactiveJobsData = {
+  data: [] as Item[],
+  error: false,
+  errorMsg: "",
+};
+
 export interface NewJobForm {
   form: {
     name: string;
