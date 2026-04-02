@@ -11,6 +11,8 @@ import {
 } from "../types/inventory.types";
 import { mapProductsFromApi } from "../utils/inventory.utils";
 
+export type UnifiedFilter =  "ACTIVOS" | "INACTIVOS" | "CRITICOS" | "AGOTADOS";
+
 export const useInventory = () => {
   const [productsData, setProductsData] = useState<ProductsData>(InitialProductsData);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -26,25 +28,37 @@ export const useInventory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [searchParameter, setSearchParameter] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  
+  const [activeFilter, setActiveFilter] = useState<UnifiedFilter>("ACTIVOS");
 
-  const getProducts = async (page: number = 1, currentSearch: string = "") => {
+  const getProducts = async (page: number = 1, currentSearch: string = "", filter: UnifiedFilter = "ACTIVOS") => {
     setIsLoading(true);
     try {
+      let activeParam: string | undefined = undefined;
+      if (filter === "ACTIVOS") activeParam = "true";
+      if (filter === "INACTIVOS") activeParam = "false";
+
       const response = await ProductService.getAll({
         page: page.toString(),
         param: currentSearch,
+        active: activeParam,
       });
 
-      const data = mapProductsFromApi(response.data.data);
+      const mappedData = mapProductsFromApi(response.products.data); 
+
+      let totalToDisplay = response.products.meta.totals.active;
+      if (filter === "INACTIVOS") {
+        totalToDisplay = response.products.meta.totals.inactive;
+      }
 
       setProductsData((prev) => ({
         ...prev,
-        data: data,
-        totalProducts: response.data.meta.totalItems,
+        data: mappedData,
+        totalProducts: totalToDisplay, 
       }));
 
-      if (response.data.meta.totalPages) {
-        setTotalPages(response.data.meta.totalPages);
+      if (response.products.meta.totalPages) {
+        setTotalPages(response.products.meta.totalPages);
       }
 
       return true;
@@ -66,19 +80,19 @@ export const useInventory = () => {
 
   useEffect(() => {
     if (isFirstRender.current) {
-      getProducts(currentPage, debouncedSearch);
+      getProducts(currentPage, debouncedSearch, activeFilter);
       isFirstRender.current = false;
       return;
     }
-    getProducts(currentPage, debouncedSearch);
-  }, [currentPage, debouncedSearch]);
+    getProducts(currentPage, debouncedSearch, activeFilter);
+  }, [currentPage, debouncedSearch, activeFilter]);
 
 
   const deleteProduct = async (id: string | number) => {
     setIsSubmitting(true);
     try {
       await ProductService.delete(id);
-      await getProducts(currentPage, debouncedSearch);
+      await getProducts(currentPage, debouncedSearch, activeFilter);
       return true;
     } catch (error) {
       console.error(error);
@@ -112,7 +126,7 @@ export const useInventory = () => {
         minStock: Number(newProductForm.form.minStock),
         active: true 
       });
-      getProducts(currentPage, debouncedSearch);
+      getProducts(currentPage, debouncedSearch, activeFilter);
       return true;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -141,7 +155,7 @@ export const useInventory = () => {
       if (formattedChanges.minStock) formattedChanges.minStock = Number(formattedChanges.minStock);
 
       await ProductService.edit(String(editProductState.id), formattedChanges);
-      getProducts(currentPage, debouncedSearch);
+      getProducts(currentPage, debouncedSearch, activeFilter);
       
       setChangedFields({});
       setEditProductState((prev) => ({ ...prev, error: false, errorMsg: "" }));
@@ -172,6 +186,11 @@ export const useInventory = () => {
     setCurrentPage(1); 
   };
 
+  const handleFilterChange = (newFilter: UnifiedFilter) => {
+    setActiveFilter(newFilter);
+    setCurrentPage(1);
+  };
+
   return {
     productsData,
     isLoading,
@@ -195,5 +214,7 @@ export const useInventory = () => {
     editProduct,
     handleSearchChange,
     searchParameter,
+    activeFilter,
+    handleFilterChange,
   };
 };

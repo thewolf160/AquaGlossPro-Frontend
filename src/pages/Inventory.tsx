@@ -12,7 +12,6 @@ import Input from "../components/Modal/Input";
 import ActionButton from "../components/Modal/ActionButton";
 import Alert from "../components/Alert";
 
-// Hooks
 import { useInventory } from "../hooks/useInventory";
 import { useModals } from "../hooks/useModals";
 import { InitialProduct, InitialNewProductForm } from "../types/inventory.types";
@@ -41,12 +40,12 @@ export default function Inventory() {
     handleSearchChange,
     searchParameter,
     isSubmitting,
+    activeFilter,
+    handleFilterChange,
   } = useInventory();
 
   const { modals, toggleModal } = useModals();
 
-  const [activeFilter, setActiveFilter] = useState<"TODOS" | "CRITICOS" | "AGOTADOS">("TODOS");
-  
   const [categories, setCategories] = useState<{categoryId: number, name: string}[]>([]);
 
   useEffect(() => {
@@ -61,7 +60,7 @@ export default function Inventory() {
         const productCategories = categoriesArray.filter((c: any) => c.type === 'P');
         setCategories(productCategories);
       } catch (error) {
-        console.error("Error cargando categorías:", error);
+        console.error(error);
       }
     };
     fetchCategories();
@@ -69,16 +68,22 @@ export default function Inventory() {
 
   const stats = useMemo(() => {
     if (!productsData.data || productsData.data.length === 0) {
-      return { totalValue: 0, lowStock: 0, outOfStock: 0, totalItems: 0 };
+      return { totalValue: 0, lowStock: 0, outOfStock: 0, totalItems: productsData.totalProducts || 0 };
     }
 
     const products = productsData.data as unknown as Product[];
     const totalValue = products.reduce((acc, item) => acc + (Number(item.currentStock) * Number(item.unitCostLiter)), 0);
-    const lowStock = products.filter((i) => Number(i.currentStock) > 0 && Number(i.currentStock) <= Number(i.minStock)).length;
-    const outOfStock = products.filter((i) => Number(i.currentStock) === 0).length;
+    
+    let lowStock = 0;
+    let outOfStock = 0;
+
+    if (activeFilter !== "INACTIVOS") {
+      lowStock = products.filter((i) => Number(i.currentStock) > 0 && Number(i.currentStock) <= Number(i.minStock)).length;
+      outOfStock = products.filter((i) => Number(i.currentStock) === 0).length;
+    }
     
     return { totalValue, lowStock, outOfStock, totalItems: productsData.totalProducts || 0 };
-  }, [productsData]);
+  }, [productsData, activeFilter]);
 
   const filteredItems = useMemo(() => {
     let result = productsData.data as unknown as Product[];
@@ -90,7 +95,6 @@ export default function Inventory() {
     return result;
   }, [productsData.data, activeFilter]);
 
-  // Manejadores de Modales
   const handleOpenRegister = () => toggleModal("register", true);
   const handleCloseRegister = () => {
     toggleModal("register", false);
@@ -183,8 +187,8 @@ export default function Inventory() {
             <div className="flex justify-between items-end">
               <span className="font-black mr-2 text-lg leading-none text-gray-800">{stock}</span>
               <span className="text-xs font-medium text-gray-500">
-  {unitNames[product.unitType] || product.unitType}
-</span>
+                {unitNames[product.unitType] || product.unitType}
+              </span>
             </div>
             <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
               <div className={`h-full ${colorClass} transition-all duration-500 ease-out rounded-full`} style={{ width: `${fillPercentage}%` }}></div>
@@ -258,12 +262,12 @@ export default function Inventory() {
       <InventoryCards stats={stats} />
 
       <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
-        {/* Pestañas de Filtro Rápido */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex bg-gray-100 p-1 rounded-lg">
-            <button onClick={() => { setActiveFilter("TODOS"); setCurrentPage(1); }} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "TODOS" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Todos</button>
-            <button onClick={() => { setActiveFilter("CRITICOS"); setCurrentPage(1); }} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "CRITICOS" ? "bg-white text-yellow-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Críticos</button>
-            <button onClick={() => { setActiveFilter("AGOTADOS"); setCurrentPage(1); }} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "AGOTADOS" ? "bg-white text-red-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Agotados</button>
+            <button onClick={() => handleFilterChange("ACTIVOS")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "ACTIVOS" ? "bg-white text-green-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Activos</button>
+            <button onClick={() => handleFilterChange("CRITICOS")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "CRITICOS" ? "bg-white text-yellow-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Críticos</button>
+            <button onClick={() => handleFilterChange("AGOTADOS")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "AGOTADOS" ? "bg-white text-red-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Agotados</button>
+            <button onClick={() => handleFilterChange("INACTIVOS")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "INACTIVOS" ? "bg-white text-slate-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Inactivos</button>
           </div>
         </div>
 
