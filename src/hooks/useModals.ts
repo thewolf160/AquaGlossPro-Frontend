@@ -7,7 +7,8 @@ export const useModals = () => {
     edit: false,
     details: false,
     vehicles: false,
-    stockMovement: false
+    stockMovement: false,
+    restore: false,
   });
 
   const toggleModal = (type: keyof typeof modals, state: boolean) => {

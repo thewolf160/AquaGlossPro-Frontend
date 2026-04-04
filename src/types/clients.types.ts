@@ -6,26 +6,27 @@ export interface Client extends Item {
   names: string;
   lastnames: string;
   numberPhone: string;
+  countVehicles?: number; 
   vehicles?: ClientVehicle[]; 
 }
 
 export interface ClientVehicle {
+  id?: number;
   plate: string;
   model?: { name: string };
   typeVehicle?: { name: string };
 }
 
-// Valor inicial de Cliente
 export const InitialClient: Client = {
   id: null,
   ci: "",
   names: "",
   lastnames: "",
   numberPhone: "",
+  countVehicles: 0, 
   vehicles: [],
 };
 
-// Formulario para agregar cliente
 export interface NewClientForm {
   form: {
     names: string;
@@ -48,7 +49,6 @@ export const InitialNewClientForm: NewClientForm = {
   errorMsg: "",
 };
 
-// Guardar registros de la API
 export interface ClientsData {
   data: Item[];
   totalClients: number | null;
@@ -63,7 +63,6 @@ export const InitialClientsData: ClientsData = {
   errorMsg: "",
 };
 
-// Como llegan los datos de la API
 export interface ClientApi {
   clientId: number;
   names: string;
@@ -71,5 +70,27 @@ export interface ClientApi {
   numberPhone: string;
   ci: string;
   active: boolean;
+  countVehicles?: number; 
   vehicles?: ClientVehicle[];
+}
+
+export interface BackendVehicle {
+  vehicleId: number;
+  plate: string;
+  active: boolean;
+  typeVehicle?: {
+    typeVehicleId: number;
+    name: string;
+    active: boolean;
+  };
+}
+
+export interface BackendGroupedClient {
+  clientId: number;
+  names: string;
+  lastnames: string;
+  ci: string;
+  numberPhone: string;
+  active: boolean;
+  vehicles: BackendVehicle[];
 }

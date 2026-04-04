@@ -15,6 +15,7 @@ export const useClients = () => {
   const [clientsData, setClientsData] = useState<ClientsData>(InitialClientsData);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  
 
   const [currentClient, setCurrentClient] = useState<Client>(InitialClient);
   const [editClientState, setEditClientState] = useState<Client & { error?: boolean; errorMsg?: string }>(InitialClient);
@@ -27,27 +28,27 @@ export const useClients = () => {
   
   const [searchParameter, setSearchParameter] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  const [isActiveView, setIsActiveView] = useState<boolean>(true);
 
-  const getClients = async (page: number = 1, currentSearch: string = "") => {
+  const getClients = async (page: number = 1, currentSearch: string = "", activeStatus: boolean = true) => {
     setIsLoading(true);
     try {
       const response = await ClientService.getAll({
         page: page.toString(),
         param: currentSearch,
+        active: activeStatus.toString(), 
       });
 
       const data = transformData(response.data.data);
-
       setClientsData((prev) => ({
         ...prev,
         data: data,
-        totalClients: response.data.meta.totalItems,
+        totalClients: response.data.meta.totals.general, 
       }));
 
       if (response.data.meta.totalPages) {
         setTotalPages(response.data.meta.totalPages);
       }
-
       return true;
     } catch (error) {
       console.error(error);
@@ -67,12 +68,33 @@ export const useClients = () => {
 
   useEffect(() => {
     if (isFirstRender.current) {
-      getClients(currentPage, debouncedSearch);
+      getClients(currentPage, debouncedSearch, isActiveView);
       isFirstRender.current = false;
       return;
     }
-    getClients(currentPage, debouncedSearch);
-  }, [currentPage, debouncedSearch]);
+    getClients(currentPage, debouncedSearch, isActiveView);
+  }, [currentPage, debouncedSearch, isActiveView]);
+
+ const toggleActiveView = (view: boolean) => {
+    setIsActiveView(view);
+    setCurrentPage(1); 
+    
+    setClientsData((prev) => ({ ...prev, data: [] }));
+  };
+
+  const restoreClient = async (id: string) => {
+    setIsSubmitting(true);
+    try {
+      await ClientService.restore(id);
+      await getClients(currentPage, debouncedSearch, isActiveView); // Recargamos la tabla
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const deleteClient = async (id: string) => {
     setIsSubmitting(true);
@@ -182,5 +204,8 @@ export const useClients = () => {
     editClient,
     handleSearchChange,
     searchParameter,
+    isActiveView,
+    toggleActiveView,
+    restoreClient,
   };
 };

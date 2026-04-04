@@ -1,12 +1,12 @@
 import Modal from "../Modal/Modal";
 import ActionButton from "../Modal/ActionButton";
-import type { ClientMapped } from "../../types/clients.types";
+import type { Client } from "../../types/clients.types";
 
 interface DeleteClientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  deletingClient: ClientMapped | null;
-  onDelete: (id: number) => Promise<boolean>; // Función inyectada
+  deletingClient: Client | null; 
+  onDelete: (id: number) => Promise<boolean>; 
   isLoading: boolean;
 }
 
@@ -19,10 +19,9 @@ export default function DeleteClientModal({
 }: DeleteClientModalProps) {
   
   const handleDelete = async () => {
-    if (!deletingClient) return;
+    if (!deletingClient?.id) return;
     
-    // Llamamos a la API con el ID real de la base de datos
-    const success = await onDelete(deletingClient.clientId);
+    const success = await onDelete(Number(deletingClient.id));
     if (success) {
       onClose();
     }
@@ -39,12 +38,11 @@ export default function DeleteClientModal({
         <p className="text-slate-600 text-lg">
           ¿Estás seguro que deseas eliminar al cliente <br />
           <span className="font-bold text-slate-800">
-            {deletingClient?.name} {deletingClient?.lastname}
+            {deletingClient?.names} {deletingClient?.lastnames}
           </span>?
         </p>
-        <p className="text-sm text-red-500 mt-4 bg-red-50 p-3 rounded-md border border-red-100">
-          <i className="bi bi-exclamation-circle-fill mr-2"></i>
-          Esta acción no se puede deshacer. Se mantendrá un registro histórico en la base de datos, pero el cliente ya no será visible en el directorio.
+        <p className="text-sm text-red-500 mt-2">
+          Esta acción enviará al cliente a la papelera.
         </p>
       </div>
     </Modal>

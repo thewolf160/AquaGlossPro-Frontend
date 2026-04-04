@@ -18,8 +18,8 @@ export const ClientService = {
     const { data } = await api.get("/clients", {
       params: {
         limit: "5",
-        active: "true",
-        ...filters,
+        active: "true", 
+        ...filters,     
       },
     });
     return data;
@@ -34,4 +34,21 @@ export const ClientService = {
     const { data } = await api.patch(`/clients/${id}`, edited);
     return data;
   },
+
+  restore: async (id: string | number) => {
+    const { data } = await api.patch(`/clients/restore/${id}`);
+    return data;
+  },
+
+  getClientVehicles: async (names: string) => {
+    const { data } = await api.get("/vehicles", {
+      params: { limit: "100", active: "true", param: names },
+    });
+    return data;
+  },
+
+  deleteVehicle: async (vehicleId: number) => {
+    const { data } = await api.delete(`/vehicles/${vehicleId}`);
+    return data;
+  }
 };
