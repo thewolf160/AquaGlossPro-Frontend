@@ -166,7 +166,6 @@ function Clients() {
             return { success: false, msg: "Ocurrió un error inesperado al editar" };
     }
   };
-  // --- RESTAURAR ---
   const handleOpenRestore = (client: Client) => {
     setClientToRestore(client);
     toggleModal("restore", true);
@@ -244,7 +243,7 @@ function Clients() {
       </HeaderPortal>
       
       <div className="flex flex-col gap-6">
-        <ClientCards stats={globalStats} />
+       <ClientCards stats={globalStats} isActiveView={isActiveView} />
 
         <section className="shadow-md rounded-xl overflow-hidden border border-slate-200">
           <div className="bg-white px-6 py-3 border-b border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
