@@ -7,14 +7,16 @@ import HeaderSearch from "../components/HeaderSearch";
 import InventoryCards from "../components/inventory/InventoryCards";
 import StockMovementModal from "../components/inventory/StockMovementModal";
 
-import Modal from "../components/Modal/Modal";
-import Input from "../components/Modal/Input";
-import ActionButton from "../components/Modal/ActionButton";
+import AddProductModal from "../components/inventory/AddProductModal";
+import EditProductModal from "../components/inventory/EditProductModal";
+import DeleteProductModal from "../components/inventory/DeleteProductModal";
+import RestoreProductModal from "../components/inventory/RestoreClientModal"; 
+
 import Alert from "../components/Alert";
 
 import { useInventory } from "../hooks/useInventory";
 import { useModals } from "../hooks/useModals";
-import { InitialProduct, InitialNewProductForm } from "../types/inventory.types";
+import { InitialProduct, InitialNewProductForm, type InventoryCategory } from "../types/inventory.types";
 import api from "../config/api";
 
 export default function Inventory() {
@@ -42,22 +44,24 @@ export default function Inventory() {
     isSubmitting,
     activeFilter,
     handleFilterChange,
+    restoreProduct,
   } = useInventory();
 
   const { modals, toggleModal } = useModals();
 
   const [categories, setCategories] = useState<{categoryId: number, name: string}[]>([]);
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await api.get('/categories', {
           params: { active: "true", limit: "100" } 
         });
         
-        const categoriesArray = response.data.data.data; 
+        const categoriesArray: InventoryCategory[] = response.data.data.data; 
         
-        const productCategories = categoriesArray.filter((c: any) => c.type === 'P');
+        const productCategories = categoriesArray.filter((c) => c.type === 'P');
+        
         setCategories(productCategories);
       } catch (error) {
         console.error(error);
@@ -150,6 +154,22 @@ export default function Inventory() {
     U: "Unidades"
   };
 
+  const handleOpenRestore = (product: Product) => {
+    setCurrentProduct(product);
+    toggleModal("restore", true);
+  };
+
+  const handleRestoreConfirm = async (id: string) => {
+    const success = await restoreProduct(id);
+    if (success) {
+      toggleModal("restore", false);
+      setSuccessMessage("Producto reactivado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+      return true;
+    }
+    return false;
+  };
+
   const columns = [
     {
       header: "Producto",
@@ -215,34 +235,47 @@ export default function Inventory() {
         return <span className="font-bold text-gray-900">${totalValue.toFixed(2)}</span>;
       },
     },
-    {
-      header: "Acciones",
-      key: "actions",
-      mobile: true,
-      render: (item: Item) => {
-        const product = item as unknown as Product;
-        return (
-          <div className="flex justify-center gap-2">
-            <button
-              onClick={() => {
-                setCurrentProduct(product);
-                toggleModal("stockMovement", true);
-              }}
-              className="btn bg-blue-50 text-blue-600 hover:bg-blue-100 border-none min-h-0 h-9 px-3 cursor-pointer"
-              title="Registrar Entrada/Salida"
-            >
-              <i className="bi bi-arrow-left-right font-bold"></i>
-            </button>
-            <button onClick={() => handleOpenEdit(item)} className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer" title="Editar Producto">
-              <i className="bi bi-pencil-square"></i>
-            </button>
-            <button onClick={() => handleOpenDelete(item)} className="btn bg-red-50 text-red-600 hover:bg-red-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer" title="Eliminar Producto">
-              <i className="bi bi-trash"></i>
-            </button>
-          </div>
-        );
-      },
-    },
+    ...(activeFilter !== "INACTIVOS" ? [
+     {
+        header: "Acciones",
+        key: "actions",
+        mobile: true,
+        render: (item: Item) => {
+          const product = item as unknown as Product;
+
+          return (
+            <div className="flex justify-center gap-2">
+              <button 
+                onClick={() => { 
+                  setCurrentProduct(product); 
+                  toggleModal("stockMovement", true); 
+                }} 
+                className="btn bg-blue-50 text-blue-600 h-9 px-3 cursor-pointer"
+              >
+                <i className="bi bi-arrow-left-right"></i>
+              </button>
+              <button onClick={() => handleOpenEdit(item)} className="btn bg-sky-50 text-sky-600 h-9 w-9 p-0 cursor-pointer">
+                <i className="bi bi-pencil-square"></i>
+              </button>
+              <button onClick={() => handleOpenDelete(item)} className="btn bg-red-50 text-red-600 h-9 w-9 p-0 cursor-pointer">
+                <i className="bi bi-trash"></i>
+              </button>
+            </div>
+          );
+        }
+      }
+    ] : [
+      {
+        header: "Acciones",
+        key: "restore",
+        mobile: true,
+        render: (item: Item) => (
+          <button onClick={() => handleOpenRestore(item as unknown as Product)} className="px-3 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer mx-auto">
+            <i className="bi bi-arrow-clockwise"></i> Reactivar
+          </button>
+        )
+      }
+    ])
   ];
 
   return (
@@ -259,7 +292,7 @@ export default function Inventory() {
         />
       </HeaderPortal>
       
-      <InventoryCards stats={stats} />
+<InventoryCards stats={stats} activeFilter={activeFilter} />
 
       <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -308,107 +341,46 @@ export default function Inventory() {
         </div>
       </section>
 
-      <Modal
+      <AddProductModal
         isOpen={modals.register}
         onClose={handleCloseRegister}
-        title="Registro de Nuevo Producto"
-        actions={<ActionButton type="register" isLoading={isSubmitting} form="RegisterForm" />}
-      >
-        <form className="flex flex-col gap-3" onSubmit={handleRegister} id="RegisterForm">
-          <Input name="name" label="Nombre del Producto:" type="text" onChange={handleChange} value={newProductForm.form.name} />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-slate-700">Categoría:</label>
-              <select name="categoryId" onChange={handleChange} value={newProductForm.form.categoryId || ""} className="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="" disabled>Seleccione...</option>
-                {categories.map(c => (
-                  <option key={c.categoryId} value={c.categoryId}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-slate-700">Tipo de Unidad:</label>
-              <select name="unitType" onChange={handleChange} value={newProductForm.form.unitType} className="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="" disabled>Seleccione...</option>
-                <option value="L">Litros (L)</option>
-                <option value="G">Galones (G)</option>
-                <option value="U">Unidades (U)</option>
-              </select>
-            </div>
-          </div>
+        formState={newProductForm}
+        categories={categories}
+        onChange={handleChange}
+        onSubmit={handleRegister}
+        isLoading={isSubmitting}
+      />
 
-          <div className="grid grid-cols-3 gap-4">
-            <Input name="unitCostLiter" label="Costo/Precio:" type="number" onChange={handleChange} value={String(newProductForm.form.unitCostLiter)} />
-            <Input name="currentStock" label="Stock Inicial:" type="number" onChange={handleChange} value={String(newProductForm.form.currentStock)} />
-            <Input name="minStock" label="Stock Mínimo:" type="number" onChange={handleChange} value={String(newProductForm.form.minStock)} />
-          </div>
-          
-          <div className="flex justify-center items-center h-8">
-            {newProductForm.error && <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">{newProductForm.errorMsg}</span>}
-          </div>
-        </form>
-      </Modal>
+      <EditProductModal
+  isOpen={modals.edit}
+  onClose={handleCloseEdit}
+  editingProduct={editProductState}
+  categories={categories}
+  onChange={handleEditChange}  
+  onSubmit={handleEditSubmit}  
+  isLoading={isSubmitting}
+/>
 
-      <Modal
-        isOpen={modals.edit}
-        onClose={handleCloseEdit}
-        title="Editar Producto"
-        actions={<ActionButton type="edit" isLoading={isSubmitting} form="EditForm" />}
-      >
-        <form className="flex flex-col gap-3" onSubmit={handleEditSubmit} id="EditForm">
-          <Input name="name" label="Nombre del Producto:" type="text" onChange={handleEditChange} value={editProductState.name} />
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-slate-700">Categoría:</label>
-              <select name="categoryId" onChange={handleEditChange} value={editProductState.categoryId || ""} className="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="" disabled>Seleccione...</option>
-                {categories.map(c => (
-                  <option key={c.categoryId} value={c.categoryId}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-slate-700">Tipo de Unidad:</label>
-              <select name="unitType" onChange={handleEditChange} value={editProductState.unitType} className="w-full h-10 px-3 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="" disabled>Seleccione...</option>
-                <option value="L">Litros (L)</option>
-                <option value="G">Galones (G)</option>
-                <option value="U">Unidades (U)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <Input name="unitCostLiter" label="Costo/Precio:" type="number" onChange={handleEditChange} value={String(editProductState.unitCostLiter)} />
-            <Input name="currentStock" label="Stock Actual:" type="number" onChange={handleEditChange} value={String(editProductState.currentStock)} />
-            <Input name="minStock" label="Stock Mínimo:" type="number" onChange={handleEditChange} value={String(editProductState.minStock)} />
-          </div>
-          
-          <div className="flex justify-center items-center h-8">
-            {editProductState.error && <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">{editProductState.errorMsg}</span>}
-          </div>
-        </form>
-      </Modal>
-
-      <Modal
+      <DeleteProductModal
         isOpen={modals.delete}
         onClose={handleCloseDelete}
-        deleteText="Eliminar Producto"
-        actions={<ActionButton type="delete" isLoading={isSubmitting} onClick={handleDelete} />}
-      >
-        <div className="pt-4">
-          <p className="text-center text-slate-700">
-            ¿Estás seguro de que deseas eliminar el producto <span className="font-semibold text-slate-800">{currentProduct.name}</span>?
-          </p>
-        </div>
-      </Modal>
+        deletingProduct={currentProduct}
+        onDelete={handleDelete}
+        isLoading={isSubmitting}
+      />
+
+      <RestoreProductModal
+        isOpen={modals.restore || false}
+        onClose={() => toggleModal("restore", false)}
+        restoringProduct={currentProduct}
+        onRestore={handleRestoreConfirm}
+        isLoading={isSubmitting}
+      />
 
       <StockMovementModal 
         isOpen={modals.stockMovement || false} 
         onClose={() => toggleModal("stockMovement", false)} 
-        selectedItem={currentProduct as any} 
+        selectedItem={currentProduct} 
       />
     </div>
   );

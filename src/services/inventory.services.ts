@@ -34,4 +34,9 @@ export const ProductService = {
     const { data } = await api.patch(`/products/${id}`, edited);
     return data;
   },
+
+  restore: async (id: string | number) => {
+    const { data } = await api.patch(`/products/restore/${id}`);
+    return data;
+  },
 };

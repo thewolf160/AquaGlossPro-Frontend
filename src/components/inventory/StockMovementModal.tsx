@@ -1,9 +1,8 @@
 import { useState, useMemo } from "react";
 import Modal from "../Modal/Modal";
-import type { InventoryItem } from "../../pages/Inventory";
-
+import type { Product } from "../../types/inventory.types";
 type StockMovementModalProps = {
-  selectedItem: InventoryItem | null;
+  selectedItem: Product | null;
   isOpen: boolean;
   onClose: () => void;
 };
@@ -55,7 +54,6 @@ export default function StockMovementModal({ isOpen, onClose, selectedItem }: St
     >
       {selectedItem && (
         <div className="flex flex-col gap-5 pt-2">
-          {/* Tarjeta de información del producto */}
           <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-center justify-between shadow-sm">
             <div>
               <p className="text-sm text-slate-500 font-medium">Producto consultado</p>
@@ -69,7 +67,6 @@ export default function StockMovementModal({ isOpen, onClose, selectedItem }: St
             </div>
           </div>
 
-          {/* SECCIÓN DE FILTROS */}
           <div className="bg-white border border-gray-200 p-3 rounded-lg space-y-3 shadow-sm">
             <div className="flex justify-between items-center">
               <h4 className="text-sm font-bold text-slate-700">Filtros de búsqueda</h4>
@@ -116,7 +113,6 @@ export default function StockMovementModal({ isOpen, onClose, selectedItem }: St
             </div>
           </div>
 
-          {/* LISTA DE MOVIMIENTOS */}
           <div className="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1">
             {filteredMovements.length > 0 ? (
               filteredMovements.map((mov) => (

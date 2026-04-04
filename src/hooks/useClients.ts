@@ -40,13 +40,21 @@ export const useClients = () => {
       });
 
       const data = transformData(response.data.data);
+      let totalToDisplay = response.data.meta.totals.general; 
+      
+      if (response.data.meta.totals.active !== undefined) {
+         totalToDisplay = activeStatus 
+            ? response.data.meta.totals.active 
+            : response.data.meta.totals.inactive;
+      }
+
       setClientsData((prev) => ({
         ...prev,
         data: data,
-        totalClients: response.data.meta.totals.general, 
+        totalClients: totalToDisplay, 
       }));
 
-      if (response.data.meta.totalPages) {
+      if (response.data.meta.totals.totalPages) { 
         setTotalPages(response.data.meta.totalPages);
       }
       return true;
@@ -86,7 +94,7 @@ export const useClients = () => {
     setIsSubmitting(true);
     try {
       await ClientService.restore(id);
-      await getClients(currentPage, debouncedSearch, isActiveView); // Recargamos la tabla
+      await getClients(currentPage, debouncedSearch, isActiveView); 
       return true;
     } catch (error) {
       console.error(error);

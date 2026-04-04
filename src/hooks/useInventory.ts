@@ -35,13 +35,17 @@ export const useInventory = () => {
     setIsLoading(true);
     try {
       let activeParam: string | undefined = undefined;
-      if (filter === "ACTIVOS") activeParam = "true";
+      if (filter === "ACTIVOS" || filter === "CRITICOS" || filter === "AGOTADOS") activeParam = "true";
       if (filter === "INACTIVOS") activeParam = "false";
+
+      // Aumentamos el límite de resultados para que el filtro local tenga margen de maniobra
+      const limitParam = (filter === "CRITICOS" || filter === "AGOTADOS") ? "100" : "5";
 
       const response = await ProductService.getAll({
         page: page.toString(),
         param: currentSearch,
         active: activeParam,
+        limit: limitParam,
       });
 
       const mappedData = mapProductsFromApi(response.products.data); 
@@ -96,6 +100,20 @@ export const useInventory = () => {
       return true;
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const restoreProduct = async (id: string | number) => {
+    setIsSubmitting(true);
+    try {
+      await ProductService.restore(id);
+      await getProducts(currentPage, debouncedSearch, activeFilter);
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -201,6 +219,7 @@ export const useInventory = () => {
     setEditProductState,
     handleEditChange,
     deleteProduct,
+    restoreProduct, 
     changedFields,
     newProductForm,
     setNewProductForm,
