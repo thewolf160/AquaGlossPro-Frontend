@@ -23,11 +23,8 @@ const menuItems: SidebarItem[] = [
   { path: "/sales", label: "Ventas", icon: "bi bi-currency-dollar" },
   { path: "/roles", label: "Roles y Acceso", icon: "bi bi-key" },
   {path: "/settings", label: "Ajustes", icon: "bi bi-gear"},
-    { path: "/reports", label: "Reportes", icon: "bi bi-graph-up" }
-
-
+  { path: "/reports", label: "Reportes", icon: "bi bi-graph-up" },
 ];
-
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
