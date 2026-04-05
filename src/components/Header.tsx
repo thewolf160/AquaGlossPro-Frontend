@@ -9,6 +9,7 @@ const routeTitles: Record<string, string> = {
   "/services": "Servicios y Lavados",
   "/sales": "Ventas",
   "/roles": "Roles y Acceso",
+  "/reports": "Reportes",
 };
 
 interface HeaderProps {
@@ -22,7 +23,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="bg-blue-600 text-white shadow-md sticky top-0 z-30">
       <div className="flex items-center px-6 py-4 gap-4">
-        
         <button
           onClick={onMenuClick}
           className="md:hidden p-1 rounded hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
@@ -32,15 +32,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </button>
 
         <div className="flex-1 flex items-center w-full">
-        
-          <div id="custom-header-portal" className="peer empty:hidden w-full flex justify-end"></div>
-          
-      
+          <div
+            id="custom-header-portal"
+            className="peer empty:hidden w-full flex justify-end"
+          ></div>
+
           <h1 className="text-lg font-bold tracking-wide peer-empty:block hidden">
             {currentTitle}
           </h1>
         </div>
-        
       </div>
     </header>
   );
