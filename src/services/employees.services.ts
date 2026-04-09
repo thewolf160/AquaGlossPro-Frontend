@@ -19,11 +19,10 @@ export const EmployeeService = {
     const { data } = await api.get("/employees", {
       params: {
         limit: "5",
-        active: "true",
         ...filters,
       },
     });
-    console.log(data);
+
     return data;
   },
 
@@ -35,6 +34,12 @@ export const EmployeeService = {
 
   edit: async (id: string, edited: Partial<Employee>) => {
     const { data } = await api.patch(`/employees/${id}`, edited);
+
+    return data;
+  },
+
+  restore: async (id: string) => {
+    const { data } = await api.patch(`/employees/restore/${id}`);
 
     return data;
   },

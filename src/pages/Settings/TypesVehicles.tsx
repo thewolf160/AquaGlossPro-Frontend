@@ -1,46 +1,45 @@
-import type React from "react";
-import { useJobs } from "../../hooks/useJobs";
+import { useNavigate } from "react-router-dom";
+import { useTypesVehicles } from "../../hooks/useTypesVehicles";
+import type { Item } from "../../types/models";
 import { useModals } from "../../hooks/useModals";
-import { InitialJob, InitialNewJobForm } from "../../types/jobs.types";
 import Modal from "../../components/Modal/Modal";
+import Table from "../../components/Table/Table";
+import {
+  InitialNewTypeVehicleForm,
+  InitialTypeVehicle
+} from "../../types/typesVehicles.type";
 import Input from "../../components/Modal/Input";
 import ActionButton from "../../components/Modal/ActionButton";
-import { useNavigate } from "react-router-dom";
-import Table from "../../components/Table/Table";
-import type { Item } from "../../types/models";
 import Alert from "../../components/Alert";
 
 const columns = [
-  { key: "name", header: "Nombre", mobile: true },
-  { key: "actions", header: "Acciones", mobile: true },
-];
+  {key: "name", header: "Nombre", mobile: true},
+  {key: "actions", header: "Acciones", mobile: true}
+]
 
-function Jobs() {
+function TypesVehicles() {
   const {
-    jobsData,
-    newJobForm,
-    setNewJobForm,
-    registerJob,
-    handleChange,
+    typesVehiclesData,
     isLoading,
-    currentJob,
-    setCurrentJob,
-    deleteJob,
-    inactiveJobsData,
-    restoreJob,
+    isSubmitting,
+    handleChange,
+    registerTypeVehicle,
+    setNewTypeVehicleForm,
+    newTypeVehicleForm,
     successMessage,
     setSuccessMessage,
-    changedFields,
-    handleEditChange,
-    setChangedFields,
-    isSubmitting,
-    editJob,
     error,
     setError,
-    totalPages,
-    setCurrentPage,
-    currentPage,
-  } = useJobs();
+    deleteTypeVehicle,
+    currentTypeVehicle,
+    setCurrentTypeVehicle,
+    setChangedFields,
+    editTypeVehicle,
+    changedFields,
+    handleEditChange,
+    inactiveTypesVehicleData,
+    restoreTypeVehicle
+  } = useTypesVehicles();
 
   const { modals, toggleModal } = useModals();
 
@@ -50,12 +49,13 @@ function Jobs() {
 
   const handleCloseRegister = () => {
     toggleModal("register", false);
-    setNewJobForm(InitialNewJobForm);
+    setNewTypeVehicleForm(InitialNewTypeVehicleForm);
+    setError({ active: false, msg: "" });
   };
 
   const handleRegister = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const success = await registerJob();
+    const success = await registerTypeVehicle();
     if (success) {
       handleCloseRegister();
       setSuccessMessage("Registrado con Éxito");
@@ -65,23 +65,21 @@ function Jobs() {
     }
   };
 
-  const handleOpenDelete = (job: Item) => {
+  const handleOpenDelete = (item: Item) => {
     toggleModal("delete", true);
-    setCurrentJob((prev) => ({
-      ...prev,
-      id: job.id,
-      name: job.name,
-      baseSalary: job.baseSalary,
-    }));
+    setCurrentTypeVehicle({
+      id: item.id,
+      name: item.name,
+    });
   };
 
   const handleCloseDelete = () => {
     toggleModal("delete", false);
-    setCurrentJob(InitialJob);
+    setCurrentTypeVehicle(InitialTypeVehicle);
   };
 
   const handleDelete = async () => {
-    const success = await deleteJob(String(currentJob.id));
+    const success = await deleteTypeVehicle();
     if (success) {
       handleCloseDelete();
       setSuccessMessage("Eliminado con Éxito");
@@ -91,70 +89,61 @@ function Jobs() {
     }
   };
 
-  const handleOpenRestore = (job: Item) => {
-    toggleModal("restore", true);
-    setCurrentJob((prev) => ({
-      ...prev,
-      id: job.id,
-      name: job.name,
-    }));
-  };
-
-  const handleCloseRestore = () => {
-    toggleModal("restore", false);
-    setCurrentJob(InitialJob);
-  };
-
-  const handleRestore = async () => {
-    const success = await restoreJob(String(currentJob.id));
-    if (success) {
-      handleCloseRestore();
-      setSuccessMessage("Restaurado con Éxito");
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
-    }
-  };
-
   const handleOpenEdit = (item: Item) => {
     toggleModal("edit", true);
-    setCurrentJob((prev) => ({
-      ...prev,
-      id: item.id,
-      name: item.name,
-      baseSalary: item.baseSalary,
-    }));
+    setCurrentTypeVehicle({ id: item.id, name: item.name });
   };
 
   const handleCloseEdit = () => {
-    toggleModal("edit", false);
-    setCurrentJob(InitialJob);
-    setChangedFields({});
-    setError({ active: false, msg: "" });
-  };
+    toggleModal("edit", false)
+    setCurrentTypeVehicle(InitialTypeVehicle)
+    setChangedFields({})
+    setError({active: false, msg: ""})
+  }
 
   const handleEdit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const success = await editJob();
-    if (success) {
-      handleCloseEdit();
-      setSuccessMessage("Editado con Éxito");
+    e.preventDefault()
+    const success = await editTypeVehicle()
+    if(success){
+      handleCloseEdit()
+      setSuccessMessage("Editado con Éxito")
       setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
+        setSuccessMessage(null)
+      }, 3000)
     }
-  };
+  }
+
+  const handleOpenRestore = (item: Item) => {
+    toggleModal("restore", true)
+    setCurrentTypeVehicle({id: item.id, name: item.name})
+  }
+
+  const handleCloseRestore = () => {
+    toggleModal("restore", false)
+    setCurrentTypeVehicle(InitialTypeVehicle)
+  }
+
+  const handleRestore = async () => {
+    const success = await restoreTypeVehicle()
+    if(success){
+      handleCloseRestore()
+      setCurrentTypeVehicle(InitialTypeVehicle)
+      setSuccessMessage("Restaurado con  Éxito")
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 3000)
+    }
+  }
 
   const navigate = useNavigate();
-
   return (
     <>
       {successMessage && <Alert message={successMessage} />}
       <div className="space-y-6">
         <div className="flex justify-between">
-          <h1 className="text-3xl font-bold text-slate-900">
-            Puestos de Trabajo
-          </h1>
+          <h2 className="text-3xl font-bold  text-slate-900">
+            Tipos de Vehículos
+          </h2>
           <div className="flex flex-col md:flex-row gap-2">
             <button
               className="btn bg-white rounded-lg"
@@ -179,44 +168,34 @@ function Jobs() {
             </div>
           ) : (
             <>
-              {jobsData.data.map((job: Item) => (
+              {typesVehiclesData.data.map((typeVehicle: Item) => (
                 <div
-                  key={job.id}
+                  key={typeVehicle.id}
                   className="card bg-white border border-slate-200 border-t-5 border-t-blue-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ease-out duration-200"
                 >
                   <div className="card-body gap-4">
                     <div className="flex items-center justify-between">
                       <div className="bg-blue-100 px-2 py-1 rounded-lg">
-                        <i className="bi bi-person-fill text-2xl text-blue-500" />
+                        <i className="bi bi-car-front-fill text-2xl text-blue-500" />
                       </div>
-
                       <div className="flex gap-2">
                         <button
-                          className="cursor-pointer"
-                          onClick={() => handleOpenEdit(job)}
-                          title="Editar"
+                          className="cursor-pointer text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5"
+                          onClick={() => handleOpenEdit(typeVehicle)}
                         >
-                          <i className="bi bi-pencil-square text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5" />
+                          <i className="bi bi-pencil-square " />
                         </button>
                         <button
-                          className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5"
-                          onClick={() => handleOpenDelete(job)}
-                          title="Eliminar"
+                          className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5 "
+                          onClick={() => handleOpenDelete(typeVehicle)}
                         >
                           <i className="bi bi-trash " />
                         </button>
                       </div>
                     </div>
-                    <h3 className="card-title text-xl text-slate-800">
-                      {job.name}
-                    </h3>
-                    <div>
-                      <p className="text-xs text-slate-600 font-semibold uppercase">
-                        Salario
-                      </p>
-                      <p className="text-xl text-green-600 font-bold">
-                        ${job.baseSalary}
-                      </p>
+                    <div className="mt-2">
+                      <h3 className="card-title text-xl">{typeVehicle.name}</h3>
+                      <p>Categoría de Vehiculo</p>
                     </div>
                   </div>
                 </div>
@@ -241,29 +220,29 @@ function Jobs() {
             ) : (
               <Table
                 columns={columns}
-                data={inactiveJobsData.data}
+                data={inactiveTypesVehicleData.data}
                 onRestore={handleOpenRestore}
               />
             )}
 
             <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
               <p className="text-sm text-slate-500">
-                Página <span className="font-bold">{currentPage}</span> de{" "}
-                <span className="font-bold">{totalPages}</span>
+                Página <span className="font-bold"></span> de{" "}
+                <span className="font-bold"></span>
               </p>
               <div className="join gap-2">
                 <button
                   className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1 || isLoading}
+                  //onClick={() => setCurrentPage(currentPage - 1)}
+                  //disabled={currentPage === 1 || isLoading}
                 >
                   <i className="bi bi-arrow-left-short text-xl" />
                   Anterior
                 </button>
                 <button
                   className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages || isLoading}
+                  //onClick={() => setCurrentPage(currentPage + 1)}
+                 // disabled={currentPage === totalPages || isLoading}
                 >
                   Siguiente
                   <i className="bi bi-arrow-right-short text-xl" />
@@ -276,7 +255,7 @@ function Jobs() {
       <Modal
         isOpen={modals.register}
         onClose={handleCloseRegister}
-        title="Registro de Nuevo Puesto de Trabajo"
+        title="Registro de Nuevo Tipo de Vehículo"
         actions={
           <ActionButton
             type="register"
@@ -290,30 +269,50 @@ function Jobs() {
           className="flex flex-col gap-3"
           onSubmit={handleRegister}
         >
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              name="name"
-              label="Nombre:"
-              type="text"
-              placeholder="Ej: Lavador"
-              value={newJobForm.form.name}
-              onChange={handleChange}
-            />
-            <Input
-              name="baseSalary"
-              label="Salario base:"
-              type="number"
-              placeholder="Ej: 1200"
-              icon={<i className="bi bi-cash-coin text-xl"/>}
-              min={0}
-              value={newJobForm.form.baseSalary}
-              onChange={handleChange}
-            />
-          </div>
+          <Input
+            type="text"
+            name="name"
+            label="Nombre:"
+            value={newTypeVehicleForm.name}
+            onChange={handleChange}
+          />
           <div className="flex justify-center items-center h-6">
-            {newJobForm.error && (
+            {error.active && (
               <p className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
-                {newJobForm.errorMSg}
+                {error.msg}
+              </p>
+            )}
+          </div>
+        </form>
+      </Modal>
+      <Modal
+        isOpen={modals.edit}
+        onClose={handleCloseEdit}
+        title="Registro de Nuevo Tipo de Vehículo"
+        actions={
+          <ActionButton
+            type="register"
+            isLoading={isSubmitting}
+            form="EditForm"
+          />
+        }
+      >
+        <form
+          id="EditForm"
+          className="flex flex-col gap-3"
+          onSubmit={handleEdit}
+        >
+          <Input
+            type="text"
+            name="name"
+            label="Nombre:"
+            value={changedFields.name ?? currentTypeVehicle.name}
+            onChange={handleEditChange}
+          />
+          <div className="flex justify-center items-center h-6">
+            {error.active && (
+              <p className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+                {error.msg}
               </p>
             )}
           </div>
@@ -335,7 +334,7 @@ function Jobs() {
           <p className="text-center text-slate-700">
             ¿Estás seguro de que deseas eliminar{" "}
             <span className="font-semibold text-slate-800">
-              {currentJob.name}
+              {currentTypeVehicle.name}
             </span>
             ?
           </p>
@@ -357,55 +356,14 @@ function Jobs() {
           <p className="text-center text-slate-700">
             ¿Estás seguro de que deseas restaurar{" "}
             <span className="font-semibold text-slate-800">
-              {currentJob.name}
+              {currentTypeVehicle.name}
             </span>
             ?
           </p>
         </div>
       </Modal>
-      <Modal
-        isOpen={modals.edit}
-        onClose={handleCloseEdit}
-        title="Editar Trabajo"
-        actions={
-          <ActionButton type="edit" isLoading={isSubmitting} form="EditForm" />
-        }
-      >
-        <form
-          className="flex flex-col gap-3"
-          id="EditForm"
-          onSubmit={handleEdit}
-        >
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              name="name"
-              label="Nombre:"
-              type="text"
-              placeholder="Ej. Limpiador"
-              value={changedFields.name ?? currentJob.name}
-              onChange={handleEditChange}
-            />
-            <Input
-              name="baseSalary"
-              label="Salario base:"
-              type="number"
-              placeholder="Ej. 1200"
-              value={changedFields.baseSalary ?? currentJob.baseSalary}
-              onChange={handleEditChange}
-            />
-          </div>
-
-          <div className="flex justify-center items-center h-6">
-            {error.active && (
-              <p className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
-                {error.msg}
-              </p>
-            )}
-          </div>
-        </form>
-      </Modal>
     </>
   );
 }
 
-export default Jobs;
+export default TypesVehicles;

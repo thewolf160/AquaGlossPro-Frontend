@@ -11,17 +11,21 @@ interface JobsFilters {
 export const JobService = {
   new: async (job: Job) => {
     const { data } = await api.post("/jobs", job);
-
-    return data;
   },
 
   getAll: async (filters: JobsFilters) => {
     const { data } = await api.get("/jobs", {
       params: {
-        limit: "10",
+        limit: "20",
         ...filters,
       },
     });
+
+    return data;
+  },
+
+  edit: async (id: string, edited: Partial<Job>) => {
+    const { data } = await api.patch(`/jobs/${id}`, edited);
 
     return data;
   },

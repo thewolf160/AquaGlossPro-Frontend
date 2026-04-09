@@ -13,9 +13,9 @@ import ClientDisplay from "./pages/ClientHome";
 import ClientHeader from "./components/ClientHeader";
 import Clients from "./pages/Client";
 import ProtectedRoute from "./routes/ProtectedRoutes";
-import SettingsLayout from "./pages/Settings/SettingsLayout";
 import SettingsMenu from "./pages/Settings/SettingsMenu";
 import Jobs from "./pages/Settings/Jobs";
+import TypesVehicles from "./pages/Settings/TypesVehicles";
 
 export default function App() {
   return (
@@ -47,6 +47,7 @@ export default function App() {
           <Route path="settings">
             <Route index element={<SettingsMenu/>}/>
             <Route path="jobs" element={<Jobs/>}/>
+            <Route path="typesVehicles" element={<TypesVehicles/>}/>
           </Route>
         </Route>
       </Routes>

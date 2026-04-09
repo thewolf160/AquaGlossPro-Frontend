@@ -38,7 +38,7 @@ function Modal({
           if (e.target === e.currentTarget) onClose();
         }}
       >
-        <div className="modal-box w-full max-w-xl">
+        <div className="modal-box w-full max-w-sm md:max-w-xl">
           {title ? (
             <div className="w-full border-b border-slate-200 p-4 mb-4">
               <p className="text-2xl font-semibold text-slate-800">{title}</p>

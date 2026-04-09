@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   InitialJobsData,
   InitialNewJobForm,
@@ -22,6 +22,14 @@ export const useJobs = () => {
   const [newJobForm, setNewJobForm] = useState<NewJobForm>(InitialNewJobForm);
   const [currentJob, setCurrentJob] = useState<Job>(InitialJob);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [changedFields, setChangedFields] = useState<Partial<Job>>({});
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [error, setError] = useState<{ active: boolean; msg: string }>({
+    active: false,
+    msg: "",
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const getJobs = async () => {
     setIsLoading(true);
@@ -45,12 +53,12 @@ export const useJobs = () => {
     }
   };
 
-  const getInactiveJobs = async () => {
+  const getInactiveJobs = async (page: number = 1) => {
     setIsLoading(true);
     try {
       const response = await JobService.getAll({
         active: "false",
-        page: "1",
+        page: page.toString(),
         limit: "3",
       });
 
@@ -64,6 +72,11 @@ export const useJobs = () => {
         ...prev,
         data: formattedData,
       }));
+
+      if (response.data.meta.totalPages) {
+        setTotalPages(response.data.meta.totalPages);
+      }
+
       return true;
     } catch (error) {
       console.log(error);
@@ -74,11 +87,53 @@ export const useJobs = () => {
 
   useEffect(() => {
     getJobs();
-    getInactiveJobs();
   }, []);
 
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      getInactiveJobs(currentPage);
+      isFirstRender.current = false;
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      getInactiveJobs(currentPage);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [currentPage]);
+
+  const editJob = async () => {
+    setIsSubmitting(true);
+    setError({ active: false, msg: "" });
+
+    if (Object.keys(changedFields).length === 0) {
+      setError({ active: true, msg: "No se han detectado cambios" });
+      setIsSubmitting(false);
+      return false;
+    }
+
+    try {
+      await JobService.edit(String(currentJob.id), changedFields);
+      getJobs();
+      setChangedFields({});
+      return true;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        setError({
+          active: true,
+          msg: error.response?.data.message || "Error al editar",
+        });
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const deleteJob = async (id: string) => {
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
       await JobService.delete(id);
       await getJobs();
@@ -87,12 +142,12 @@ export const useJobs = () => {
     } catch (error) {
       console.log(error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const registerJob = async () => {
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     if (!newJobForm.form.baseSalary || !newJobForm.form.name) {
       setNewJobForm((prev) => ({
@@ -100,7 +155,7 @@ export const useJobs = () => {
         error: true,
         errorMSg: "Todos los campos son obligatorios",
       }));
-      setIsLoading(false);
+      setIsSubmitting(false);
       return;
     }
 
@@ -113,7 +168,6 @@ export const useJobs = () => {
       return true;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        console.log("error: ", error.response?.data);
         setNewJobForm((prev) => ({
           ...prev,
           error: true,
@@ -122,11 +176,12 @@ export const useJobs = () => {
         return;
       }
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const restoreJob = async (id: string) => {
+    setIsSubmitting(true);
     try {
       await JobService.restore(id);
       await getJobs();
@@ -134,6 +189,8 @@ export const useJobs = () => {
       return true;
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -151,6 +208,14 @@ export const useJobs = () => {
     }));
   };
 
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setChangedFields((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return {
     jobsData,
     inactiveJobsData,
@@ -165,5 +230,15 @@ export const useJobs = () => {
     deleteJob,
     handleChange,
     restoreJob,
+    changedFields,
+    handleEditChange,
+    setChangedFields,
+    isSubmitting,
+    editJob,
+    error,
+    setError,
+    totalPages,
+    currentPage,
+    setCurrentPage,
   };
 };

@@ -15,14 +15,14 @@ import Alert from "../components/Alert";
 import type React from "react";
 import { useJobs } from "../hooks/useJobs";
 
-  const columns = [
-    { key: "ci", header: "CI", mobile: true },
-    { key: "names", header: "Nombre", mobile: true },
-    { key: "lastnames", header: "Apellido", mobile: true },
-    { key: "email", header: "Email", mobile: false },
-    { key: "numberPhone", header: "Número de Teléfono", mobile: false },
-    { key: "actions", header: "Acciones", mobile: true },
-  ];
+const columns = [
+  { key: "ci", header: "CI", mobile: true },
+  { key: "names", header: "Nombre", mobile: false },
+  { key: "lastnames", header: "Apellido", mobile: true },
+  { key: "email", header: "Email", mobile: false },
+  { key: "numberPhone", header: "Número de Teléfono", mobile: false },
+  { key: "actions", header: "Acciones", mobile: true },
+];
 
 function Employees() {
   const {
@@ -48,7 +48,11 @@ function Employees() {
     handleSelectChangeEdit,
     handleSearchChange,
     searchParameter,
-    isSubmitting
+    isSubmitting,
+    isActiveEmployees,
+    setIsActiveEmployees,
+    getEmployees,
+    restoreEmployee,
   } = useEmployees();
 
   const { jobsData } = useJobs();
@@ -72,8 +76,12 @@ function Employees() {
 
   const handleDelete = async () => {
     const success = await deleteEmployee(String(currentEmployee.id));
-    if (success) {  
+    if (success) {
       handleCloseDelete();
+      setSuccessMessage("Eliminado con Éxito")
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 3000)
     }
   };
 
@@ -91,7 +99,7 @@ function Employees() {
     const success = await registerEmployee();
     if (success) {
       handleCloseRegister();
-      setSuccessMessage("Empleado registrado con exito");
+      setSuccessMessage("Registrado con Éxito");
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
@@ -102,13 +110,7 @@ function Employees() {
     toggleModal("details", true);
     setCurrentEmployee((prev) => ({
       ...prev,
-      names: item.names,
-      lastnames: item.lastnames,
-      ci: item.ci,
-      numberPhone: item.numberPhone,
-      email: item.email,
-      nameJob: item.nameJob,
-      baseSalary: item.baseSalary,
+      ...item,
     }));
   };
 
@@ -121,7 +123,7 @@ function Employees() {
     toggleModal("edit", true);
     setEditEmployeeState((prev) => ({
       ...prev,
-      ...item
+      ...item,
     }));
   };
 
@@ -131,16 +133,61 @@ function Employees() {
   };
 
   const handleEdit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const success = await editEmployee()
-    if(success){
-      handleCloseEdit()
-      setSuccessMessage("Empleado editado con exito")
+    e.preventDefault();
+    const success = await editEmployee();
+    if (success) {
+      handleCloseEdit();
+      setSuccessMessage("Editado con Éxito");
       setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
+        setSuccessMessage(null);
+      }, 3000);
     }
-  }
+  };
+
+  const handleOpenRestore = (item: Item) => {
+    toggleModal("restore", true);
+    setCurrentEmployee((prev) => ({
+      ...prev,
+      id: item.id,
+      names: item.names,
+      lastnames: item.lastnames,
+    }));
+  };
+
+  const handleCloseRestore = () => {
+    toggleModal("restore", false);
+    setCurrentEmployee(InitialEmployee);
+  };
+
+  const handleRestore = async () => {
+    const success = await restoreEmployee(String(currentEmployee.id));
+    if (success) {
+      handleCloseRestore();
+      setSuccessMessage("Restaurado con Éxito");
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    }
+  };
+
+  const handleTab = async (active: boolean) => {
+    const success = await getEmployees(1, active);
+
+    if (success) {
+      setIsActiveEmployees(active);
+    }
+  };
+
+  const actionProps = isActiveEmployees
+    ? {
+        onDelete: handleOpenDelete,
+        onEdit: handleOpenEdit,
+        onView: handleOpenDetails,
+      }
+    : {
+        onView: handleOpenDetails,
+        onRestore: handleOpenRestore,
+      };
 
   return (
     <>
@@ -194,56 +241,74 @@ function Employees() {
             </div>
             <div>
               <p className="font-medium text-sm text-yellow-500">Inactivos</p>
-              <p className="text-2xl font-bold text-yellow-900">0</p>
+              <p className="text-2xl font-bold text-yellow-900">
+                {employeesData.totalInactiveEmployees}
+              </p>
             </div>
           </div>
         </section>
-        <section className="shadow-md rounded-xl overflow-hidden border border-slate-200">
-          <div className=" bg-white px-6 py-3 border-b border-slate-200">
-            <h2 className="font-bold text-slate-800 text-xl tracking-tight">
-              Gestión de Empleados
-            </h2>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
+          <div className="flex flex-row justify-between items-center gap-4">
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => handleTab(true)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors  ${isActiveEmployees ? "bg-white text-green-600  shadow-sm" : "text-gray-500 hover:text-gray-700 cursor-pointer"}`}
+              >
+                Activos
+              </button>
+              <button
+                onClick={() => handleTab(false)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${!isActiveEmployees ? "bg-white text-red-600 shadow-sm" : "text-gray-500 hover:text-gray-700 cursor-pointer"}`}
+              >
+                Inactivos
+              </button>
+            </div>
           </div>
-          <div>
-            {isLoading ? (
-              <div className="flex items-center justify-center p-10">
-                <span className="loading loading-spinner loading-xl"></span>
+          <section className="shadow-sm rounded-xl overflow-hidden border border-gray-200">
+            <div className=" bg-white px-6 py-3 border-b border-slate-200">
+              <h2 className="font-bold text-slate-800 text-xl tracking-tight">
+                Gestión de Empleados
+              </h2>
+            </div>
+            <div>
+              {isLoading ? (
+                <div className="flex items-center justify-center p-10">
+                  <span className="loading loading-spinner loading-xl"></span>
+                </div>
+              ) : (
+                <Table
+                  columns={columns}
+                  data={employeesData.data}
+                  {...actionProps}
+                />
+              )}
+            </div>
+            <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
+              <p className="text-sm text-slate-500">
+                Página <span className="font-bold">{currentPage}</span> de{" "}
+                <span className="font-bold">{totalPages}</span>
+              </p>
+              <div className="join gap-2">
+                <button
+                  className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                >
+                  <i className="bi bi-arrow-left-short text-xl" />
+                  Anterior
+                </button>
+                <button
+                  className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages || isLoading}
+                >
+                  Siguiente
+                  <i className="bi bi-arrow-right-short text-xl" />
+                </button>
               </div>
-            ) : (
-              <Table
-                columns={columns}
-                data={employeesData.data}
-                onDelete={handleOpenDelete}
-                onEdit={handleOpenEdit}
-                onView={handleOpenDetails}
-              />
-            )}
-          </div>
-          <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
-            <p className="text-sm text-slate-500">
-              Página <span className="font-bold">{currentPage}</span> de{" "}
-              <span className="font-bold">{totalPages}</span>
-            </p>
-            <div className="join gap-2">
-              <button
-                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1 || isLoading}
-              >
-                <i className="bi bi-arrow-left-short text-xl" />
-                Anterior
-              </button>
-              <button
-                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages || isLoading}
-              >
-                Siguiente
-                <i className="bi bi-arrow-right-short text-xl" />
-              </button>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
       </div>
       <Modal
         isOpen={modals.register}
@@ -368,9 +433,15 @@ function Employees() {
         isOpen={modals.edit}
         onClose={handleCloseEdit}
         title="Editar Empleado"
-        actions={<ActionButton type="edit" isLoading={isSubmitting} form="EditForm"/>}
+        actions={
+          <ActionButton type="edit" isLoading={isSubmitting} form="EditForm" />
+        }
       >
-        <form className="flex flex-col gap-3" onSubmit={handleEdit} id="EditForm">
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={handleEdit}
+          id="EditForm"
+        >
           <div className="grid grid-cols-2 gap-4">
             <Input
               name="names"
@@ -510,6 +581,28 @@ function Employees() {
               readOnly
             />
           </div>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={modals.restore}
+        onClose={handleCloseRestore}
+        restoreText="Restaurar Empleado"
+        actions={
+          <ActionButton
+            type="restore"
+            isLoading={isSubmitting}
+            onClick={handleRestore}
+          />
+        }
+      >
+        <div className="pt-4">
+          <p className="text-center text-slate-700">
+            ¿Estás seguro de que deseas restaurar a{" "}
+            <span className="font-semibold text-slate-800">
+              {currentEmployee.names} {currentEmployee.lastnames}
+            </span>
+            ?
+          </p>
         </div>
       </Modal>
     </>

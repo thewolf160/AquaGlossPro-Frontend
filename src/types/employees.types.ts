@@ -56,6 +56,7 @@ export const InitialNewEmployeeForm: NewEmployeeForm = {
 export interface EmployeesData {
   data: Item[];
   totalEmployees: number | null;
+  totalInactiveEmployees: number | null;
   error: boolean;
   errorMsg: string;
 }
@@ -63,6 +64,7 @@ export interface EmployeesData {
 export const InitialEmployeesData: EmployeesData = {
   data: [] as Item[],
   totalEmployees: null,
+  totalInactiveEmployees: null,
   error: false,
   errorMsg: "",
 };

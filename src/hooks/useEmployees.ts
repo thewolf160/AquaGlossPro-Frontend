@@ -34,24 +34,31 @@ export const useEmployees = () => {
 
   const [searchParameter, setSearchParameter] = useState<string>("");
 
-  const getEmployees = async (page: number = 1) => {
+  const [isActiveEmployees, setIsActiveEmployees] = useState<boolean>(true);
+
+  const getEmployees = async (page: number = 1, activeOverride?: boolean) => {
     setIsLoading(true);
     try {
+      const isTargetActive =
+        activeOverride !== undefined ? activeOverride : isActiveEmployees;
+
       const response = await EmployeeService.getAll({
         page: page.toString(),
         param: searchParameter,
+        active: isTargetActive ? "true" : "false",
       });
 
-      const data = transformData(response.data.data);
+      const data = transformData(response.results.data);
 
       setEmployeesData((prev) => ({
         ...prev,
         data: data,
-        totalEmployees: response.data.meta.totalItems,
+        totalEmployees: response.results.meta.totals.active,
+        totalInactiveEmployees: response.results.meta.totals.inactive,
       }));
 
-      if (response.data.meta.totalPages) {
-        setTotalPages(response.data.meta.totalPages);
+      if (response.results.meta.totalPages) {
+        setTotalPages(response.results.meta.totalPages);
       }
 
       return true;
@@ -73,10 +80,10 @@ export const useEmployees = () => {
 
     const timeoutId = setTimeout(() => {
       getEmployees(currentPage);
-    }, 500);
+    }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [currentPage, searchParameter]);
+  }, [currentPage, searchParameter, isActiveEmployees]);
 
   const deleteEmployee = async (id: string) => {
     setIsSubmitting(true);
@@ -86,6 +93,19 @@ export const useEmployees = () => {
       return true;
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const restoreEmployee = async (id: string) => {
+    setIsSubmitting(true);
+    try {
+      await EmployeeService.restore(id);
+      await getEmployees();
+      return true;
+    } catch (error) {
+      console.log(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -138,6 +158,12 @@ export const useEmployees = () => {
 
   const editEmployee = async () => {
     setIsSubmitting(true);
+
+    setEditEmployeeState((prev) => ({
+      ...prev,
+      error: false,
+      errorMsg: "",
+    }));
 
     if (Object.keys(changedFields).length === 0) {
       setEditEmployeeState((prev) => ({
@@ -252,7 +278,6 @@ export const useEmployees = () => {
     setEditEmployeeState,
     handleEditChange,
     deleteEmployee,
-    changedFields,
     newEmployeeForm,
     setNewEmployeeForm,
     handleChange,
@@ -268,5 +293,9 @@ export const useEmployees = () => {
     handleSearchChange,
     searchParameter,
     isSubmitting,
+    isActiveEmployees,
+    setIsActiveEmployees,
+    getEmployees,
+    restoreEmployee,
   };
 };

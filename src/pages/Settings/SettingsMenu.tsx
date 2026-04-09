@@ -1,14 +1,17 @@
 import { useNavigate } from "react-router-dom";
 
-function SettingsMenu() {
-  const navigate = useNavigate();
-
-  const opciones = [
+const opciones = [
     {
       id: "jobs",
       title: "Puestos de Trabajo",
       desc: "Defina y administre los cargos del personal",
       icon: "bi bi-person-fill-gear",
+    },
+    {
+      id: "typesVehicles",
+      title: "Tipos de Vehículos",
+      desc: "Configura y administra las diferentes categorías de vehículos",
+      icon: "bi bi-car-front-fill"
     },
     {
       id: "pagos",
@@ -17,6 +20,9 @@ function SettingsMenu() {
       icon: "bi bi-cash",
     },
   ];
+
+function SettingsMenu() {
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-5">
@@ -33,7 +39,7 @@ function SettingsMenu() {
           <div
             key={opt.id}
             onClick={() => navigate(opt.id)}
-            className="card bg-white border border-blue-100 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition-all "
+            className="card bg-white border border-blue-200 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all ease-out duration-200 "
           >
             <div className="card-body items-center text-center">
               <div className="text-4xl bg-blue-100 py-1 px-2 mb-2 rounded-lg">
