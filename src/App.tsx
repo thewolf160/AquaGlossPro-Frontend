@@ -19,20 +19,20 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-         <Route
-            path="/clientHome"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <ClientHeader />
-                <ClientDisplay />
-              </div>
-            }
-          />
+        <Route
+          path="/clientHome"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <ClientHeader />
+              <ClientDisplay />
+            </div>
+          }
+        />
         <Route path="/login" element={<Login />} />
 
         <Route index element={<Navigate to="/login" replace />} />
         <Route element={<ProtectedRoute />}>
-         {/* Rutas protegidas para usuarios autenticados */}
+          {/* Rutas protegidas para usuarios autenticados */}
           <Route path="home" element={<Home />} />
           <Route path="employees" element={<Employees />} />
           <Route path="inventory" element={<Inventory />} />
@@ -43,6 +43,7 @@ export default function App() {
           <Route path="services" element={<Services />} />
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />
+          <Route path="reports" element={<Reports />} />
         </Route>
       </Routes>
     </BrowserRouter>
