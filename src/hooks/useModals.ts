@@ -6,6 +6,8 @@ export const useModals = () => {
     delete: false,
     edit: false,
     details: false,
+    vehicles: false,
+    stockMovement: false,
     restore: false,
   });
 
