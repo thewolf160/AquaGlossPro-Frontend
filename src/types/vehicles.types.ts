@@ -12,3 +12,15 @@ export const InitialVehicle: Vehicle = {
   typeVehicleId: null,
   ownerId: null,
 };
+
+export interface NewVehicleForm {
+  typeVehicleId: number | null;
+  ownerId: number | null;
+  plate: string;
+}
+
+export const InitialNewVehicleForm: NewVehicleForm = {
+  typeVehicleId: null,
+  ownerId: null,
+  plate: "",
+};

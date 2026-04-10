@@ -8,6 +8,9 @@ import { Link } from "react-router-dom";
 import ActionButton from "../components/Modal/ActionButton";
 import { useTypesVehicles } from "../hooks/useTypesVehicles";
 import { useModals } from "../hooks/useModals";
+import { useClients } from "../hooks/useClients";
+import type React from "react";
+import { useVehicles } from "../hooks/useVehicles";
 
 const columns = [
   { key: "plate", header: "Placa", mobile: true },
@@ -26,9 +29,15 @@ const data = [
 ];
 
 function Vehicles() {
+  const {
+    clientsData
+  } = useClients()
+
   const {toggleModal, modals} = useModals()
 
   const { typesVehiclesData } = useTypesVehicles();
+
+  const {registerVehicle, successMessage, setSuccessMessage} = useVehicles()
 
 
 
@@ -39,6 +48,18 @@ function Vehicles() {
   const handleCloseRegister = () => {
     toggleModal("register", false)
   };
+
+  const handleRegister = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const success = await registerVehicle()
+    if(success){
+      setSuccessMessage("Registrado con Exito")
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 3000)
+    }
+
+  }
 
   const handleOpenDelete = (item: Item) => {
     toggleModal("delete", true)
@@ -186,19 +207,29 @@ function Vehicles() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Input
-              name="owner"
-              label="Cliente:"
-              type="text"
-              placeholder="Buscar Cliente..."
-              icon={<i className="bi bi-search text-xl" />}
-            />
-            <p className="text-sm text-slate-500 px-2">
-              ¿No encuentras al Cliente?{" "}
-              <Link to="/clients" className="text-blue-400 hover:text-blue-500">
-                Crear Nuevo Cliente
-              </Link>
-            </p>
+             <div className="flex flex-col gap-2">
+              <label
+                htmlFor="vehicle_type"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Cliente:
+              </label>
+              <select
+                defaultValue="-- Selecciona uno--"  
+                name="vehicle_type"
+                id="vehicle_type"
+                className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in "
+              >
+                <option value="" disabled>
+                  -- Selecciona una opción--
+                </option>
+                {clientsData.data.map((typeVehicle) => (
+                  <option key={typeVehicle.id} value={typeVehicle.id || ""}>
+                    {typeVehicle.names}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </form>
       </Modal>
