@@ -13,7 +13,7 @@ import ClientDisplay from "./pages/ClientHome";
 import ClientHeader from "./components/ClientHeader";
 import Clients from "./pages/Client";
 import ProtectedRoute from "./routes/ProtectedRoutes";
-
+import Reports from "./pages/Reports";
 
 export default function App() {
   return (
