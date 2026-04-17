@@ -13,7 +13,6 @@ export interface Client extends Item {
 export interface ClientVehicle {
   id?: number;
   plate: string;
-  model?: { name: string };
   typeVehicle?: { name: string };
 }
 
