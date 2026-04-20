@@ -5,7 +5,6 @@ import type { Product } from "../types/inventory.types";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
 import InventoryCards from "../components/inventory/InventoryCards";
-import StockMovementModal from "../components/inventory/StockMovementModal";
 
 import AddProductModal from "../components/inventory/AddProductModal";
 import EditProductModal from "../components/inventory/EditProductModal";
@@ -241,19 +240,10 @@ export default function Inventory() {
         key: "actions",
         mobile: true,
         render: (item: Item) => {
-          const product = item as unknown as Product;
 
           return (
             <div className="flex justify-center gap-2">
-              <button 
-                onClick={() => { 
-                  setCurrentProduct(product); 
-                  toggleModal("stockMovement", true); 
-                }} 
-                className="btn bg-blue-50 text-blue-600 h-9 px-3 cursor-pointer"
-              >
-                <i className="bi bi-arrow-left-right"></i>
-              </button>
+            
               <button onClick={() => handleOpenEdit(item)} className="btn bg-sky-50 text-sky-600 h-9 w-9 p-0 cursor-pointer">
                 <i className="bi bi-pencil-square"></i>
               </button>
@@ -377,11 +367,7 @@ export default function Inventory() {
         isLoading={isSubmitting}
       />
 
-      <StockMovementModal 
-        isOpen={modals.stockMovement || false} 
-        onClose={() => toggleModal("stockMovement", false)} 
-        selectedItem={currentProduct} 
-      />
+
     </div>
   );
 }
