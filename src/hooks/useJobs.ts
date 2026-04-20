@@ -117,12 +117,12 @@ export const useJobs = () => {
 
     try {
       await JobService.edit(String(currentJob.id), changedFields);
-      getJobs();
+      await getJobs();
       setChangedFields({});
       return true;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        setError({
+        ({
           active: true,
           msg: error.response?.data.message || "Error al editar",
         });

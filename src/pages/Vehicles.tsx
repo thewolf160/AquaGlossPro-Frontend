@@ -11,70 +11,68 @@ import { useModals } from "../hooks/useModals";
 import { useClients } from "../hooks/useClients";
 import type React from "react";
 import { useVehicles } from "../hooks/useVehicles";
+import Alert from "../components/Alert";
 
 const columns = [
-  { key: "plate", header: "Placa", mobile: true },
+  { key: "names", header: "Placa", mobile: true },
   { key: "vehicle_type", header: "Tipo", mobile: false },
   { key: "owner", header: "Cliente Propietario", mobile: true },
   { key: "actions", header: "Acciones", mobile: true },
 ];
 
-const data = [
-  {
-    id: 1,
-    plate: "ABC-1234",
-    vehicle_type: "Camioneta",
-    owner: "Alexandra Nieves",
-  },
-];
-
 function Vehicles() {
-  const {
-    clientsData
-  } = useClients()
+  const { clientsData } = useClients();
 
-  const {toggleModal, modals} = useModals()
+  const { toggleModal, modals } = useModals();
 
   const { typesVehiclesData } = useTypesVehicles();
 
-  const {registerVehicle, successMessage, setSuccessMessage} = useVehicles()
-
-
+  const {
+    registerVehicle,
+    successMessage,
+    setSuccessMessage,
+    isSubmitting,
+    error,
+    handleChange,
+    handleSelectChange,
+    newVehicleForm,
+    vehiclesData
+  } = useVehicles();
 
   const handleOpenRegister = () => {
-    toggleModal("register", true)
+    toggleModal("register", true);
   };
 
   const handleCloseRegister = () => {
-    toggleModal("register", false)
+    toggleModal("register", false);
   };
 
   const handleRegister = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const success = await registerVehicle()
-    if(success){
-      setSuccessMessage("Registrado con Exito")
+    e.preventDefault();
+    const success = await registerVehicle();
+    if (success) {
+      setSuccessMessage("Registrado con Exito");
+      handleCloseRegister()
       setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
+        setSuccessMessage(null);
+      }, 3000);
     }
-
-  }
+  };
 
   const handleOpenDelete = (item: Item) => {
-    toggleModal("delete", true)
+    toggleModal("delete", true);
   };
 
   const handleCloseDelete = () => {
-    toggleModal("delete", false)
+    toggleModal("delete", false);
   };
 
   const handleOpenEdit = (item: Item) => {
-    toggleModal("edit", true)
+    toggleModal("edit", true);
   };
 
   const handleCloseEdit = () => {
-    toggleModal("edit", false)  
+    toggleModal("edit", false);
   };
 
   const searchTerm: string = "";
@@ -85,6 +83,7 @@ function Vehicles() {
 
   return (
     <>
+      {successMessage && <Alert message={successMessage} />}
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar Vehiculo..."
@@ -125,7 +124,7 @@ function Vehicles() {
           </div>
           <Table
             columns={columns}
-            data={data}
+            data={vehiclesData.data}
             onDelete={handleOpenDelete}
             onEdit={handleOpenEdit}
           />
@@ -172,21 +171,33 @@ function Vehicles() {
         isOpen={modals.register}
         onClose={handleCloseRegister}
         title="Registro de Nuevo Vehículo"
-        actions={<ActionButton type="register" />}
+        actions={
+          <ActionButton
+            type="register"
+            isLoading={isSubmitting}
+            form="RegisterForm"
+          />
+        }
       >
-        <form className="flex flex-col gap-3">
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={handleRegister}
+          id="RegisterForm"
+        >
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label
-                htmlFor="vehicle_type"
+                htmlFor="typeVehicleId"
                 className="block text-sm font-medium text-slate-700"
               >
                 Tipo de Vehículo:
               </label>
               <select
-                defaultValue="-- Selecciona uno--"  
-                name="vehicle_type"
-                id="vehicle_type"
+                defaultValue="-- Selecciona uno--"
+                name="typeVehicleId"
+                id="typeVehicleId"
+                onChange={handleSelectChange}
+                value={newVehicleForm.typeVehicleId || ""}
                 className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in "
               >
                 <option value="" disabled>
@@ -204,20 +215,24 @@ function Vehicles() {
               label="Placa:"
               type="text"
               placeholder="Ej: ABC-123"
+              onChange={handleChange}
+              value={newVehicleForm.plate}
             />
           </div>
           <div className="flex flex-col gap-2">
-             <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
               <label
-                htmlFor="vehicle_type"
+                htmlFor="ownerId"
                 className="block text-sm font-medium text-slate-700"
               >
                 Cliente:
               </label>
               <select
-                defaultValue="-- Selecciona uno--"  
-                name="vehicle_type"
-                id="vehicle_type"
+                defaultValue="-- Selecciona uno--"
+                name="ownerId"
+                id="ownerId"
+                onChange={handleSelectChange}
+                value={newVehicleForm.ownerId || ""}
                 className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in "
               >
                 <option value="" disabled>
@@ -231,16 +246,20 @@ function Vehicles() {
               </select>
             </div>
           </div>
+          <div className="flex justify-center items-center h-8">
+            {error.active && (
+              <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+                {error.msg}
+              </span>
+            )}
+          </div>
         </form>
       </Modal>
       <Modal isOpen={modals.delete} onClose={handleCloseDelete}>
         <div className="pt-4">
           <p className="text-center text-slate-700">
             ¿Estás seguro de que deseas eliminar el vehiculo{" "}
-            <span className="font-semibold text-slate-800">
-
-            </span>
-            ?
+            <span className="font-semibold text-slate-800"></span>?
           </p>
         </div>
       </Modal>
@@ -262,7 +281,6 @@ function Vehicles() {
                 defaultValue="-- Selecciona uno--"
                 name="vehicle_type"
                 id="vehicle_type"
-
                 className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in "
               >
                 <option value="" disabled={true}>
@@ -286,7 +304,7 @@ function Vehicles() {
               label="Cliente:"
               type="text"
               placeholder="Buscar Cliente..."
-              icon={<i className="bi bi-search text-xl"/>}
+              icon={<i className="bi bi-search text-xl" />}
             />
             <p className="text-sm text-slate-500 px-2">
               ¿No encuentras al Cliente?{" "}

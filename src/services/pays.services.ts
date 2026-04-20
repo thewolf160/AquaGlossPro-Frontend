@@ -1,21 +1,21 @@
 import api from "../config/api";
-import type { TypeVehicle } from "../types/typesVehicles.type";
+import type { PayMethod } from "../types/pays.types";
 
-interface TypesVehiclesFilters {
+interface PaysMethodsFilters {
   page?: string;
   limit?: string;
   active?: string;
   param?: string;
 }
 
-const URL = "/type-vehicle";
+const URL = "/payments-methods";
 
-export const TypeVehicleService = {
-  new: async (type: TypeVehicle) => {
-    await api.post(URL, type);
+export const PayMethodService = {
+  new: async (pay: PayMethod) => {
+    await api.post(URL, pay);
   },
 
-  getAll: async (filters: TypesVehiclesFilters) => {
+  getAll: async (filters: PaysMethodsFilters) => {
     const { data } = await api.get(URL, {
       params: {
         limit: "20",
@@ -30,7 +30,7 @@ export const TypeVehicleService = {
     await api.delete(`${URL}/${id}`);
   },
 
-  edit: async (id: string, edited: Partial<TypeVehicle>) => {
+  edit: async (id: string, edited: Partial<PayMethod>) => {
     await api.patch(`${URL}/${id}`, edited);
   },
 

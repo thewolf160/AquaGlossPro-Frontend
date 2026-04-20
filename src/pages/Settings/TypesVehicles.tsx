@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { useTypesVehicles } from "../../hooks/useTypesVehicles";
 import type { Item } from "../../types/models";
 import { useModals } from "../../hooks/useModals";
@@ -6,16 +5,17 @@ import Modal from "../../components/Modal/Modal";
 import Table from "../../components/Table/Table";
 import {
   InitialNewTypeVehicleForm,
-  InitialTypeVehicle
+  InitialTypeVehicle,
 } from "../../types/typesVehicles.type";
 import Input from "../../components/Modal/Input";
 import ActionButton from "../../components/Modal/ActionButton";
 import Alert from "../../components/Alert";
+import NavBar from "./ui/NavBar";
 
 const columns = [
-  {key: "name", header: "Nombre", mobile: true},
-  {key: "actions", header: "Acciones", mobile: true}
-]
+  { key: "name", header: "Nombre", mobile: true },
+  { key: "actions", header: "Acciones", mobile: true },
+];
 
 function TypesVehicles() {
   const {
@@ -38,7 +38,10 @@ function TypesVehicles() {
     changedFields,
     handleEditChange,
     inactiveTypesVehicleData,
-    restoreTypeVehicle
+    restoreTypeVehicle,
+    currentPage,
+    setCurrentPage,
+    totalPages
   } = useTypesVehicles();
 
   const { modals, toggleModal } = useModals();
@@ -95,72 +98,51 @@ function TypesVehicles() {
   };
 
   const handleCloseEdit = () => {
-    toggleModal("edit", false)
-    setCurrentTypeVehicle(InitialTypeVehicle)
-    setChangedFields({})
-    setError({active: false, msg: ""})
-  }
+    toggleModal("edit", false);
+    setCurrentTypeVehicle(InitialTypeVehicle);
+    setChangedFields({});
+    setError({ active: false, msg: "" });
+  };
 
   const handleEdit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const success = await editTypeVehicle()
-    if(success){
-      handleCloseEdit()
-      setSuccessMessage("Editado con Éxito")
+    e.preventDefault();
+    const success = await editTypeVehicle();
+    if (success) {
+      handleCloseEdit();
+      setSuccessMessage("Editado con Éxito");
       setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
+        setSuccessMessage(null);
+      }, 3000);
     }
-  }
+  };
 
   const handleOpenRestore = (item: Item) => {
-    toggleModal("restore", true)
-    setCurrentTypeVehicle({id: item.id, name: item.name})
-  }
+    toggleModal("restore", true);
+    setCurrentTypeVehicle({ id: item.id, name: item.name });
+  };
 
   const handleCloseRestore = () => {
-    toggleModal("restore", false)
-    setCurrentTypeVehicle(InitialTypeVehicle)
-  }
+    toggleModal("restore", false);
+    setCurrentTypeVehicle(InitialTypeVehicle);
+  };
 
   const handleRestore = async () => {
-    const success = await restoreTypeVehicle()
-    if(success){
-      handleCloseRestore()
-      setCurrentTypeVehicle(InitialTypeVehicle)
-      setSuccessMessage("Restaurado con  Éxito")
+    const success = await restoreTypeVehicle();
+    if (success) {
+      handleCloseRestore();
+      setCurrentTypeVehicle(InitialTypeVehicle);
+      setSuccessMessage("Restaurado con  Éxito");
       setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
+        setSuccessMessage(null);
+      }, 3000);
     }
-  }
+  };
 
-  const navigate = useNavigate();
   return (
     <>
       {successMessage && <Alert message={successMessage} />}
       <div className="space-y-6">
-        <div className="flex justify-between">
-          <h2 className="text-3xl font-bold  text-slate-900">
-            Tipos de Vehículos
-          </h2>
-          <div className="flex flex-col md:flex-row gap-2">
-            <button
-              className="btn bg-white rounded-lg"
-              onClick={() => navigate("/settings")}
-            >
-              <i className="bi bi-arrow-left" />
-              Volver al Menú
-            </button>
-            <button
-              className="btn bg-blue-600 text-white rounded-lg"
-              onClick={handleOpenRegister}
-            >
-              <i className="bi bi-plus text-xl" />
-              Agregar
-            </button>
-          </div>
-        </div>
+        <NavBar title="Tipos de Vehículos" onRegister={handleOpenRegister} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {isLoading ? (
             <div className="p-10 col-span-full flex items-center justify-center">
@@ -227,22 +209,22 @@ function TypesVehicles() {
 
             <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
               <p className="text-sm text-slate-500">
-                Página <span className="font-bold"></span> de{" "}
-                <span className="font-bold"></span>
+                Página <span className="font-bold">{currentPage}</span> de{" "}
+                <span className="font-bold">{totalPages}</span>
               </p>
               <div className="join gap-2">
                 <button
                   className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
-                  //onClick={() => setCurrentPage(currentPage - 1)}
-                  //disabled={currentPage === 1 || isLoading}
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
                 >
                   <i className="bi bi-arrow-left-short text-xl" />
                   Anterior
                 </button>
                 <button
                   className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
-                  //onClick={() => setCurrentPage(currentPage + 1)}
-                 // disabled={currentPage === totalPages || isLoading}
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                   disabled={currentPage === totalPages || isLoading}
                 >
                   Siguiente
                   <i className="bi bi-arrow-right-short text-xl" />
@@ -291,7 +273,7 @@ function TypesVehicles() {
         title="Registro de Nuevo Tipo de Vehículo"
         actions={
           <ActionButton
-            type="register"
+            type="edit"
             isLoading={isSubmitting}
             form="EditForm"
           />

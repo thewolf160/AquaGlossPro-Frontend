@@ -14,9 +14,9 @@ const opciones = [
       icon: "bi bi-car-front-fill"
     },
     {
-      id: "pagos",
-      title: "Pagos",
-      desc: "Métodos de cobro",
+      id: "pays",
+      title: "Métodos de Pago",
+      desc: "Controla las opciones de pago de tu sistema",
       icon: "bi bi-cash",
     },
   ];

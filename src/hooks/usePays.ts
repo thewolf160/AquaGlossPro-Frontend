@@ -1,33 +1,34 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  InitialNewTypeVehicleForm,
-  InitialTypesVehiclesData,
-  InitialTypeVehicle,
-  type TypeVehicle,
-  type NewTypeVehicleForm,
-  type TypesVehiclesApi,
-  type TypesVehiclesData,
-  type InactiveTypesVehiclesData,
-  InitialInactiveTypesVehiclesData,
-} from "../types/typesVehicles.type";
-import { TypeVehicleService } from "../services/typesVehicles.services";
+  InitialNewPayMethod,
+  InitialPaysMethodsData,
+  type PaysMethodsData,
+  type NewPayMethod,
+  type PaysMethodsApi,
+  type PayMethod,
+  InitialPayMethod,
+  type InactivePaysMethodsData,
+  InitialInactivePaysMethodsData,
+} from "../types/pays.types";
+import { PayMethodService } from "../services/pays.services";
 import axios from "axios";
 
-export const useTypesVehicles = () => {
-  const [typesVehiclesData, setTypesVehiclesData] = useState<TypesVehiclesData>(
-    InitialTypesVehiclesData,
+export const usePays = () => {
+  const [paysMethodsData, setPaysMethodsData] = useState<PaysMethodsData>(
+    InitialPaysMethodsData,
   );
 
-  const [inactiveTypesVehicleData, setInactiveTypesVehicleData] =
-    useState<InactiveTypesVehiclesData>(InitialInactiveTypesVehiclesData);
-  const [newTypeVehicleForm, setNewTypeVehicleForm] =
-    useState<NewTypeVehicleForm>(InitialNewTypeVehicleForm);
+  const [inactivePaysMethodsData, setInactivePaysMethodsData] =
+    useState<InactivePaysMethodsData>(InitialInactivePaysMethodsData);
+
+  const [newPayMethodForm, setNewPayMethodForm] =
+    useState<NewPayMethod>(InitialNewPayMethod);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [currentTypeVehicle, setCurrentTypeVehicle] =
-    useState<TypeVehicle>(InitialTypeVehicle);
-  const [changedFields, setChangedFields] = useState<Partial<TypeVehicle>>({});
+  const [currentPayMethod, setCurrentPayMethod] =
+    useState<PayMethod>(InitialPayMethod);
+  const [changedFields, setChangedFields] = useState<Partial<PayMethod>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<{ active: boolean; msg: string }>({
@@ -35,48 +36,48 @@ export const useTypesVehicles = () => {
     msg: "",
   });
 
-  const getTypesVehicles = async () => {
+  const getPaysMethods = async () => {
     setIsLoading(true);
     try {
-      const response = await TypeVehicleService.getAll({
+      const response = await PayMethodService.getAll({
         active: "true",
         page: "1",
       });
       const data = response.data.data;
 
-      const formattedData = data.map((typeVehicle: TypesVehiclesApi) => ({
-        id: typeVehicle.typeVehicleId,
-        name: typeVehicle.name,
+      const formattedData = data.map((payMethod: PaysMethodsApi) => ({
+        id: payMethod.paymentMethodId,
+        name: payMethod.name,
       }));
 
-      setTypesVehiclesData((prev) => ({
+      setPaysMethodsData((prev) => ({
         ...prev,
         data: formattedData,
       }));
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getInactiveTypesVehicles = async (page: number = 1) => {
+  const getInactivePaysMethods = async (page: number = 1) => {
     setIsLoading(true);
     try {
-      const response = await TypeVehicleService.getAll({
-        limit: "1",
+      const response = await PayMethodService.getAll({
         active: "false",
         page: page.toString(),
+        limit: "3",
       });
 
       const data = response.data.data;
 
-      const formattedData = data.map((typeVehicle: TypesVehiclesApi) => ({
-        ...typeVehicle,
-        id: typeVehicle.typeVehicleId,
+      const formattedData = data.map((payMethod: PaysMethodsApi) => ({
+        id: payMethod.paymentMethodId,
+        name: payMethod.name,
       }));
 
-      setInactiveTypesVehicleData((prev) => ({
+      setInactivePaysMethodsData((prev) => ({
         ...prev,
         data: formattedData,
       }));
@@ -93,38 +94,38 @@ export const useTypesVehicles = () => {
   };
 
   useEffect(() => {
-    getTypesVehicles();
+    getPaysMethods();
   }, []);
 
   const isFirstRender = useRef(true);
 
   useEffect(() => {
     if (isFirstRender.current) {
-      getInactiveTypesVehicles(currentPage);
+      getInactivePaysMethods(currentPage);
       isFirstRender.current = false;
       return;
     }
 
     const timeoutId = setTimeout(() => {
-      getInactiveTypesVehicles(currentPage);
+      getInactivePaysMethods(currentPage);
     }, 100);
 
     return () => clearTimeout(timeoutId);
   }, [currentPage]);
 
-  const registerTypeVehicle = async () => {
+  const registerPayMethod = async () => {
     setIsSubmitting(true);
     setError({ active: false, msg: "" });
 
-    if (!newTypeVehicleForm.name) {
+    if (!newPayMethodForm.name) {
       setError({ active: true, msg: "El nombre es obligatorio" });
       setIsSubmitting(false);
       return false;
     }
 
     try {
-      await TypeVehicleService.new({ name: newTypeVehicleForm.name });
-      getTypesVehicles();
+      await PayMethodService.new({ name: newPayMethodForm.name });
+      getPaysMethods();
       return true;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -138,12 +139,12 @@ export const useTypesVehicles = () => {
     }
   };
 
-  const deleteTypeVehicle = async () => {
+  const deletePayMethod = async () => {
     setIsSubmitting(true);
     try {
-      await TypeVehicleService.delete(String(currentTypeVehicle.id));
-      getTypesVehicles();
-      getInactiveTypesVehicles();
+      await PayMethodService.delete(String(currentPayMethod.id));
+      getPaysMethods();
+      getInactivePaysMethods();
       return true;
     } catch (error) {
       console.error(error);
@@ -152,7 +153,7 @@ export const useTypesVehicles = () => {
     }
   };
 
-  const editTypeVehicle = async () => {
+  const editPayMethod = async () => {
     setError({ active: false, msg: "" });
 
     if (Object.keys(changedFields).length === 0) {
@@ -163,11 +164,8 @@ export const useTypesVehicles = () => {
     setIsSubmitting(true);
 
     try {
-      await TypeVehicleService.edit(
-        String(currentTypeVehicle.id),
-        changedFields,
-      );
-      await getTypesVehicles();
+      await PayMethodService.edit(String(currentPayMethod.id), changedFields);
+      await getPaysMethods();
       setChangedFields({});
       return true;
     } catch (error: unknown) {
@@ -183,12 +181,12 @@ export const useTypesVehicles = () => {
     }
   };
 
-  const restoreTypeVehicle = async () => {
+  const restorePayMethod = async () => {
     setIsSubmitting(true);
     try {
-      await TypeVehicleService.restore(String(currentTypeVehicle.id));
-      getTypesVehicles();
-      getInactiveTypesVehicles();
+      await PayMethodService.restore(String(currentPayMethod.id));
+      getPaysMethods();
+      getInactivePaysMethods();
       return true;
     } catch (error) {
       console.error(error);
@@ -200,7 +198,7 @@ export const useTypesVehicles = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    setNewTypeVehicleForm((prev) => ({
+    setNewPayMethodForm((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -216,26 +214,26 @@ export const useTypesVehicles = () => {
   };
 
   return {
-    typesVehiclesData,
+    paysMethodsData,
     handleChange,
-    registerTypeVehicle,
+    registerPayMethod,
     isSubmitting,
     isLoading,
-    setNewTypeVehicleForm,
-    newTypeVehicleForm,
+    setNewPayMethodForm,
+    newPayMethodForm,
     successMessage,
     setSuccessMessage,
     error,
     setError,
-    deleteTypeVehicle,
-    currentTypeVehicle,
-    setCurrentTypeVehicle,
+    deletePayMethod,
+    currentPayMethod,
+    setCurrentPayMethod,
     handleEditChange,
     changedFields,
-    editTypeVehicle,
+    editPayMethod,
     setChangedFields,
-    inactiveTypesVehicleData,
-    restoreTypeVehicle,
+    inactivePaysMethodsData,
+    restorePayMethod,
     currentPage,
     setCurrentPage,
     totalPages,

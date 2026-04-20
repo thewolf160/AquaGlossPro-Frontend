@@ -24,3 +24,29 @@ export const InitialNewVehicleForm: NewVehicleForm = {
   ownerId: null,
   plate: "",
 };
+
+export interface VehiclesData {
+  data: Item[];
+}
+
+export const InitialVehiclesData: VehiclesData = {
+  data: [] as Item[],
+};
+
+export interface VehicleApi {
+  clientId: number;
+  names: string;
+  lastnames: string;
+  numberPhone: string;
+  ci: string;
+  vehicles: [
+    {
+      vehicleId: number;
+      plate: string;
+      typeVehicle: {
+        typeVehicleId: number;
+        name: string;
+      };
+    },
+  ];
+}

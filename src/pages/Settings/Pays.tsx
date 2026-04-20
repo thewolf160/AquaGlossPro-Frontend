@@ -1,12 +1,14 @@
-import type React from "react";
-import { useJobs } from "../../hooks/useJobs";
+import { usePays } from "../../hooks/usePays";
+import type { Item } from "../../types/models";
 import { useModals } from "../../hooks/useModals";
-import { InitialJob, InitialNewJobForm } from "../../types/jobs.types";
 import Modal from "../../components/Modal/Modal";
+import Table from "../../components/Table/Table";
+import {
+  InitialNewPayMethod,
+  InitialPayMethod,
+} from "../../types/pays.types";
 import Input from "../../components/Modal/Input";
 import ActionButton from "../../components/Modal/ActionButton";
-import Table from "../../components/Table/Table";
-import type { Item } from "../../types/models";
 import Alert from "../../components/Alert";
 import NavBar from "./ui/NavBar";
 
@@ -15,32 +17,32 @@ const columns = [
   { key: "actions", header: "Acciones", mobile: true },
 ];
 
-function Jobs() {
+function Pays() {
   const {
-    jobsData,
-    newJobForm,
-    setNewJobForm,
-    registerJob,
-    handleChange,
+    paysMethodsData,
     isLoading,
-    currentJob,
-    setCurrentJob,
-    deleteJob,
-    inactiveJobsData,
-    restoreJob,
+    isSubmitting,
+    handleChange,
+    registerPayMethod,
+    setNewPayMethodForm,
+    newPayMethodForm,
     successMessage,
     setSuccessMessage,
-    changedFields,
-    handleEditChange,
-    setChangedFields,
-    isSubmitting,
-    editJob,
     error,
     setError,
-    totalPages,
-    setCurrentPage,
+    deletePayMethod,
+    currentPayMethod,
+    setCurrentPayMethod,
+    setChangedFields,
+    editPayMethod,
+    changedFields,
+    handleEditChange,
+    inactivePaysMethodsData,
+    restorePayMethod,
     currentPage,
-  } = useJobs();
+    setCurrentPage,
+    totalPages
+  } = usePays();
 
   const { modals, toggleModal } = useModals();
 
@@ -50,12 +52,13 @@ function Jobs() {
 
   const handleCloseRegister = () => {
     toggleModal("register", false);
-    setNewJobForm(InitialNewJobForm);
+    setNewPayMethodForm(InitialNewPayMethod);
+    setError({ active: false, msg: "" });
   };
 
   const handleRegister = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const success = await registerJob();
+    const success = await registerPayMethod();
     if (success) {
       handleCloseRegister();
       setSuccessMessage("Registrado con Éxito");
@@ -65,23 +68,21 @@ function Jobs() {
     }
   };
 
-  const handleOpenDelete = (job: Item) => {
+  const handleOpenDelete = (item: Item) => {
     toggleModal("delete", true);
-    setCurrentJob((prev) => ({
-      ...prev,
-      id: job.id,
-      name: job.name,
-      baseSalary: job.baseSalary,
-    }));
+    setCurrentPayMethod({
+      id: item.id,
+      name: item.name,
+    });
   };
 
   const handleCloseDelete = () => {
     toggleModal("delete", false);
-    setCurrentJob(InitialJob);
+    setCurrentPayMethod(InitialPayMethod);
   };
 
   const handleDelete = async () => {
-    const success = await deleteJob(String(currentJob.id));
+    const success = await deletePayMethod();
     if (success) {
       handleCloseDelete();
       setSuccessMessage("Eliminado con Éxito");
@@ -91,54 +92,46 @@ function Jobs() {
     }
   };
 
-  const handleOpenRestore = (job: Item) => {
-    toggleModal("restore", true);
-    setCurrentJob((prev) => ({
-      ...prev,
-      id: job.id,
-      name: job.name,
-    }));
-  };
-
-  const handleCloseRestore = () => {
-    toggleModal("restore", false);
-    setCurrentJob(InitialJob);
-  };
-
-  const handleRestore = async () => {
-    const success = await restoreJob(String(currentJob.id));
-    if (success) {
-      handleCloseRestore();
-      setSuccessMessage("Restaurado con Éxito");
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
-    }
-  };
-
   const handleOpenEdit = (item: Item) => {
     toggleModal("edit", true);
-    setCurrentJob((prev) => ({
-      ...prev,
-      id: item.id,
-      name: item.name,
-      baseSalary: item.baseSalary,
-    }));
+    setCurrentPayMethod({ id: item.id, name: item.name });
   };
 
   const handleCloseEdit = () => {
     toggleModal("edit", false);
-    setCurrentJob(InitialJob);
+    setCurrentPayMethod(InitialPayMethod);
     setChangedFields({});
     setError({ active: false, msg: "" });
   };
 
   const handleEdit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const success = await editJob();
+    const success = await editPayMethod();
     if (success) {
       handleCloseEdit();
       setSuccessMessage("Editado con Éxito");
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    }
+  };
+
+  const handleOpenRestore = (item: Item) => {
+    toggleModal("restore", true);
+    setCurrentPayMethod({ id: item.id, name: item.name });
+  };
+
+  const handleCloseRestore = () => {
+    toggleModal("restore", false);
+    setCurrentPayMethod(InitialPayMethod);
+  };
+
+  const handleRestore = async () => {
+    const success = await restorePayMethod();
+    if (success) {
+      handleCloseRestore();
+      setCurrentPayMethod(InitialPayMethod);
+      setSuccessMessage("Restaurado con Éxito");
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
@@ -149,7 +142,7 @@ function Jobs() {
     <>
       {successMessage && <Alert message={successMessage} />}
       <div className="space-y-6">
-        <NavBar title="Puestos de Trabajo" onRegister={handleOpenRegister}/>
+        <NavBar title="Métodos de Pago" onRegister={handleOpenRegister} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {isLoading ? (
             <div className="p-10 col-span-full flex items-center justify-center">
@@ -157,44 +150,34 @@ function Jobs() {
             </div>
           ) : (
             <>
-              {jobsData.data.map((job: Item) => (
+              {paysMethodsData.data.map((payMethod: Item) => (
                 <div
-                  key={job.id}
+                  key={payMethod.id}
                   className="card bg-white border border-slate-200 border-t-5 border-t-blue-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ease-out duration-200"
                 >
                   <div className="card-body gap-4">
                     <div className="flex items-center justify-between">
                       <div className="bg-blue-100 px-2 py-1 rounded-lg">
-                        <i className="bi bi-person-fill text-2xl text-blue-500" />
+                        <i className="bi bi-wallet text-2xl text-blue-500" />
                       </div>
-
                       <div className="flex gap-2">
                         <button
-                          className="cursor-pointer"
-                          onClick={() => handleOpenEdit(job)}
-                          title="Editar"
+                          className="cursor-pointer text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5"
+                          onClick={() => handleOpenEdit(payMethod)}
                         >
-                          <i className="bi bi-pencil-square text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5" />
+                          <i className="bi bi-pencil-square " />
                         </button>
                         <button
-                          className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5"
-                          onClick={() => handleOpenDelete(job)}
-                          title="Eliminar"
+                          className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5 "
+                          onClick={() => handleOpenDelete(payMethod)}
                         >
                           <i className="bi bi-trash " />
                         </button>
                       </div>
                     </div>
-                    <h3 className="card-title text-xl text-slate-800">
-                      {job.name}
-                    </h3>
-                    <div>
-                      <p className="text-xs text-slate-600 font-semibold uppercase">
-                        Salario
-                      </p>
-                      <p className="text-xl text-green-600 font-bold">
-                        ${job.baseSalary}
-                      </p>
+                    <div className="mt-2">
+                      <h3 className="card-title text-xl">{payMethod.name}</h3>
+                      <p>Métodos de Pago</p>
                     </div>
                   </div>
                 </div>
@@ -219,7 +202,7 @@ function Jobs() {
             ) : (
               <Table
                 columns={columns}
-                data={inactiveJobsData.data}
+                data={inactivePaysMethodsData.data}
                 onRestore={handleOpenRestore}
               />
             )}
@@ -254,7 +237,7 @@ function Jobs() {
       <Modal
         isOpen={modals.register}
         onClose={handleCloseRegister}
-        title="Registro de Nuevo Puesto de Trabajo"
+        title="Registro de Nuevo Método de Pago"
         actions={
           <ActionButton
             type="register"
@@ -268,30 +251,50 @@ function Jobs() {
           className="flex flex-col gap-3"
           onSubmit={handleRegister}
         >
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              name="name"
-              label="Nombre:"
-              type="text"
-              placeholder="Ej: Lavador"
-              value={newJobForm.form.name}
-              onChange={handleChange}
-            />
-            <Input
-              name="baseSalary"
-              label="Salario base:"
-              type="number"
-              placeholder="Ej: 1200"
-              icon={<i className="bi bi-cash-coin text-xl"/>}
-              min={0}
-              value={newJobForm.form.baseSalary}
-              onChange={handleChange}
-            />
-          </div>
+          <Input
+            type="text"
+            name="name"
+            label="Nombre:"
+            value={newPayMethodForm.name}
+            onChange={handleChange}
+          />
           <div className="flex justify-center items-center h-6">
-            {newJobForm.error && (
+            {error.active && (
               <p className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
-                {newJobForm.errorMSg}
+                {error.msg}
+              </p>
+            )}
+          </div>
+        </form>
+      </Modal>
+      <Modal
+        isOpen={modals.edit}
+        onClose={handleCloseEdit}
+        title="Edición de Método de Pago"
+        actions={
+          <ActionButton
+            type="edit"
+            isLoading={isSubmitting}
+            form="EditForm"
+          />
+        }
+      >
+        <form
+          id="EditForm"
+          className="flex flex-col gap-3"
+          onSubmit={handleEdit}
+        >
+          <Input
+            type="text"
+            name="name"
+            label="Nombre:"
+            value={changedFields.name ?? currentPayMethod.name}
+            onChange={handleEditChange}
+          />
+          <div className="flex justify-center items-center h-6">
+            {error.active && (
+              <p className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+                {error.msg}
               </p>
             )}
           </div>
@@ -313,7 +316,7 @@ function Jobs() {
           <p className="text-center text-slate-700">
             ¿Estás seguro de que deseas eliminar{" "}
             <span className="font-semibold text-slate-800">
-              {currentJob.name}
+              {currentPayMethod.name}
             </span>
             ?
           </p>
@@ -335,55 +338,15 @@ function Jobs() {
           <p className="text-center text-slate-700">
             ¿Estás seguro de que deseas restaurar{" "}
             <span className="font-semibold text-slate-800">
-              {currentJob.name}
+              {currentPayMethod.name}
             </span>
             ?
           </p>
         </div>
       </Modal>
-      <Modal
-        isOpen={modals.edit}
-        onClose={handleCloseEdit}
-        title="Editar Trabajo"
-        actions={
-          <ActionButton type="edit" isLoading={isSubmitting} form="EditForm" />
-        }
-      >
-        <form
-          className="flex flex-col gap-3"
-          id="EditForm"
-          onSubmit={handleEdit}
-        >
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              name="name"
-              label="Nombre:"
-              type="text"
-              placeholder="Ej. Limpiador"
-              value={changedFields.name ?? currentJob.name}
-              onChange={handleEditChange}
-            />
-            <Input
-              name="baseSalary"
-              label="Salario base:"
-              type="number"
-              placeholder="Ej. 1200"
-              value={changedFields.baseSalary ?? currentJob.baseSalary}
-              onChange={handleEditChange}
-            />
-          </div>
-
-          <div className="flex justify-center items-center h-6">
-            {error.active && (
-              <p className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
-                {error.msg}
-              </p>
-            )}
-          </div>
-        </form>
-      </Modal>
     </>
   );
 }
 
-export default Jobs;
+export default Pays;
+

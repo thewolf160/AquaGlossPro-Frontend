@@ -16,6 +16,7 @@ import ProtectedRoute from "./routes/ProtectedRoutes";
 import SettingsMenu from "./pages/Settings/SettingsMenu";
 import Jobs from "./pages/Settings/Jobs";
 import TypesVehicles from "./pages/Settings/TypesVehicles";
+import Pays from "./pages/Settings/Pays";
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
             <Route index element={<SettingsMenu/>}/>
             <Route path="jobs" element={<Jobs/>}/>
             <Route path="typesVehicles" element={<TypesVehicles/>}/>
+            <Route path="pays" element={<Pays/>}/>
           </Route>
         </Route>
       </Routes>
