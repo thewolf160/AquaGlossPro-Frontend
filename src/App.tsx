@@ -13,7 +13,7 @@ import ClientDisplay from "./pages/ClientHome";
 import ClientHeader from "./components/ClientHeader";
 import Clients from "./pages/Client";
 import ProtectedRoute from "./routes/ProtectedRoutes";
-import SettingsMenu from "./pages/Settings/SettingsMenu";
+import Reports from "./pages/Reports";import SettingsMenu from "./pages/Settings/SettingsMenu";
 import Jobs from "./pages/Settings/Jobs";
 import TypesVehicles from "./pages/Settings/TypesVehicles";
 import Pays from "./pages/Settings/Pays";
@@ -22,20 +22,20 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-         <Route
-            path="/clientHome"
-            element={
-              <div className="min-h-screen bg-gray-50">
-                <ClientHeader />
-                <ClientDisplay />
-              </div>
-            }
-          />
+        <Route
+          path="/clientHome"
+          element={
+            <div className="min-h-screen bg-gray-50">
+              <ClientHeader />
+              <ClientDisplay />
+            </div>
+          }
+        />
         <Route path="/login" element={<Login />} />
 
         <Route index element={<Navigate to="/login" replace />} />
         <Route element={<ProtectedRoute />}>
-         {/* Rutas protegidas para usuarios autenticados */}
+          {/* Rutas protegidas para usuarios autenticados */}
           <Route path="home" element={<Home />} />
           <Route path="employees" element={<Employees />} />
           <Route path="inventory" element={<Inventory />} />
@@ -52,6 +52,7 @@ export default function App() {
             <Route path="typesVehicles" element={<TypesVehicles/>}/>
             <Route path="pays" element={<Pays/>}/>
           </Route>
+          <Route path="reports" element={<Reports />} />
         </Route>
       </Routes>
     </BrowserRouter>
