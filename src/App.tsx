@@ -13,7 +13,10 @@ import ClientDisplay from "./pages/ClientHome";
 import ClientHeader from "./components/ClientHeader";
 import Clients from "./pages/Client";
 import ProtectedRoute from "./routes/ProtectedRoutes";
-import Reports from "./pages/Reports";
+import Reports from "./pages/Reports";import SettingsMenu from "./pages/Settings/SettingsMenu";
+import Jobs from "./pages/Settings/Jobs";
+import TypesVehicles from "./pages/Settings/TypesVehicles";
+import Pays from "./pages/Settings/Pays";
 
 export default function App() {
   return (
@@ -43,6 +46,12 @@ export default function App() {
           <Route path="services" element={<Services />} />
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />
+          <Route path="settings">
+            <Route index element={<SettingsMenu/>}/>
+            <Route path="jobs" element={<Jobs/>}/>
+            <Route path="typesVehicles" element={<TypesVehicles/>}/>
+            <Route path="pays" element={<Pays/>}/>
+          </Route>
           <Route path="reports" element={<Reports />} />
         </Route>
       </Routes>
