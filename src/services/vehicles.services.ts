@@ -25,4 +25,19 @@ export const VehicleService = {
 
     return data;
   },
+
+  delete: async (id: string) => {
+    const { data } = await api.delete(`${URL}/${id}`);
+    return data;
+  },
+
+  edit: async (id: string, edited: Partial<Vehicle>) => {
+    const { data } = await api.patch(`${URL}/${id}`, edited);
+    return data;
+  },
+
+  restore: async (id: string) => {
+    const { data } = await api.patch(`${URL}/restore/${id}`);
+    return data;
+  },
 };
