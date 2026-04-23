@@ -12,19 +12,18 @@ import { useClients } from "../hooks/useClients";
 import type React from "react";
 import { useVehicles } from "../hooks/useVehicles";
 import Alert from "../components/Alert";
+import { InitialVehicle, InitialNewVehicleForm } from "../types/vehicles.types";
 
 const columns = [
-  { key: "names", header: "Placa", mobile: true },
-  { key: "vehicle_type", header: "Tipo", mobile: false },
-  { key: "owner", header: "Cliente Propietario", mobile: true },
+  { key: "plate", header: "Placa", mobile: true },
+  { key: "typeVehicleName", header: "Tipo", mobile: false },
+  { key: "ownerName", header: "Cliente Propietario", mobile: true },
   { key: "actions", header: "Acciones", mobile: true },
 ];
 
 function Vehicles() {
   const { clientsData } = useClients();
-
   const { toggleModal, modals } = useModals();
-
   const { typesVehiclesData } = useTypesVehicles();
 
   const {
@@ -36,7 +35,27 @@ function Vehicles() {
     handleChange,
     handleSelectChange,
     newVehicleForm,
-    vehiclesData
+    vehiclesData,
+    totalPages,
+    setCurrentPage,
+    currentVehicle,
+    setCurrentVehicle,
+    currentPage,
+    deleteVehicle,
+    editVehicle,
+    restoreVehicle,
+    editVehicleState,
+    setEditVehicleState,
+    handleEditChange,
+    handleSelectChangeEdit,
+    handleSearchChange,
+    searchParameter,
+    isActiveVehicles,
+    setIsActiveVehicles,
+    getVehicles,
+    isLoading,
+    setError,
+    setNewVehicleForm
   } = useVehicles();
 
   const handleOpenRegister = () => {
@@ -45,14 +64,16 @@ function Vehicles() {
 
   const handleCloseRegister = () => {
     toggleModal("register", false);
+    setError({ active: false, msg: "" });
+    setNewVehicleForm(InitialNewVehicleForm);
   };
 
   const handleRegister = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     const success = await registerVehicle();
     if (success) {
-      setSuccessMessage("Registrado con Exito");
-      handleCloseRegister()
+      setSuccessMessage("Registrado con Éxito");
+      handleCloseRegister();
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
@@ -60,41 +81,123 @@ function Vehicles() {
   };
 
   const handleOpenDelete = (item: Item) => {
+    setCurrentVehicle((prev) => ({
+      ...prev,
+      ...item
+    }));
     toggleModal("delete", true);
   };
 
   const handleCloseDelete = () => {
     toggleModal("delete", false);
+    setCurrentVehicle(InitialVehicle);
+  };
+
+  const handleDelete = async () => {
+    const success = await deleteVehicle(String(currentVehicle.id));
+    if (success) {
+      handleCloseDelete();
+      setSuccessMessage("Eliminado con Éxito");
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    }
   };
 
   const handleOpenEdit = (item: Item) => {
     toggleModal("edit", true);
+    setEditVehicleState((prev) => ({
+      ...prev,
+      ...item,
+    }));
   };
 
   const handleCloseEdit = () => {
     toggleModal("edit", false);
+    setEditVehicleState(InitialVehicle);
   };
 
-  const searchTerm: string = "";
-
-  const handleSearch = () => {
-    console.log("Buscar...");
+  const handleEdit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const success = await editVehicle();
+    if (success) {
+      handleCloseEdit();
+      setSuccessMessage("Editado con Éxito");
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    }
   };
+
+  const handleOpenDetails = (item: Item) => {
+    toggleModal("details", true);
+    setCurrentVehicle((prev) => ({
+      ...prev,
+      ...item,
+    }));
+  };
+
+  const handleCloseDetails = () => {
+    toggleModal("details", false);
+    setCurrentVehicle(InitialVehicle);
+  };
+
+  const handleOpenRestore = (item: Item) => {
+    toggleModal("restore", true);
+    setCurrentVehicle((prev) => ({
+      ...prev,
+      ...item,
+    }));
+  };
+
+  const handleCloseRestore = () => {
+    toggleModal("restore", false);
+    setCurrentVehicle(InitialVehicle);
+  };
+
+  const handleRestore = async () => {
+    const success = await restoreVehicle(String(currentVehicle.id));
+    if (success) {
+      handleCloseRestore();
+      setSuccessMessage("Restaurado con Éxito");
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    }
+  };
+
+  const handleTab = async (active: boolean) => {
+    const success = await getVehicles(1, active);
+    if (success) {
+      setIsActiveVehicles(active);
+    }
+  };
+
+  const actionProps = isActiveVehicles
+    ? {
+      onDelete: handleOpenDelete,
+      onEdit: handleOpenEdit,
+      onView: handleOpenDetails,
+    }
+    : {
+      onView: handleOpenDetails,
+      onRestore: handleOpenRestore,
+    };
 
   return (
     <>
       {successMessage && <Alert message={successMessage} />}
       <HeaderPortal>
         <HeaderSearch
-          searchPlaceholder="Buscar Vehiculo..."
-          buttonText="Agregar Vehiculo"
-          searchTerm={searchTerm}
-          onSearchChange={handleSearch}
+          searchPlaceholder="Buscar Vehículo..."
+          buttonText="Agregar Vehículo"
+          searchTerm={searchParameter}
+          onSearchChange={handleSearchChange}
           onAddClick={handleOpenRegister}
         />
       </HeaderPortal>
       <div className="flex flex-col gap-6">
-        <section className="grid grid-cols-4 gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-200  hover:shadow-md transition-shadow flex items-center gap-4">
             <div className="p-3 rounded-full bg-blue-100">
               <svg
@@ -110,63 +213,97 @@ function Vehicles() {
             </div>
             <div>
               <p className="font-medium text-sm text-blue-700">
-                Total Vehiculos
+                Total Vehículos
               </p>
-              <p className="text-2xl font-bold text-blue-900">20</p>
+              <p className="text-2xl font-bold text-blue-900">{vehiclesData.totalVehicles}</p>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-yellow-200 hover:shadow-md transition-shadow flex items-center gap-4">
+            <div className="p-3 rounded-full bg-yellow-100">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                fill="currentColor"
+                className="bi bi-pause-circle text-yellow-800"
+                viewBox="0 0 16 16"
+              >
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-medium text-sm text-yellow-500">Inactivos</p>
+              <p className="text-2xl font-bold text-yellow-900">
+                {vehiclesData.totalInactiveVehicles}
+              </p>
             </div>
           </div>
         </section>
-        <section className="shadow-md rounded-xl overflow-hidden border border-slate-200">
-          <div className="bg-white px-6 py-3 border-b border-slate-200">
-            <h2 className="font-bold text-slate-800 text-xl tracking-tight">
-              Gestión de Vehiculos
-            </h2>
-          </div>
-          <Table
-            columns={columns}
-            data={vehiclesData.data}
-            onDelete={handleOpenDelete}
-            onEdit={handleOpenEdit}
-          />
-          <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
-            <p className="text-sm text-slate-500">Página 1 de 2</p>
-            <div className="join gap-2">
-              <button className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="currentColor"
-                  className="bi bi-arrow-left-short"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5"
-                  />
-                </svg>
-                Anterior
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
+          <div className="flex flex-row justify-between items-center gap-4">
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => handleTab(true)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors  ${isActiveVehicles ? "bg-white text-green-600  shadow-sm" : "text-gray-500 hover:text-gray-700 cursor-pointer"}`}
+              >
+                Activos
               </button>
-              <button className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1">
-                Siguiente
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="currentColor"
-                  className="bi bi-arrow-right-short"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8"
-                  />
-                </svg>
+              <button
+                onClick={() => handleTab(false)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${!isActiveVehicles ? "bg-white text-red-600 shadow-sm" : "text-gray-500 hover:text-gray-700 cursor-pointer"}`}
+              >
+                Inactivos
               </button>
             </div>
           </div>
-        </section>
+          <section className="shadow-sm rounded-xl overflow-hidden border border-gray-200">
+            <div className="bg-white px-6 py-3 border-b border-slate-200">
+              <h2 className="font-bold text-slate-800 text-xl tracking-tight">
+                Gestión de Vehículos
+              </h2>
+            </div>
+            <div>
+              {isLoading ? (
+                <div className="flex items-center justify-center p-10">
+                  <span className="loading loading-spinner loading-xl"></span>
+                </div>
+              ) : (
+                <Table
+                  columns={columns}
+                  data={vehiclesData.data}
+                  {...actionProps}
+                />
+              )}
+            </div>
+            <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
+              <p className="text-sm text-slate-500">
+                Página <span className="font-bold">{currentPage}</span> de{" "}
+                <span className="font-bold">{totalPages}</span>
+              </p>
+              <div className="join gap-2">
+                <button
+                  className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                >
+                  <i className="bi bi-arrow-left-short text-xl" />
+                  Anterior
+                </button>
+                <button
+                  className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages || isLoading}
+                >
+                  Siguiente
+                  <i className="bi bi-arrow-right-short text-xl" />
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
+
       <Modal
         isOpen={modals.register}
         onClose={handleCloseRegister}
@@ -193,7 +330,6 @@ function Vehicles() {
                 Tipo de Vehículo:
               </label>
               <select
-                defaultValue="-- Selecciona uno--"
                 name="typeVehicleId"
                 id="typeVehicleId"
                 onChange={handleSelectChange}
@@ -225,10 +361,9 @@ function Vehicles() {
                 htmlFor="ownerId"
                 className="block text-sm font-medium text-slate-700"
               >
-                Cliente:
+                Cliente Propietario:
               </label>
               <select
-                defaultValue="-- Selecciona uno--"
                 name="ownerId"
                 id="ownerId"
                 onChange={handleSelectChange}
@@ -238,15 +373,21 @@ function Vehicles() {
                 <option value="" disabled>
                   -- Selecciona una opción--
                 </option>
-                {clientsData.data.map((typeVehicle) => (
-                  <option key={typeVehicle.id} value={typeVehicle.id || ""}>
-                    {typeVehicle.names}
+                {clientsData.data.map((client) => (
+                  <option key={client.id} value={client.id || ""}>
+                    {client.names} {client.lastnames}
                   </option>
                 ))}
               </select>
             </div>
+            <p className="text-sm text-slate-500 px-2">
+              ¿No encuentras al Cliente?{" "}
+              <Link to="/clients" className="text-blue-400 hover:text-blue-500">
+                Crear Nuevo Cliente
+              </Link>
+            </p>
           </div>
-          <div className="flex justify-center items-center h-8">
+          <div className="flex justify-center items-center h-6">
             {error.active && (
               <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
                 {error.msg}
@@ -255,40 +396,61 @@ function Vehicles() {
           </div>
         </form>
       </Modal>
-      <Modal isOpen={modals.delete} onClose={handleCloseDelete}>
+
+      <Modal
+        isOpen={modals.delete}
+        onClose={handleCloseDelete}
+        deleteText="Eliminar Vehículo"
+        actions={
+          <ActionButton
+            type="delete"
+            isLoading={isSubmitting}
+            onClick={handleDelete}
+          />
+        }
+      >
         <div className="pt-4">
           <p className="text-center text-slate-700">
-            ¿Estás seguro de que deseas eliminar el vehiculo{" "}
-            <span className="font-semibold text-slate-800"></span>?
+            ¿Estás seguro de que deseas eliminar el vehículo con placa{" "}
+            <span className="font-semibold text-slate-800">{currentVehicle.plate}</span>?
           </p>
         </div>
       </Modal>
+
       <Modal
         isOpen={modals.edit}
         onClose={handleCloseEdit}
         title="Editar Vehículo"
+        actions={
+          <ActionButton type="edit" isLoading={isSubmitting} form="EditForm" />
+        }
       >
-        <form className="flex flex-col gap-3">
+        <form
+          className="flex flex-col gap-3"
+          onSubmit={handleEdit}
+          id="EditForm"
+        >
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label
-                htmlFor="vehicle_type"
                 className="block text-sm font-medium text-slate-700"
               >
                 Tipo de Vehículo:
               </label>
               <select
-                defaultValue="-- Selecciona uno--"
-                name="vehicle_type"
-                id="vehicle_type"
+                name="typeVehicleId"
+                value={editVehicleState.typeVehicleId || ""}
+                onChange={handleSelectChangeEdit}
                 className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in "
               >
-                <option value="" disabled={true}>
+                <option value="" disabled>
                   -- Selecciona uno--
                 </option>
-                <option value="Carro">Carro</option>
-                <option value="Moto">Moto</option>
-                <option value="Camioneta">Camioneta</option>
+                {typesVehiclesData.data.map((typeVehicle) => (
+                  <option key={typeVehicle.id} value={typeVehicle.id || ""}>
+                    {typeVehicle.name}
+                  </option>
+                ))}
               </select>
             </div>
             <Input
@@ -296,24 +458,133 @@ function Vehicles() {
               label="Placa:"
               type="text"
               placeholder="Ej: ABC-123"
+              onChange={handleEditChange}
+              value={editVehicleState.plate}
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Input
-              name="owner"
-              label="Cliente:"
-              type="text"
-              placeholder="Buscar Cliente..."
-              icon={<i className="bi bi-search text-xl" />}
-            />
+            <div className="flex flex-col gap-2">
+              <label
+                className="block text-sm font-medium text-slate-700"
+              >
+                Cliente Propietario:
+              </label>
+              <select
+                name="ownerId"
+                onChange={handleSelectChangeEdit}
+                value={editVehicleState.ownerId || ""}
+                className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in "
+              >
+                <option value="" disabled>
+                  -- Selecciona una opción--
+                </option>
+                {clientsData.data.map((client) => (
+                  <option key={client.id} value={client.id || ""}>
+                    {client.names} {client.lastnames}
+                  </option>
+                ))}
+              </select>
+            </div>
             <p className="text-sm text-slate-500 px-2">
               ¿No encuentras al Cliente?{" "}
-              <Link to="" className="text-blue-400 hover:text-blue-500">
+              <Link to="/clients" className="text-blue-400 hover:text-blue-500">
                 Crear Nuevo Cliente
               </Link>
             </p>
           </div>
+          <div className="flex justify-center items-center h-6">
+            {editVehicleState.error && (
+              <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+                {editVehicleState.errorMsg}
+              </span>
+            )}
+          </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={modals.details}
+        onClose={handleCloseDetails}
+        title="Detalles del Vehículo"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              name="plate"
+              label="Placa:"
+              type="text"
+              value={currentVehicle.plate}
+              readOnly
+            />
+            <Input
+              name="typeVehicleName"
+              label="Tipo de Vehículo:"
+              type="text"
+              value={currentVehicle.typeVehicleName || ""}
+              readOnly
+            />
+          </div>
+          <div>
+            <h3 className="text-slate-800 mt-2 mb-2 border-b border-slate-200 pb-1">Datos del Propietario</h3>
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <Input
+                name="ownerName"
+                label="Nombres:"
+                type="text"
+                value={currentVehicle.ownerName || ""}
+                readOnly
+              />
+              <Input
+                name="ownerLastName"
+                label="Apellidos:"
+                type="text"
+                value={currentVehicle.ownerLastName || ""}
+                readOnly
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                name="ownerCi"
+                label="Cédula:"
+                type="text"
+                value={currentVehicle.ownerCi || ""}
+                icon={<i className="bi bi-person-vcard text-xl"></i>}
+                readOnly
+              />
+              <Input
+                name="ownerNumberPhone"
+                label="Teléfono:"
+                type="text"
+                value={currentVehicle.ownerNumberPhone || ""}
+                icon={<i className="bi bi-telephone text-xl" />}
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={modals.restore}
+        onClose={handleCloseRestore}
+        restoreText="Restaurar Vehículo"
+        actions={
+          <ActionButton
+            type="restore"
+            isLoading={isSubmitting}
+            onClick={handleRestore}
+          />
+        }
+      >
+        <div className="pt-4">
+          <p className="text-center text-slate-700">
+            ¿Estás seguro de que deseas restaurar el vehículo con placa{" "}
+            <span className="font-semibold text-slate-800">
+              {currentVehicle.plate}
+            </span>
+            ?
+          </p>
+        </div>
       </Modal>
     </>
   );
