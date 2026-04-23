@@ -17,6 +17,7 @@ import Reports from "./pages/Reports";import SettingsMenu from "./pages/Settings
 import Jobs from "./pages/Settings/Jobs";
 import TypesVehicles from "./pages/Settings/TypesVehicles";
 import Pays from "./pages/Settings/Pays";
+import Suppliers from "./pages/Suppliers";
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="sales" element={<Sales />} />
           <Route path="services" element={<Services />} />
           <Route path="users" element={<Users />} />
+          <Route path="suppliers" element={<Suppliers />} />
           <Route path="roles" element={<Roles />} />
           <Route path="settings">
             <Route index element={<SettingsMenu/>}/>

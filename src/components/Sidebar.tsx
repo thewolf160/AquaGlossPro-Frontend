@@ -27,6 +27,7 @@ const menuItems: SidebarItem[] = [
     subItems: [
       { label: "Inventario", path: "/inventory" },
       { label: "Compras", path: "/purchases" },
+      { label: "Proveedores", path: "/suppliers" }
     ],
   },
   {
