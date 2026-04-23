@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { PurchaseService } from "../services/purchases.services";
 import { SupplierService } from "../services/supliers.services";
-import { PaymentMethodService } from "../services/payment-methods.services";
+import { PayMethodService } from "../services/pays.services";
 import { ProductService } from "../services/inventory.services";
 
 import type { CreatePurchasePayload } from "../types/purchases.types";
@@ -24,18 +24,26 @@ export const usePurchases = () => {
     try {
       const [suppliersRes, paymentsRes, productsRes] = await Promise.all([
         SupplierService.getAll(),
-        PaymentMethodService.getAll(),
-        ProductService.getAll({ limit: "100", active: "true" }) 
+        PayMethodService.getAll({ limit: "100", active: "true" }),
+        ProductService.getAll({ limit: "100", active: "true" }),
       ]);
-
+      
       setSuppliers(suppliersRes);
-      setPaymentMethods(paymentsRes);
-setProducts(productsRes.products.data.map((p: any) => ({
-           ...p,           
-         id: p.productId 
-})));    } catch (err) {
+      setPaymentMethods(
+        paymentsRes.data.data.map((pm: { paymentMethodId: number; name: string }) => ({
+          id: pm.paymentMethodId,
+          name: pm.name,
+        }))
+      );
+      setProducts(
+        productsRes.products.data.map((p: Omit<Product, "id"> & { productId: number }) => ({
+          ...p,
+          id: p.productId,
+        }))
+      );
+    } catch (err) {
       console.error("Error cargando dependencias:", err);
-      setError("No se pudieron cargar las listas de proveedores o productos.");
+      setError("No se pudieron cargar las listas de dependencias.");
     } finally {
       setIsLoadingData(false);
     }
@@ -56,7 +64,9 @@ setProducts(productsRes.products.data.map((p: any) => ({
       return true;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Error al registrar la compra.");
+        setError(
+          err.response?.data?.message || "Error al registrar la compra.",
+        );
       } else {
         setError("Ocurrió un error inesperado.");
       }
