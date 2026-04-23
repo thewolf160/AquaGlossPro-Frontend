@@ -7,19 +7,21 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
-interface PaymentMethodChartProps {
-  efectivoAmount: number;
-  pagoMovilAmount: number;
-  divisaAmount: number;
-  puntoAmount: number;
+interface WashedVehiclesChartProps {
+  sedanAmount: number;
+  suvAmount: number;
+  camionetaAmount: number;
+  motoAmount: number;
+  compactoAmount: number;
 }
 
-export default function PaymentMethodChart({
-  efectivoAmount,
-  pagoMovilAmount,
-  divisaAmount,
-  puntoAmount,
-}: PaymentMethodChartProps) {
+export default function WashedVehiclesChart({
+  sedanAmount,
+  suvAmount,
+  camionetaAmount,
+  motoAmount,
+  compactoAmount,
+}: WashedVehiclesChartProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeTimeFilter, setActiveTimeFilter] =
@@ -38,7 +40,8 @@ export default function PaymentMethodChart({
     custom: "total esp",
   };
 
-  const total = efectivoAmount + pagoMovilAmount + divisaAmount + puntoAmount;
+  const total =
+    sedanAmount + suvAmount + camionetaAmount + motoAmount + compactoAmount;
 
   const getPercentage = (amount: number) => {
     if (total === 0) return 0;
@@ -46,14 +49,26 @@ export default function PaymentMethodChart({
   };
 
   const formattedTotal =
-    total >= 1000 ? `${(total / 1000).toFixed(1)}k` : `$${total}`;
+    total >= 1000 ? `${(total / 1000).toFixed(1)}k` : total;
 
   const data = {
-    labels: ["Efectivo", "Pago Móvil", "Divisa", "Punto"],
+    labels: ["Sedan", "SUV", "Camioneta", "Moto", "Compacto"], // Etiqueta agregada
     datasets: [
       {
-        data: [efectivoAmount, pagoMovilAmount, divisaAmount, puntoAmount],
-        backgroundColor: ["#3b82f6", "#8b5cf6", "#a16207", "#06b6d4"],
+        data: [
+          sedanAmount,
+          suvAmount,
+          camionetaAmount,
+          motoAmount,
+          compactoAmount,
+        ],
+        backgroundColor: [
+          "#3b82f6",
+          "#10b981",
+          "#8b5cf6",
+          "#f43f5e",
+          "#f59e0b",
+        ],
         borderWidth: 0,
         cutout: "80%",
       },
@@ -70,7 +85,7 @@ export default function PaymentMethodChart({
           label: (context: any) => {
             const label = context.label || "";
             const value = context.parsed || 0;
-            return `${label}: $${value} (${getPercentage(value)}%)`;
+            return `${label}: ${value} unds (${getPercentage(value)}%)`;
           },
         },
       },
@@ -96,7 +111,7 @@ export default function PaymentMethodChart({
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 h-full flex flex-col">
         <div className="flex justify-between items-start mb-6">
           <h3 className="font-bold text-slate-800 text-lg">
-            Ventas por Método de Pago
+            Total de Vehículos Lavados
           </h3>
           <button
             onClick={handleOpenModal}
@@ -112,7 +127,6 @@ export default function PaymentMethodChart({
             <p className="text-3xl font-black text-slate-900 leading-none">
               {formattedTotal}
             </p>
-            {/* TEXTO CENTRAL DINÁMICO */}
             <p className="text-[13px] font-bold text-slate-400 uppercase tracking-widest mt-1">
               {centerLabelText[activeTimeFilter]}
             </p>
@@ -122,25 +136,30 @@ export default function PaymentMethodChart({
         <div className="space-y-3 pt-4 border-t border-slate-100">
           {[
             {
-              label: "Efectivo",
+              label: "Sedan",
               color: "bg-blue-500",
-              pct: getPercentage(efectivoAmount),
+              pct: getPercentage(sedanAmount),
             },
             {
-              label: "Pago Móvil",
+              label: "SUV",
+              color: "bg-emerald-500",
+              pct: getPercentage(suvAmount),
+            },
+            {
+              label: "Camioneta",
               color: "bg-violet-500",
-              pct: getPercentage(pagoMovilAmount),
+              pct: getPercentage(camionetaAmount),
             },
             {
-              label: "Divisa",
-              color: "bg-yellow-700",
-              pct: getPercentage(divisaAmount),
+              label: "Moto",
+              color: "bg-rose-500",
+              pct: getPercentage(motoAmount),
             },
             {
-              label: "Punto",
-              color: "bg-cyan-500",
-              pct: getPercentage(puntoAmount),
-            },
+              label: "Compacto",
+              color: "bg-amber-500",
+              pct: getPercentage(compactoAmount),
+            }, // Elemento en la lista
           ].map((item) => (
             <div
               key={item.label}
@@ -159,7 +178,7 @@ export default function PaymentMethodChart({
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Filtros de Ventas"
+        title="Filtros de Vehículos"
         actions={
           <button
             className="btn bg-blue-600 hover:bg-blue-700 text-white border-none"

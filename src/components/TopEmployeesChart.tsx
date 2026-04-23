@@ -14,7 +14,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
-export default function MostRequestedServices() {
+export default function TopEmployeesChart() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeTimeFilter, setActiveTimeFilter] =
@@ -30,24 +30,22 @@ export default function MostRequestedServices() {
     hoy: "del día",
     semana: "de la semana",
     mes: "del mes",
-    custom: "rango de fechas especificas",
+    custom: "rango específico",
   };
 
   const data = {
     labels: [
-      "Lavado Express",
-      "Pulitura",
-      "Lavado de Motor",
-      "Detallado",
-      "Aspirado Interno",
-      "Aplicación de Cera",
-      "Descontaminación",
+      "Mauricio V.",
+      "José V.",
+      "Hendelberth E.",
+      "Keiber O.",
+      "Cristofer A.",
     ],
     datasets: [
       {
-        label: "Servicios",
-        data: [35, 28, 22, 18, 15, 10, 6],
-        backgroundColor: "#3b82f6",
+        label: "Vehículos Lavados",
+        data: [42, 35, 28, 24, 19],
+        backgroundColor: "#8b5cf6",
         borderRadius: 20,
         barThickness: 15,
         categoryPercentage: 0.8,
@@ -65,7 +63,7 @@ export default function MostRequestedServices() {
       tooltip: {
         enabled: true,
         callbacks: {
-          label: (context: any) => ` Cantidad: ${context.raw} servicios`,
+          label: (context: any) => ` Cantidad: ${context.raw} vehículos`,
         },
       },
     },
@@ -113,14 +111,13 @@ export default function MostRequestedServices() {
     <>
       <div className="bg-white p-6 pb-2 rounded-2xl shadow-sm border border-slate-50 h-full flex flex-col">
         <div className="flex justify-between items-start mb-6">
-          {/* CABECERA LIMPIA: Título y Franja de tiempo */}
+          {/* CABECERA ULTRA LIMPIA (Idéntica a Servicios) */}
           <div>
             <h3 className="font-bold text-slate-800 text-lg leading-tight">
-              Servicios más Solicitados
+              Top Empleados (Vehículos Lavados)
             </h3>
             <div className="mt-1">
-              {/* Mostramos el texto del filtro activo con la tipografía solicitada */}
-              <span className="text-[15px] font-bold text-slate-400 uppercase tracking-widest">
+              <span className="text-[13px] font-bold text-slate-400 uppercase tracking-widest">
                 {timeFilterText[activeTimeFilter]}
               </span>
             </div>
@@ -143,7 +140,7 @@ export default function MostRequestedServices() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Filtros del Gráfico"
+        title="Filtros de Empleados"
         actions={
           <button
             className="btn bg-blue-600 hover:bg-blue-700 text-white border-none"
