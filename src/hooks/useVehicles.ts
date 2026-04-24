@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   InitialNewVehicleForm,
   InitialVehiclesData,
   type VehiclesData,
   type NewVehicleForm,
-  type VehicleApi,
+  type Vehicle,
+  InitialVehicle,
 } from "../types/vehicles.types";
 import { VehicleService } from "../services/vehicles.services";
-import { isAxiosError } from "axios";
+import axios from "axios";
 import { transformData } from "../utils/vehicles.utils";
 
 export const useVehicles = () => {
@@ -23,16 +24,20 @@ export const useVehicles = () => {
   });
   const [isActiveVehicles, setIsActiveVehicles] = useState<boolean>(true);
   const [searchParameter, setSearchParameter] = useState<string>("");
-  const [vehiclesData, setVehiclesData] =
-    useState<VehiclesData>(InitialVehiclesData);
+  const [vehiclesData, setVehiclesData] = useState<VehiclesData>(InitialVehiclesData);
   const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [currentVehicle, setCurrentVehicle] = useState<Vehicle>(InitialVehicle);
+  const [editVehicleState, setEditVehicleState] = useState<
+    Vehicle & { error?: boolean; errorMsg?: string }
+  >(InitialVehicle);
+  const [changedFields, setChangedFields] = useState<Partial<Vehicle>>({});
 
   const getVehicles = async (page: number = 1, activeOverride?: boolean) => {
     setIsLoading(true);
 
     try {
-      const isTargetActive =
-        activeOverride !== undefined ? activeOverride : isActiveVehicles;
+      const isTargetActive = activeOverride !== undefined ? activeOverride : isActiveVehicles;
 
       const response = await VehicleService.getAll({
         page: page.toString(),
@@ -40,20 +45,19 @@ export const useVehicles = () => {
         active: isTargetActive ? "true" : "false",
       });
 
-      const data = response.data.data;
+      if (response.data.meta.totalPages) {
+        setTotalPages(response.data.meta.totalPages);
+      }
 
-      const formattedData = transformData(data);
-
-      console.log(formattedData);
+      const formattedData = transformData(response.data.data);
 
       setVehiclesData((prev) => ({
         ...prev,
-        data: data,
+        data: formattedData,
+        totalVehicles: response.data.meta.totals?.active || 0,
+        totalInactiveVehicles: response.data.meta.totals?.inactive || 0,
       }));
 
-      if (response.results.meta.totalPages) {
-        setTotalPages(response.results.meta.totalPages);
-      }
       return true;
     } catch (error) {
       console.error(error);
@@ -62,14 +66,24 @@ export const useVehicles = () => {
     }
   };
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
-    getVehicles();
-  }, []);
+    if (isFirstRender.current) {
+      getVehicles(currentPage);
+      isFirstRender.current = false;
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      getVehicles(currentPage);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [currentPage, searchParameter, isActiveVehicles]);
 
   const registerVehicle = async () => {
     setIsSubmitting(true);
-
-    console.table(newVehicleForm);
 
     if (
       !newVehicleForm.ownerId ||
@@ -86,17 +100,120 @@ export const useVehicles = () => {
         typeVehicleId: newVehicleForm.typeVehicleId,
         ownerId: newVehicleForm.ownerId,
         plate: newVehicleForm.plate,
+        id: null
       });
-
+      await getVehicles();
       return true;
     } catch (error: unknown) {
-      if (isAxiosError(error)) {
+      if (axios.isAxiosError(error)) {
         setError({ active: true, msg: error.response?.data.message });
         return;
       }
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const deleteVehicle = async (id: string) => {
+    setIsSubmitting(true);
+    try {
+      await VehicleService.delete(id);
+      await getVehicles();
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const restoreVehicle = async (id: string) => {
+    setIsSubmitting(true);
+    try {
+      await VehicleService.restore(id);
+      await getVehicles();
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const editVehicle = async () => {
+    setIsSubmitting(true);
+
+    setEditVehicleState((prev) => ({
+      ...prev,
+      error: false,
+      errorMsg: "",
+    }));
+
+    if (Object.keys(changedFields).length === 0) {
+      setEditVehicleState((prev) => ({
+        ...prev,
+        error: true,
+        errorMsg: "No se han detectado cambios",
+      }));
+      setIsSubmitting(false);
+      return false;
+    }
+
+    try {
+      await VehicleService.edit(String(editVehicleState.id), changedFields);
+      await getVehicles();
+      setChangedFields({});
+      setEditVehicleState((prev) => ({
+        ...prev,
+        error: false,
+        errorMsg: "",
+      }));
+      return true;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        setEditVehicleState((prev) => ({
+          ...prev,
+          error: true,
+          errorMsg: error.response?.data.message,
+        }));
+        return false;
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setEditVehicleState((prev) => ({
+      ...prev,
+      [name]: value,
+      error: false,
+      errorMsg: "",
+    }));
+    setChangedFields((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChangeEdit = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    setEditVehicleState((prev) => ({
+      ...prev,
+      [name]: Number(value),
+      error: false,
+      errorMsg: "",
+    }));
+
+    setChangedFields((prev) => ({
+      ...prev,
+      [name]: Number(value),
+    }));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,8 +234,14 @@ export const useVehicles = () => {
     }));
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchParameter(value);
+    setCurrentPage(1);
+  };
+
   return {
     registerVehicle,
+    setError,
     error,
     successMessage,
     setSuccessMessage,
@@ -129,5 +252,22 @@ export const useVehicles = () => {
     vehiclesData,
     isLoading,
     totalPages,
+    currentPage,
+    setCurrentPage,
+    currentVehicle,
+    setCurrentVehicle,
+    editVehicleState,
+    setEditVehicleState,
+    handleEditChange,
+    deleteVehicle,
+    editVehicle,
+    handleSelectChangeEdit,
+    handleSearchChange,
+    searchParameter,
+    isActiveVehicles,
+    setIsActiveVehicles,
+    getVehicles,
+    restoreVehicle,
+    setNewVehicleForm
   };
 };
