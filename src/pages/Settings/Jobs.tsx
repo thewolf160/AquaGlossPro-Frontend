@@ -368,6 +368,7 @@ function Jobs() {
               label="Salario base:"
               type="number"
               placeholder="Ej. 1200"
+              min={0}
               value={changedFields.baseSalary ?? currentJob.baseSalary}
               onChange={handleEditChange}
             />

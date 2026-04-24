@@ -17,7 +17,7 @@ import { InitialVehicle, InitialNewVehicleForm } from "../types/vehicles.types";
 const columns = [
   { key: "plate", header: "Placa", mobile: true },
   { key: "typeVehicleName", header: "Tipo", mobile: false },
-  { key: "ownerName", header: "Cliente Propietario", mobile: true },
+  { key: "ownerName", header: "Cliente Propietario", mobile: false },
   { key: "actions", header: "Acciones", mobile: true },
 ];
 
