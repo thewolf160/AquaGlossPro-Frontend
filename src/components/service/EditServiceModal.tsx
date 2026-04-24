@@ -1,7 +1,7 @@
 import Modal from "../Modal/Modal";
 import Input from "../Modal/Input";
 import ActionButton from "../Modal/ActionButton";
-import type { CatalogService } from "./ServiceCatalog";
+import type { CatalogService } from "../../pages/ServiceCatalog";
 
 interface EditServiceModalProps {
   isOpen: boolean;

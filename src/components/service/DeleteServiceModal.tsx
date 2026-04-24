@@ -1,6 +1,6 @@
 import Modal from "../Modal/Modal";
 import ActionButton from "../Modal/ActionButton";
-import type { CatalogService } from "./ServiceCatalog";
+import type { CatalogService } from "../../pages/ServiceCatalog";
 
 interface DeleteServiceModalProps {
   isOpen: boolean;

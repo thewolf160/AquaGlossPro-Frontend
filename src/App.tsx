@@ -5,7 +5,6 @@ import Employees from "./pages/Employees";
 import Inventory from "./pages/Inventory";
 import Purchases from "./pages/Purchases";
 import Sales from "./pages/Sales";
-import Services from "./pages/Services";
 import Users from "./pages/Users";
 import Vehicles from "./pages/Vehicles";
 import Roles from "./pages/Roles";
@@ -18,6 +17,8 @@ import Jobs from "./pages/Settings/Jobs";
 import TypesVehicles from "./pages/Settings/TypesVehicles";
 import Pays from "./pages/Settings/Pays";
 import Suppliers from "./pages/Suppliers";
+import ServiceCatalog from "./pages/ServiceCatalog";
+import KanbanBoard from "./pages/KanbanBoard";
 
 export default function App() {
   return (
@@ -44,7 +45,8 @@ export default function App() {
           <Route path="purchases" element={<Purchases />} />
           <Route path="clients" element={<Clients />} />
           <Route path="sales" element={<Sales />} />
-          <Route path="services" element={<Services />} />
+          <Route path="servicesCatalog" element={<ServiceCatalog />} />
+          <Route path="washes" element={<KanbanBoard />} />
           <Route path="users" element={<Users />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="roles" element={<Roles />} />
