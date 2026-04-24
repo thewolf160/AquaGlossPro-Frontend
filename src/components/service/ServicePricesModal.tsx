@@ -1,6 +1,6 @@
 import Modal from "../Modal/Modal";
 import Input from "../Modal/Input";
-import type { CatalogService } from "./ServiceCatalog";
+import type { CatalogService } from "../../pages/ServiceCatalog";
 
 interface ServicePricesModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export default function ServicePricesModal({ isOpen, onClose, service }: Service
           <div className="grid grid-cols-1 gap-4">
             <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
               <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl shrink-0">
-                <i className="bi bi-bicycle"></i> {/* Icono referencial para motos */}
+                <i className="bi bi-bicycle"></i> 
               </div>
               <div className="flex-1">
                 <Input 

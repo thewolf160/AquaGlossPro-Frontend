@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
-import Table from "../Table/Table";
-import type { Item } from "../../types/models";
-import HeaderPortal from "../HeaderPortal";
-import HeaderSearch from "../HeaderSearch";
-import AddServiceModal from "./AddServiceModal";
-import EditServiceModal from "./EditServiceModal";
-import DeleteServiceModal from "./DeleteServiceModal";
-import ServicePricesModal from "./ServicePricesModal";
+import Table from "../components/Table/Table";
+import type { Item } from "../types/models";
+import HeaderPortal from "../components/HeaderPortal";
+import HeaderSearch from "../components/HeaderSearch";
+import AddServiceModal from "../components/service/AddServiceModal";
+import EditServiceModal from "../components/service/EditServiceModal";
+import DeleteServiceModal from "../components/service/DeleteServiceModal";
+import ServicePricesModal from "../components/service/ServicePricesModal";
 export interface CatalogService {
   id: number;
   name: string;
