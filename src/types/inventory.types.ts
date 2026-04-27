@@ -37,7 +37,6 @@ export interface NewProductForm {
     name: string;
     unitType: UnitType | "";
     unitCostLiter: number | string;
-    currentStock: number | string;
     minStock: number | string;
   };
   error: boolean;
@@ -50,7 +49,6 @@ export const InitialNewProductForm: NewProductForm = {
     name: "",
     unitType: "",
     unitCostLiter: "",
-    currentStock: "",
     minStock: "",
   },
   error: false,

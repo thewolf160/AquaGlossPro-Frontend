@@ -72,14 +72,7 @@ export default function EditProductModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <Input 
-            name="currentStock" 
-            label="Stock Actual:" 
-            type="number" 
-            onChange={onChange} 
-            value={String(editingProduct.currentStock)} 
-          />
+        <div className="grid grid-cols-2 gap-4">
           <Input 
             name="minStock" 
             label="Stock Mínimo:" 

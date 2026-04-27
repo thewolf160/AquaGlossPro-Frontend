@@ -134,19 +134,18 @@ export const useInventory = () => {
       return;
     }
 
-    try {
+   try {
       await ProductService.new({
         name: newProductForm.form.name,
         categoryId: Number(newProductForm.form.categoryId),
         unitType: newProductForm.form.unitType,
         unitCostLiter: Number(newProductForm.form.unitCostLiter),
-        currentStock: Number(newProductForm.form.currentStock) || 0,
         minStock: Number(newProductForm.form.minStock),
         active: true 
       });
       getProducts(currentPage, debouncedSearch, activeFilter);
       return true;
-    } catch (error: unknown) {
+    }catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         setNewProductForm((prev) => ({ ...prev, error: true, errorMsg: error.response?.data.message }));
         return;

@@ -72,8 +72,7 @@ export default function AddProductModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <Input name="currentStock" label="Stock Inicial:" type="number" onChange={onChange} value={String(formState.form.currentStock)} />
+        <div className="grid grid-cols-2 gap-4">
           <Input name="minStock" label="Stock Mínimo:" type="number" onChange={onChange} value={String(formState.form.minStock)} />
           <Input 
             name="unitCostLiter" 
