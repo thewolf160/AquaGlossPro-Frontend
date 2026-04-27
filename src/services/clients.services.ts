@@ -1,5 +1,5 @@
 import api from "../config/api";
-import type { Client } from "../types/clients.types";
+import type { BackendVehicle, Client, ClientVehicle, PaginatedVehiclesResponse } from "../types/clients.types";
 
 interface ClientFilters {
   active?: string;
@@ -40,15 +40,30 @@ export const ClientService = {
     return data;
   },
 
-  getClientVehicles: async (names: string) => {
-    const { data } = await api.get("/vehicles", {
-      params: { limit: "100", active: "true", param: names },
-    });
-    return data;
-  },
+    async getClientVehicles(ci: string): Promise<ClientVehicle[]> {
+    try {
+      const response = await api.get<PaginatedVehiclesResponse>(`/vehicles`, {
+        params: { param: ci, active: "true", limit: "100" } 
+      });
 
-  deleteVehicle: async (vehicleId: number) => {
-    const { data } = await api.delete(`/vehicles/${vehicleId}`);
-    return data;
+      const vehiclesList: BackendVehicle[] = response.data?.data?.data || [];
+
+      const mappedVehicles: ClientVehicle[] = vehiclesList
+        .filter((v: BackendVehicle) => v.owner?.ci === ci && v.active === true)
+        .map((v: BackendVehicle) => ({
+          id: v.vehicleId, 
+          plate: v.plate,
+          model: { name: v.typeVehicle?.name || "Desconocido" },
+        }));
+
+      return mappedVehicles;
+    } catch (error) {
+      console.error("Error obteniendo los vehículos del cliente:", error);
+      return []; 
+    }
   }
-};
+
+  
+}
+
+  

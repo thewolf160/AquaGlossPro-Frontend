@@ -294,18 +294,20 @@ export default function Inventory() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1 relative min-h-75">
-          {isLoading && (
-            <div className="absolute inset-0 z-10 bg-white/50 backdrop-blur-[1px] flex items-center justify-center rounded-b-xl">
-              <span className="loading loading-spinner loading-lg text-blue-600"></span>
-            </div>
-          )}
-          
-          <Table
-            columns={columns}
-            data={filteredItems as unknown as Item[]}
-            emptyMessage="No hay productos que coincidan con los criterios."
-          />
+       <div className="shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white">
+          <div>
+            {isLoading ? (
+              <div className="flex items-center justify-center p-10">
+                <span className="loading loading-spinner loading-xl text-blue-600"></span>
+              </div>
+            ) : (
+              <Table
+                columns={columns}
+                data={filteredItems as unknown as Item[]}
+                emptyMessage="No hay productos que coincidan con los criterios."
+              />
+            )}
+          </div>
 
           <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
             <p className="text-sm text-slate-500">

@@ -73,16 +73,6 @@ export interface ClientApi {
   vehicles?: ClientVehicle[];
 }
 
-export interface BackendVehicle {
-  vehicleId: number;
-  plate: string;
-  active: boolean;
-  typeVehicle?: {
-    typeVehicleId: number;
-    name: string;
-    active: boolean;
-  };
-}
 
 export interface BackendGroupedClient {
   clientId: number;
@@ -92,4 +82,34 @@ export interface BackendGroupedClient {
   numberPhone: string;
   active: boolean;
   vehicles: BackendVehicle[];
+}
+
+export interface BackendVehicle {
+  vehicleId: number;
+  plate: string;
+  active: boolean;
+  owner: {
+    clientId: number;
+    names: string;
+    lastnames: string;
+    numberPhone: string;
+    ci: string;
+  };
+  typeVehicle: {
+    typeVehicleId: number;
+    name: string;
+  };
+}
+
+export interface PaginatedVehiclesResponse {
+  message: string;
+  data: {
+    data: BackendVehicle[];
+    meta: {
+      itemPerPage: number;
+      currentPage: number;
+      totalPages: number;
+      totals: any;
+    };
+  };
 }

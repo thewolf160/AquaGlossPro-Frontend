@@ -6,7 +6,7 @@ interface ClientVehiclesModalProps {
   isOpen: boolean;
   onClose: () => void;
   client: Client | null; 
-  onDeleteVehicle: (id: number, plate: string) => void;
+  onDeleteVehicle: (id: string, plate: string) => void;
   isLoading?: boolean; 
 }
 
@@ -56,13 +56,13 @@ export default function ClientVehiclesModal({
                   <div>
                     <p className="font-black text-slate-800 text-lg leading-none">{vehiculo.plate}</p>
                     <p className="text-sm text-slate-500 font-medium mt-1">
-                      {vehiculo.model?.name || "Desconocido"}
+                      {vehiculo.typeVehicle?.name || "Desconocido"}
                     </p>
                   </div>
                 </div>
                 <button 
                   type="button"
-                  onClick={() => vehiculo.id && onDeleteVehicle(vehiculo.id, vehiculo.plate)}
+                  onClick={() => vehiculo.id && onDeleteVehicle(String(vehiculo.id), vehiculo.plate)}
                   className="text-red-400 hover:text-red-600 p-2 transition-colors cursor-pointer" 
                   title="Eliminar vehículo"
                 >

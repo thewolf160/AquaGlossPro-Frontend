@@ -215,5 +215,6 @@ export const useClients = () => {
     isActiveView,
     toggleActiveView,
     restoreClient,
+    setClientsData
   };
 };
