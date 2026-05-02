@@ -157,7 +157,9 @@ function Jobs() {
             </div>
           ) : (
             <>
-              {jobsData.data.map((job: Item) => (
+              {
+              jobsData.data.length > 0 ? (
+              jobsData.data.map((job: Item) => (
                 <div
                   key={job.id}
                   className="card bg-white border border-slate-200 border-t-5 border-t-blue-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ease-out duration-200"
@@ -198,7 +200,13 @@ function Jobs() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))) : (
+                <div className="col-span-full p-5">
+                  <p className="text-slate-500  text-center">
+                    No se encontraron trabajos registrados
+                  </p>
+              </div>
+              )}
             </>
           )}
         </div>

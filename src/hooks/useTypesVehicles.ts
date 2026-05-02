@@ -64,7 +64,7 @@ export const useTypesVehicles = () => {
     setIsLoading(true);
     try {
       const response = await TypeVehicleService.getAll({
-        limit: "1",
+        limit: "3",
         active: "false",
         page: page.toString(),
       });

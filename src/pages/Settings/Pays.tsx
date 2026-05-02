@@ -150,7 +150,9 @@ function Pays() {
             </div>
           ) : (
             <>
-              {paysMethodsData.data.map((payMethod: Item) => (
+              {
+              paysMethodsData.data.length > 0 ? (
+              paysMethodsData.data.map((payMethod: Item) => (
                 <div
                   key={payMethod.id}
                   className="card bg-white border border-slate-200 border-t-5 border-t-blue-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ease-out duration-200"
@@ -181,7 +183,13 @@ function Pays() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))) : (
+                <div className="col-span-full p-5">
+                  <p className="text-slate-500  text-center">
+                    No se encontraron métodos de pago registrados
+                  </p>
+              </div>
+              )}
             </>
           )}
         </div>

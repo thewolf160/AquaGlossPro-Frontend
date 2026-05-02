@@ -10,7 +10,7 @@ interface JobsFilters {
 
 export const JobService = {
   new: async (job: Job) => {
-    const { data } = await api.post("/jobs", job);
+    await api.post("/jobs", job);
   },
 
   getAll: async (filters: JobsFilters) => {
