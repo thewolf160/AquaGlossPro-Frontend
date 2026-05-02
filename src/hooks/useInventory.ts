@@ -31,28 +31,39 @@ export const useInventory = () => {
   
   const [activeFilter, setActiveFilter] = useState<UnifiedFilter>("ACTIVOS");
 
+  const [inventoryTotals, setInventoryTotals] = useState({
+    totalItems: 0,
+    totalValue: 0,
+    lowStock: 0,
+    outOfStock: 0,
+  });
+
   const getProducts = async (page: number = 1, currentSearch: string = "", filter: UnifiedFilter = "ACTIVOS") => {
     setIsLoading(true);
     try {
-      let activeParam: string | undefined = undefined;
-      if (filter === "ACTIVOS" || filter === "CRITICOS" || filter === "AGOTADOS") activeParam = "true";
+      let activeParam = "true";
+      let searchOrStatusParam = currentSearch;
+
       if (filter === "INACTIVOS") activeParam = "false";
 
-      // Aumentamos el límite de resultados para que el filtro local tenga margen de maniobra
-      const limitParam = (filter === "CRITICOS" || filter === "AGOTADOS") ? "100" : "5";
+      if (!currentSearch) {
+        if (filter === "CRITICOS") searchOrStatusParam = "CRITICO";
+        if (filter === "AGOTADOS") searchOrStatusParam = "AGOTADO";
+      }
 
       const response = await ProductService.getAll({
         page: page.toString(),
-        param: currentSearch,
+        param: searchOrStatusParam, 
         active: activeParam,
-        limit: limitParam,
+        limit: "5", 
       });
 
       const mappedData = mapProductsFromApi(response.products.data); 
+      const metaTotals = response.products.meta.totals; 
 
-      let totalToDisplay = response.products.meta.totals.active;
+      let totalToDisplay = metaTotals.active;
       if (filter === "INACTIVOS") {
-        totalToDisplay = response.products.meta.totals.inactive;
+        totalToDisplay = metaTotals.inactive;
       }
 
       setProductsData((prev) => ({
@@ -60,6 +71,13 @@ export const useInventory = () => {
         data: mappedData,
         totalProducts: totalToDisplay, 
       }));
+
+      setInventoryTotals({
+        totalItems: totalToDisplay,
+        totalValue: metaTotals.investedCapital,
+        lowStock: metaTotals.critical,
+        outOfStock: metaTotals.soldOut
+      });
 
       if (response.products.meta.totalPages) {
         setTotalPages(response.products.meta.totalPages);
@@ -134,19 +152,18 @@ export const useInventory = () => {
       return;
     }
 
-    try {
+   try {
       await ProductService.new({
         name: newProductForm.form.name,
         categoryId: Number(newProductForm.form.categoryId),
         unitType: newProductForm.form.unitType,
         unitCostLiter: Number(newProductForm.form.unitCostLiter),
-        currentStock: Number(newProductForm.form.currentStock) || 0,
         minStock: Number(newProductForm.form.minStock),
         active: true 
       });
       getProducts(currentPage, debouncedSearch, activeFilter);
       return true;
-    } catch (error: unknown) {
+    }catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         setNewProductForm((prev) => ({ ...prev, error: true, errorMsg: error.response?.data.message }));
         return;
@@ -235,5 +252,6 @@ export const useInventory = () => {
     searchParameter,
     activeFilter,
     handleFilterChange,
+    inventoryTotals, 
   };
 };

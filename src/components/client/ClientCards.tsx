@@ -2,7 +2,7 @@ type ClientCardsProps = {
    stats: {
     totalClients: number;
     totalVehicles: number;
-    avgVehicles: string;
+    avgVehicles: string | number;
     fleets: number;
    };
    isActiveView: boolean; 

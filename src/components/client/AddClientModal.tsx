@@ -38,11 +38,9 @@ export default function AddClientModal({
       isOpen={isOpen} 
       onClose={onClose} 
       title="Registro de Nuevo Cliente" 
-      // Envolvemos handleSubmit en una función flecha anónima para que TypeScript no se queje de los argumentos
       actions={<ActionButton type="register" onClick={() => handleSubmit()} isLoading={isLoading} />}
     >
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        {/* Mostrar mensaje de error si existe */}
         {formState.error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm border border-red-200">
             <i className="bi bi-exclamation-triangle-fill mr-2"></i>

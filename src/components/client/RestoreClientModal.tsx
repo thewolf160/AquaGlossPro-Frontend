@@ -30,7 +30,7 @@ export default function RestoreClientModal({
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title="Restaurar Cliente" 
+      restoreText="Restaurar Cliente" 
       actions={
         <button 
           onClick={handleRestore}
@@ -42,17 +42,16 @@ export default function RestoreClientModal({
         </button>
       }
     >
-      <div className="py-4">
-        <p className="text-slate-600 text-lg">
-          ¿Estás seguro que deseas reactivar al cliente <br />
-          <span className="font-bold text-slate-800">
+      <div className="pt-4">
+        <p className="text-slate-700 text-center">
+          ¿Estás seguro que deseas reactivar a {""}
+          <span className="font-semibold text-slate-800">
             {restoringClient?.names} {restoringClient?.lastnames}
           </span>?
-        </p>
-        <p className="text-sm text-slate-500 mt-2">
-          Este cliente volverá a aparecer en las listas principales y podrá realizar operaciones.
         </p>
       </div>
     </Modal>
   );
 }
+
+
