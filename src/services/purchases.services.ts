@@ -6,5 +6,15 @@ export const PurchaseService = {
     const { data } = await api.post("/purchases", payload);
     return data;
   },
+
+  getAll: async (params?: any) => {
+    const { data } = await api.get("/purchases", { params });
+    return data;
+  },
+
+  updateStatus: async (id: number, status: string) => {
+    const { data } = await api.patch(`/purchases/${id}`, { status });
+    return data;
+  }
   
 };

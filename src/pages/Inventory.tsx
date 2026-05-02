@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Table from "../components/Table/Table";
 import type { Item } from "../types/models";
 import type { Product } from "../types/inventory.types";
@@ -44,13 +44,14 @@ export default function Inventory() {
     activeFilter,
     handleFilterChange,
     restoreProduct,
+    inventoryTotals, 
   } = useInventory();
 
   const { modals, toggleModal } = useModals();
 
   const [categories, setCategories] = useState<{categoryId: number, name: string}[]>([]);
 
- useEffect(() => {
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await api.get('/categories', {
@@ -58,9 +59,7 @@ export default function Inventory() {
         });
         
         const categoriesArray: InventoryCategory[] = response.data.data.data; 
-        
         const productCategories = categoriesArray.filter((c) => c.type === 'P');
-        
         setCategories(productCategories);
       } catch (error) {
         console.error(error);
@@ -68,35 +67,6 @@ export default function Inventory() {
     };
     fetchCategories();
   }, []);
-
-  const stats = useMemo(() => {
-    if (!productsData.data || productsData.data.length === 0) {
-      return { totalValue: 0, lowStock: 0, outOfStock: 0, totalItems: productsData.totalProducts || 0 };
-    }
-
-    const products = productsData.data as unknown as Product[];
-    const totalValue = products.reduce((acc, item) => acc + (Number(item.currentStock) * Number(item.unitCostLiter)), 0);
-    
-    let lowStock = 0;
-    let outOfStock = 0;
-
-    if (activeFilter !== "INACTIVOS") {
-      lowStock = products.filter((i) => Number(i.currentStock) > 0 && Number(i.currentStock) <= Number(i.minStock)).length;
-      outOfStock = products.filter((i) => Number(i.currentStock) === 0).length;
-    }
-    
-    return { totalValue, lowStock, outOfStock, totalItems: productsData.totalProducts || 0 };
-  }, [productsData, activeFilter]);
-
-  const filteredItems = useMemo(() => {
-    let result = productsData.data as unknown as Product[];
-    if (activeFilter === "CRITICOS") {
-      result = result.filter((i) => Number(i.currentStock) > 0 && Number(i.currentStock) <= Number(i.minStock));
-    } else if (activeFilter === "AGOTADOS") {
-      result = result.filter((i) => Number(i.currentStock) === 0);
-    }
-    return result;
-  }, [productsData.data, activeFilter]);
 
   const handleOpenRegister = () => toggleModal("register", true);
   const handleCloseRegister = () => {
@@ -240,10 +210,8 @@ export default function Inventory() {
         key: "actions",
         mobile: true,
         render: (item: Item) => {
-
           return (
             <div className="flex justify-center gap-2">
-            
               <button onClick={() => handleOpenEdit(item)} className="btn bg-sky-50 text-sky-600 h-9 w-9 p-0 cursor-pointer">
                 <i className="bi bi-pencil-square"></i>
               </button>
@@ -282,7 +250,7 @@ export default function Inventory() {
         />
       </HeaderPortal>
       
-<InventoryCards stats={stats} activeFilter={activeFilter} />
+      <InventoryCards stats={inventoryTotals} activeFilter={activeFilter} />
 
       <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -303,7 +271,7 @@ export default function Inventory() {
             ) : (
               <Table
                 columns={columns}
-                data={filteredItems as unknown as Item[]}
+                data={productsData.data as unknown as Item[]}
                 emptyMessage="No hay productos que coincidan con los criterios."
               />
             )}
@@ -344,14 +312,14 @@ export default function Inventory() {
       />
 
       <EditProductModal
-  isOpen={modals.edit}
-  onClose={handleCloseEdit}
-  editingProduct={editProductState}
-  categories={categories}
-  onChange={handleEditChange}  
-  onSubmit={handleEditSubmit}  
-  isLoading={isSubmitting}
-/>
+        isOpen={modals.edit}
+        onClose={handleCloseEdit}
+        editingProduct={editProductState}
+        categories={categories}
+        onChange={handleEditChange}  
+        onSubmit={handleEditSubmit}  
+        isLoading={isSubmitting}
+      />
 
       <DeleteProductModal
         isOpen={modals.delete}
@@ -368,7 +336,6 @@ export default function Inventory() {
         onRestore={handleRestoreConfirm}
         isLoading={isSubmitting}
       />
-
 
     </div>
   );

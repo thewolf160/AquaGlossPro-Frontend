@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Table from "../components/Table/Table";
 import type { Item } from "../types/models";
 import HeaderPortal from "../components/HeaderPortal";
@@ -7,94 +7,69 @@ import AddServiceModal from "../components/service/AddServiceModal";
 import EditServiceModal from "../components/service/EditServiceModal";
 import DeleteServiceModal from "../components/service/DeleteServiceModal";
 import ServicePricesModal from "../components/service/ServicePricesModal";
-export interface CatalogService {
-  id: number;
-  name: string;
-  category: string;
-  comissionPercentage: number;
-  prices: {
-    moto: number | null;
-    carro: number | null;
-    camion: number | null;
-  };
-}
-
-interface ComboPackage {
-  id: string;
-  name: string;
-  includedServices: string[];
-  comboPrice: number;
-  originalPrice: number;
-}
-
-const initialServices: CatalogService[] = [
-  { 
-    id: 1, name: "Lavado Sencillo", category: "Exterior", comissionPercentage: 10,
-    prices: { moto: 3, carro: 5, camion: 8 } 
-  },
-  { 
-    id: 2, name: "Encerado", category: "Acabado", comissionPercentage: 15,
-    prices: { moto: 5, carro: 10, camion: 15 } 
-  },
-  { 
-    id: 3, name: "Aspirado Profundo", category: "Interior", comissionPercentage: 20,
-    prices: { moto: null, carro: 7, camion: 10 } 
-  },
-];
-
-const initialCombos: ComboPackage[] = [
-  { 
-    id: "c1", 
-    name: "Combo Express", 
-    includedServices: ["Lavado Sencillo", "Aspirado Profundo"], 
-    comboPrice: 10, 
-    originalPrice: 12
-  },
-  { 
-    id: "c2", 
-    name: "Combo VIP Brillante", 
-    includedServices: ["Lavado Sencillo", "Encerado", "Aspirado Profundo"], 
-    comboPrice: 18, 
-    originalPrice: 22
-  },
-];
+import { useCatalog } from "../hooks/useCatalog";
+import type { CatalogService, CatalogServicePrice, ComboApi, CreateServicePayload } from "../types/catalog.types";
+import type { ColumnsProps } from "../components/Table/Table.types";
+import AddComboModal from "../components/service/AddComboModal";
+import EditComboModal from "../components/service/EditComboModal";
+import DeleteComboModal from "../components/service/DeleteComboModal";
 
 export default function ServiceCatalog() {
-  const [services] = useState<CatalogService[]>(initialServices);
-  const [combos] = useState<ComboPackage[]>(initialCombos);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { 
+    services, combos, categories, isLoading, isSubmitting, 
+    searchTerm, setSearchTerm, newServiceForm, handleChange, createService,
+    deleteService, updateService, saveServicePrices , newComboForm, handleComboChange, toggleServiceInCombo, createCombo, deleteCombo,editCombo
+  } = useCatalog();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPricesModalOpen, setIsPricesModalOpen] = useState(false);
-  
+  const [isAddComboModalOpen, setIsAddComboModalOpen] = useState(false);
+  const [selectedCombo, setSelectedCombo] = useState<ComboApi | null>(null);
+const [isEditComboModalOpen, setIsEditComboModalOpen] = useState(false);
+const [isDeleteComboModalOpen, setIsDeleteComboModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<CatalogService | null>(null);
 
-  const filteredServices = useMemo(() => {
-    return services.filter(service => 
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [services, searchTerm]);
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    const success = await createService(e);
+    if (success) setIsAddModalOpen(false);
+  };
 
-  const columns = [
-    { 
-      header: "Servicio", 
-      key: "name",
+  const handleDeleteSubmit = async (id: number) => {
+    const success = await deleteService(id);
+    if (success) setIsDeleteModalOpen(false);
+  };
+
+  const handleEditSubmit = async (id: number, payload: Partial<CreateServicePayload>) => {
+    const success = await updateService(id, payload);
+    if (success) setIsEditModalOpen(false);
+  };
+
+  const handleSavePrices = async (serviceId: number, updatedPrices: CatalogServicePrice[]) => {
+    const success = await saveServicePrices(serviceId, updatedPrices);
+    if (success) setIsPricesModalOpen(false);
+  };
+
+  const columns: ColumnsProps[] = [
+    {
+       header: "Servicio",
+       key: "name",
+       mobile: true,
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
         return (
-          <div>
+          <div className="text-left">
             <div className="font-bold text-gray-800">{servicio.name}</div>
             <div className="text-xs font-medium text-blue-600">Comisión: {servicio.comissionPercentage}%</div>
           </div>
         );
       }
     },
-    { 
-      header: "Categoría", 
-      key: "category",
+    {
+       header: "Categoría",
+       key: "category",
+       mobile: true,
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
         return (
@@ -104,38 +79,38 @@ export default function ServiceCatalog() {
         );
       }
     },
-    { 
-      header: "Tarifas por Vehículo", 
-      key: "prices",
+    {
+       header: "Tarifas por Vehículo",
+       key: "prices",
+       mobile: false,
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
         return (
           <div className="flex flex-col gap-1 text-xs mx-auto w-fit">
-            <div className="flex items-center gap-4">
-              <span className="text-slate-500 w-16 text-left"><i className="bi bi-bicycle mr-1"></i> Moto:</span>
-              <span className="font-bold text-slate-800 w-12 text-right">{servicio.prices.moto ? `$${servicio.prices.moto.toFixed(2)}` : 'N/A'}</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-slate-500 w-16 text-left"><i className="bi bi-car-front mr-1"></i> Carro:</span>
-              <span className="font-bold text-slate-800 w-12 text-right">{servicio.prices.carro ? `$${servicio.prices.carro.toFixed(2)}` : 'N/A'}</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-slate-500 w-16 text-left"><i className="bi bi-truck mr-1"></i> Camión:</span>
-              <span className="font-bold text-slate-800 w-12 text-right">{servicio.prices.camion ? `$${servicio.prices.camion.toFixed(2)}` : 'N/A'}</span>
-            </div>
+            {servicio.prices.map((p) => (
+              <div key={p.typeVehicleId} className="flex items-center justify-between gap-4 w-full border-b border-slate-100 last:border-0 pb-1 last:pb-0">
+                <span className="text-slate-500 text-left w-20 truncate" title={p.typeVehicleName}>
+                  <i className="bi bi-car-front mr-1"></i> {p.typeVehicleName}:
+                </span>
+                <span className="font-bold text-slate-800 text-right">
+                  {p.price !== null ? `$${p.price.toFixed(2)}` : 'N/A'}
+                </span>
+              </div>
+            ))}
           </div>
         );
       }
     },
-    { 
-      header: "Acciones", 
-      key: "actions",
+    {
+       header: "Acciones",
+       key: "actions",
+       mobile: true,
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
         return (
           <div className="flex justify-center gap-2">
-            <button 
-              onClick={() => {
+            <button
+               onClick={() => {
                 setSelectedService(servicio);
                 setIsPricesModalOpen(true);
               }}
@@ -144,8 +119,8 @@ export default function ServiceCatalog() {
             >
               <i className="bi bi-tags-fill"></i>
             </button>
-            <button 
-              onClick={() => {
+            <button
+               onClick={() => {
                 setSelectedService(servicio);
                 setIsEditModalOpen(true);
               }}
@@ -154,8 +129,8 @@ export default function ServiceCatalog() {
             >
               <i className="bi bi-pencil-square"></i>
             </button>
-            <button 
-              onClick={() => {
+            <button
+               onClick={() => {
                 setSelectedService(servicio);
                 setIsDeleteModalOpen(true);
               }}
@@ -186,69 +161,167 @@ export default function ServiceCatalog() {
         <div className="mb-4">
           <h2 className="text-xl font-bold text-gray-800">Servicios Individuales</h2>
         </div>
-
-        <Table 
-          columns={columns as any} 
-          data={filteredServices as unknown as Item[]} 
-          emptyMessage="No hay servicios que coincidan con la búsqueda."
-        />
+        
+        {isLoading ? (
+          <div className="flex items-center justify-center p-10">
+            <span className="loading loading-spinner loading-xl text-blue-600"></span>
+          </div>
+        ) : (
+          <Table 
+             columns={columns}    
+             data={services}     
+             emptyMessage={searchTerm ? "No hay servicios..." : "No hay servicios registrados."}
+          />
+        )}
       </section>
 
-       <section>
+      <section>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800">Paquetes y Combos</h2>
-          <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-600 transition-colors border-none flex items-center gap-2 cursor-pointer shadow-sm">
-            <i className="bi bi-plus-lg"></i> Crear Combo
+          <button 
+  onClick={() => setIsAddComboModalOpen(true)} 
+  className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-600 transition-colors border-none flex items-center gap-2 cursor-pointer shadow-sm"
+>
+  <i className="bi bi-plus-lg"></i> Crear Combo
+</button>
+        </div>
+        
+        {isLoading ? (
+           <div className="flex items-center justify-center p-10">
+             <span className="loading loading-spinner loading-xl text-yellow-500"></span>
+           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {combos.map((combo: ComboApi) => {
+  const uniqueServices = Array.from(new Set(combo.combosServices?.map(cs => cs.servicesTypeVehicle.service.name) || []));
+
+  return (
+    <div key={combo.comboId} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col hover:shadow-md transition-shadow relative overflow-hidden">
+      {combo.isPromotion ? (
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-linear-to-r from-red-500  via-green-500 to-blue-500"></div>
+      ) :
+           <div className="absolute top-0 left-0 w-full h-1.5 bg-linear-to-r from-blue-500  via-blue-500 to-blue-500"></div>
+
+      }
+      
+      <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 mb-3">
+        {combo.name}
+      </h3>
+      
+      <div className="flex-1 mb-4 flex flex-col gap-3">
+        <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center">
+          <p className="text-xs uppercase tracking-wider font-bold">
+            {combo.isPromotion ? (
+              <span className="bg-linear-to-r from-red-500  via-green-500 to-blue-500 text-transparent bg-clip-text">
+                Promoción Especial
+              </span>
+            ) : <span className="text-gray-600">Descuento Base</span>}
+          </p>
+          <p className="text-lg font-black text-green-600">
+            - {combo.discountPercentage}%
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[10px] text-gray-800 font-bold mb-1.5 uppercase tracking-wider">Servicios Incluidos:</p>
+          <ul className="flex flex-wrap gap-1.5">
+            {uniqueServices.length > 0 ? uniqueServices.map((srv, idx) => (
+              <li key={idx} className="bg-blue-50 text-gray-500 text-[11px] px-2 py-1 rounded-md  font-extrabold border border-blue-100">
+                {srv}
+              </li>
+            )) : <span className="text-xs text-gray-400">Sin servicios</span>}
+          </ul>
+        </div>
+      </div>
+      
+      <div className="flex justify-end pt-3 border-t border-gray-100">
+        <div className="flex gap-2">
+          <button 
+            onClick={() => { setSelectedCombo(combo); setIsEditComboModalOpen(true); }}
+            className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer"
+          >
+            <i className="bi bi-pencil-square"></i>
+          </button>
+          <button 
+            onClick={() => { setSelectedCombo(combo); setIsDeleteComboModalOpen(true); }}
+            className="btn bg-red-50 text-red-600 hover:bg-red-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer"
+          >
+            <i className="bi bi-trash"></i>
           </button>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {combos.map((combo) => (
-            <div key={combo.id} className="bg-white rounded-xl shadow-sm border border-yellow-300 p-6 flex flex-col hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3">{combo.name}</h3>
-              
-              <div className="flex-1 mb-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-2">Incluye:</p>
-                <ul className="space-y-1">
-                  {combo.includedServices.map((itemName, index) => (
-                    <li key={index} className="text-sm text-gray-700 flex items-center gap-2">
-                      <i className="bi bi-check2 text-green-500 font-bold"></i> {itemName}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className="flex justify-between items-end bg-gray-50 p-3 rounded-lg border border-gray-100">
-                <div>
-                  <div className="text-xs text-gray-400 line-through">Normal: ${combo.originalPrice.toFixed(2)}</div>
-                  <div className="text-2xl font-black text-gray-900">${combo.comboPrice.toFixed(2)}</div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <button className="btn bg-sky-50 text-sky-600 hover:bg-sky-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer">
-                    <i className="bi bi-pencil-square"></i>
-                  </button>
-                  <button className="btn bg-red-50 text-red-600 hover:bg-red-100 border-none min-h-0 h-9 w-9 p-0 cursor-pointer">
-                    <i className="bi bi-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      </div>
+    </div>
+  );
+})}
+          </div>
+        )}
       </section>
 
-      {/* Modales */}
-      <AddServiceModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+      <AddServiceModal 
+         isOpen={isAddModalOpen} 
+         onClose={() => setIsAddModalOpen(false)} 
+         formState={newServiceForm}
+         categories={categories}
+         onChange={handleChange}
+         onSubmit={handleCreateSubmit}
+         isLoading={isSubmitting}
+      />
       
       <ServicePricesModal 
-        isOpen={isPricesModalOpen} 
-        onClose={() => setIsPricesModalOpen(false)} 
-        service={selectedService} 
+         isOpen={isPricesModalOpen} 
+         onClose={() => setIsPricesModalOpen(false)} 
+         service={selectedService} 
+         onSave={handleSavePrices}
+         isLoading={isSubmitting}
+       />
+       
+      <EditServiceModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        editingService={selectedService} 
+        categories={categories}
+        onEdit={handleEditSubmit}
+        isLoading={isSubmitting}
       />
 
-      <EditServiceModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} editingService={selectedService} />
-      <DeleteServiceModal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} deletingService={selectedService} />
+      <DeleteServiceModal 
+        isOpen={isDeleteModalOpen} 
+        onClose={() => setIsDeleteModalOpen(false)} 
+        deletingService={selectedService}
+        onDelete={handleDeleteSubmit}
+        isLoading={isSubmitting}
+      />
+
+      <AddComboModal
+        isOpen={isAddComboModalOpen}
+        onClose={() => setIsAddComboModalOpen(false)}
+        formState={newComboForm}
+        services={services}
+        onChange={handleComboChange}
+        onToggleService={toggleServiceInCombo}
+        onSubmit={async (e) => {
+          const success = await createCombo(e);
+          if (success) setIsAddComboModalOpen(false);
+        }}
+        isLoading={isSubmitting}
+      />
+
+      <EditComboModal
+  isOpen={isEditComboModalOpen}
+  onClose={() => setIsEditComboModalOpen(false)}
+  combo={selectedCombo}
+  services={services}
+  onEdit={editCombo}
+  isLoading={isSubmitting}
+/>
+
+<DeleteComboModal
+  isOpen={isDeleteComboModalOpen}
+  onClose={() => setIsDeleteComboModalOpen(false)}
+  deletingCombo={selectedCombo}
+  onDelete={deleteCombo}
+  isLoading={isSubmitting}
+/>
     </div>
   );
 }

@@ -48,9 +48,19 @@ export const InitialNewClientForm: NewClientForm = {
   errorMsg: "",
 };
 
+export interface ClientTotals {
+  general: number;
+  active: number;
+  inactive: number;
+  vehicleAverage: number;
+  clientsWith3PlusVehicles: number;
+  totalVehicles: number;
+}
+
 export interface ClientsData {
   data: Item[];
   totalClients: number | null;
+  totals?: ClientTotals; 
   error: boolean;
   errorMsg: string;
 }

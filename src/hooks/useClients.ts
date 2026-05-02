@@ -39,21 +39,22 @@ export const useClients = () => {
         active: activeStatus.toString(), 
       });
 
-      const data = transformData(response.data.data);
-      let totalToDisplay = response.data.meta.totals.general; 
+     const data = transformData(response.data.data);
+      let totalToDisplay = response.data.meta.totals.general;
       
       if (response.data.meta.totals.active !== undefined) {
-         totalToDisplay = activeStatus 
-            ? response.data.meta.totals.active 
-            : response.data.meta.totals.inactive;
+         totalToDisplay = activeStatus
+             ? response.data.meta.totals.active
+             : response.data.meta.totals.inactive;
       }
 
       setClientsData((prev) => ({
         ...prev,
         data: data,
-        totalClients: totalToDisplay, 
+        totalClients: totalToDisplay,
+        totals: response.data.meta.totals 
       }));
-
+      
       if (response.data.meta.totals.totalPages) { 
         setTotalPages(response.data.meta.totalPages);
       }

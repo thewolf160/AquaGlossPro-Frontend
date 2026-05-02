@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useMemo, useState } from "react";
+import {  useState } from "react";
 import type { Client} from "../types/clients.types";
 import Table from "../components/Table/Table";
 import { type Item } from "../types/models";
@@ -54,20 +54,12 @@ function Clients() {
   const [isConfirmDeleteVehicleOpen, setIsConfirmDeleteVehicleOpen] = useState(false);
 const [vehicleToDelete, setVehicleToDelete] = useState<{id: string, plate: string} | null>(null);
 
-  const globalStats = useMemo(() => {
-    const totalClients = clientsData.totalClients || 0;
-
-    if (!clientsData.data || clientsData.data.length === 0) {
-      return { totalClients: totalClients, totalVehicles: 0, avgVehicles: "0", fleets: 0 };
-    }
-
-    const clients = clientsData.data as Client[];
-    const totalVehicles = clients.reduce((acc, client) => acc + (client.countVehicles || 0), 0);
-    const avgVehicles = clients.length > 0 ? (totalVehicles / clients.length).toFixed(1) : "0";
-    const fleets = clients.filter((client) => (client.countVehicles || 0) >= 3).length;
-
-    return { totalClients, totalVehicles, avgVehicles, fleets };
-  }, [clientsData]);
+  const globalStats = {
+    totalClients: clientsData.totals?.general || 0,
+    totalVehicles: clientsData.totals?.totalVehicles || 0,
+    avgVehicles: clientsData.totals?.vehicleAverage || "0",
+    fleets: clientsData.totals?.clientsWith3PlusVehicles || 0
+  };
 
   const handleDeleteVehicleRequest = (id: string, plate: string) => {
   setVehicleToDelete({ id, plate });

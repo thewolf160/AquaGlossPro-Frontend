@@ -1,4 +1,4 @@
-type ActionType = "edit" | "delete" | "register" | "restore";
+type ActionType = "edit" | "delete" | "register" | "restore" | "confirm" | "cancel";
 
 interface ButtonProps {
   type: ActionType;
@@ -33,6 +33,16 @@ function ActionButton({ type, onClick, isLoading = false, form }: ButtonProps) {
     restore: {
       label: "Restaurar",
       color: "bg-green-500 hover:bg-green-600"
+    },
+    confirm: {
+      label: "Confirmar",
+      icon: "bi bi-check-circle-fill",
+      color: "bg-green-600 hover:bg-green-700"
+    },
+    cancel: {
+      label: "Anular",
+      icon: "bi bi-x-circle-fill",
+      color: "bg-red-600 hover:bg-red-700"
     }
   };
 
@@ -44,7 +54,7 @@ function ActionButton({ type, onClick, isLoading = false, form }: ButtonProps) {
         disabled={isLoading}
         form={form}
         onClick={onClick}
-        className={`btn text-white transition-all ease-in ${color}`}
+        className={`btn text-white transition-all ease-in border-none ${color}`}
       >
         {isLoading ? (
           <span className="loading loading-spinner loading-xl"></span>
