@@ -19,6 +19,12 @@ const opciones = [
       desc: "Controla las opciones de pago de tu sistema",
       icon: "bi bi-cash",
     },
+    {
+      id: "categories",
+      title: "Categorías",
+      desc: "Organice sus productos y servicios en grupos personalizados",
+      icon: "bi bi-tags"
+    }
   ];
 
 function SettingsMenu() {
