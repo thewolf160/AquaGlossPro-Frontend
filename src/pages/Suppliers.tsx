@@ -1,199 +1,252 @@
-import { useState, useMemo } from "react";
+import React from "react";
 import Table from "../components/Table/Table";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
+import Alert from "../components/Alert";
+import AddSupplierModal from "../components/suppliers/AddSupplierModal";
+import EditSupplierModal from "../components/suppliers/EditSupplierModal";
+import ViewSupplierModal from "../components/suppliers/ViewSupplierModal";
+import DeleteSupplierModal from "../components/suppliers/DeleteSupplierModal";
+import RestoreSupplierModal from "../components/suppliers/RestoreSupplierModal";
+
 import type { Supplier } from "../types/suppliers.types";
 import type { Item } from "../types/models";
 import type { ColumnsProps } from "../components/Table/Table.types";
-
-const MOCK_SUPPLIERS: Supplier[] = [
-  { id: 1, name: "Distribuidora Chemical Wash", contactName: "Carlos Pérez", phone: "0414-1234567", email: "carlos@chemical.com", category: "Químicos", status: "ACTIVO" },
-  { id: 2, name: "Repuestos AutoLara", contactName: "Ana Rodríguez", phone: "0412-9876543", email: "ventas@autolara.com", category: "Repuestos", status: "ACTIVO" },
-  { id: 3, name: "Insumos Limpieza C.A.", contactName: "Luis García", phone: "0251-5551234", email: "contacto@insumos.com", category: "Consumibles", status: "INACTIVO" },
-  { id: 4, name: "Lubricantes El Tunal", contactName: "Jose Vivas", phone: "0416-8889900", email: "jvivas@eltunal.com", category: "Aceites", status: "ACTIVO" },
-];
+import { useSuppliers } from "../hooks/useSuppliers";
+import { useModals } from "../hooks/useModals";
+import { InitialNewSupplierForm } from "../types/suppliers.types";
 
 export default function Suppliers() {
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [activeFilter, setActiveFilter] = useState<"ACTIVOS" | "INACTIVOS">("ACTIVOS");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 5;
+  const {
+    suppliersData,
+    isLoading,
+    isSubmitting,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    searchParameter,
+    handleSearchChange,
+    isActiveView,
+    toggleActiveView,
+    successMessage,
+    setSuccessMessage,
+    currentSupplier,
+    setCurrentSupplier,
+    editSupplierState,
+    setEditSupplierState,
+    handleEditChange,
+    newSupplierForm,
+    setNewSupplierForm,
+    handleChange,
+    registerSupplier,
+    editSupplier,
+    restoreSupplier,
+    deleteSupplier,
+  } = useSuppliers();
 
-  const filteredData = useMemo(() => {
-    return MOCK_SUPPLIERS.filter((s) => {
-      const mapStatus = activeFilter === "ACTIVOS" ? "ACTIVO" : "INACTIVO";
-      const matchesStatus = s.status === mapStatus;
-      const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            s.contactName.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesStatus && matchesSearch;
-    });
-  }, [searchTerm, activeFilter]);
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredData.slice(start, start + itemsPerPage);
-  }, [filteredData, currentPage]);
+  const { modals, toggleModal } = useModals();
 
   const stats = {
-    total: filteredData.length,
-    active: MOCK_SUPPLIERS.filter(s => s.status === 'ACTIVO').length,
-    inactive: MOCK_SUPPLIERS.filter(s => s.status === 'INACTIVO').length
+    total: suppliersData.totals?.general || 0,
+    active: suppliersData.totals?.active || 0,
+    inactive: suppliersData.totals?.inactive || 0,
   };
 
-  const isInactiveView = activeFilter === "INACTIVOS";
+  
+  const handleOpenDetails = (item: Item) => {
+    setCurrentSupplier(item as unknown as Supplier);
+    toggleModal("details", true);
+  };
+
+  const handleCloseRegister = () => {
+    toggleModal("register", false);
+    setNewSupplierForm(InitialNewSupplierForm);
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const success = await registerSupplier();
+    if (success) {
+      handleCloseRegister();
+      setSuccessMessage("Proveedor registrado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  };
+
+  const handleOpenEdit = (item: Item) => {
+    setEditSupplierState({ ...(item as unknown as Supplier), error: false, errorMsg: "" });
+    toggleModal("edit", true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const success = await editSupplier();
+    if (success) {
+      toggleModal("edit", false);
+      setSuccessMessage("Proveedor editado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  };
+
+  const handleOpenDelete = (item: Item) => {
+    setCurrentSupplier(item as unknown as Supplier);
+    toggleModal("delete", true);
+  };
+
+  const handleConfirmDelete = async () => {
+    const success = await deleteSupplier(String(currentSupplier.id));
+    if (success) {
+      toggleModal("delete", false);
+      setSuccessMessage("Proveedor eliminado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  };
+
+  const handleOpenRestore = (item: Item) => {
+    setCurrentSupplier(item as unknown as Supplier);
+    toggleModal("restore", true);
+  };
+
+  const handleConfirmRestore = async () => {
+    const success = await restoreSupplier(String(currentSupplier.id));
+    if (success) {
+      toggleModal("restore", false);
+      setSuccessMessage("Proveedor restaurado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  };
 
   const columns: ColumnsProps[] = [
     {
-      header: "Proveedor",
-      key: "name",
+      header: "Empresa",
+      key: "companyName",
       mobile: true,
-      render: (item: Item) => {
-        const s = item as unknown as Supplier;
-        return (
-          <div className="text-left">
-            <div className="font-bold text-gray-800">{s.name}</div>
-            <div className="text-xs text-gray-500">{s.category}</div>
-          </div>
-        );
-      },
+      render: (item: Item) => <div className="font-bold text-gray-800 text-left">{(item as Supplier).companyName}</div>,
     },
     {
-      header: "Contacto",
-      key: "contactName",
+      header: "RIF",
+      key: "rif",
       mobile: true,
-      render: (item: Item) => {
-        const s = item as unknown as Supplier;
-        return (
-          <div className="text-left">
-            <div className="text-sm font-medium text-slate-700">{s.contactName}</div>
-            <div className="text-xs text-slate-500">{s.phone}</div>
-          </div>
-        );
-      },
+      render: (item: Item) => <span className="font-medium text-slate-700">{(item as Supplier).rif}</span>,
+    },
+    {
+      header: "Teléfono",
+      key: "numberPhone",
+      mobile: true,
+      render: (item: Item) => <span className="text-slate-600">{(item as Supplier).numberPhone}</span>,
     },
     {
       header: "Email",
       key: "email",
       mobile: false,
-      render: (item: Item) => <span className="text-sm text-slate-600">{(item as unknown as Supplier).email}</span>,
+      render: (item: Item) => <span className="text-sm text-slate-600">{(item as Supplier).email}</span>,
     },
     {
       header: "Acciones",
       key: "actions",
       mobile: true,
-      render: (item: Item) => (
-        <div className="flex justify-center gap-2">
-          {!isInactiveView ? (
-            <>
-              <button className="bg-sky-50 text-sky-600 h-9 w-9 flex items-center justify-center rounded-md hover:bg-sky-100 transition-all cursor-pointer">
-                <i className="bi bi-pencil-square"></i>
-              </button>
-              <button className="bg-red-50 text-red-500 h-9 w-9 flex items-center justify-center rounded-md hover:bg-red-100 transition-all cursor-pointer">
-                <i className="bi bi-trash"></i>
-              </button>
-            </>
-          ) : (
-            <button className="px-3 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer">
-              <i className="bi bi-arrow-clockwise"></i> Reactivar
-            </button>
-          )}
-        </div>
-      )
     }
   ];
 
+  const actionProps = isActiveView
+    ? {
+        onView: handleOpenDetails,
+        onEdit: handleOpenEdit,
+        onDelete: handleOpenDelete,
+      }
+    : {
+        onView: handleOpenDetails,
+        onRestore: handleOpenRestore,
+      };
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {successMessage && <Alert message={successMessage} />}
+
       <HeaderPortal>
         <HeaderSearch
-          searchPlaceholder="Buscar proveedor..."
+          searchPlaceholder="Buscar por empresa, RIF, email o teléfono..."
           buttonText="Agregar Proveedor"
-          searchTerm={searchTerm}
-          onSearchChange={(val) => { setSearchTerm(val); setCurrentPage(1); }}
-          onAddClick={() => alert("Nuevo proveedor")}
+          searchTerm={searchParameter}
+          onSearchChange={handleSearchChange}
+          onAddClick={() => toggleModal("register", true)}
         />
       </HeaderPortal>
 
-      <div className={`grid grid-cols-1 ${isInactiveView ? '' : 'md:grid-cols-3'} gap-4`}>
-        <div className={`bg-white p-4 rounded-xl shadow-sm border flex items-center gap-4 ${isInactiveView ? 'border-slate-300' : 'border-blue-200'}`}>
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${isInactiveView ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-600'}`}>
-            <i className={`bi ${isInactiveView ? 'bi-trash3' : 'bi-truck'}`}></i>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+        <div className={`bg-white p-4 rounded-xl shadow-sm border flex items-center gap-4 ${!isActiveView ? 'border-slate-300' : 'border-blue-200'}`}>
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${!isActiveView ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-600'}`}>
+            <i className={`bi ${!isActiveView ? 'bi-trash3' : 'bi-truck'}`}></i>
           </div>
           <div>
-            <p className={`text-sm font-medium ${isInactiveView ? 'text-slate-600' : 'text-blue-700'}`}>
-              {isInactiveView ? 'Total Inactivos' : 'Total Proveedores'}
+            <p className={`text-sm font-medium ${!isActiveView ? 'text-slate-600' : 'text-blue-700'}`}>
+              {!isActiveView ? 'Total Inactivos' : 'Total Proveedores Registrados'}
             </p>
-            <p className={`text-2xl font-black ${isInactiveView ? 'text-slate-800' : 'text-blue-800'}`}>
-              {isInactiveView ? stats.inactive : stats.total}
+            <p className={`text-2xl font-black ${!isActiveView ? 'text-slate-800' : 'text-blue-800'}`}>
+              {!isActiveView ? stats.inactive : stats.total}
             </p>
           </div>
         </div>
 
-        {!isInactiveView && (
-          <>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-green-200 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl">
-                <i className="bi bi-check-circle"></i>
-              </div>
-              <div>
-                <p className="text-sm text-green-700 font-medium">Proveedores Activos</p>
-                <p className="text-2xl font-black text-green-900">{stats.active}</p>
-              </div>
+        {isActiveView && (
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-green-200 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl">
+              <i className="bi bi-check-circle"></i>
             </div>
-
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-yellow-200 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl">
-                <i className="bi bi-tag"></i>
-              </div>
-              <div>
-                <p className="text-sm text-yellow-700 font-medium">Categorías</p>
-                <p className="text-2xl font-black text-yellow-700">3</p>
-              </div>
+            <div>
+              <p className="text-sm text-green-700 font-medium">Proveedores Activos</p>
+              <p className="text-2xl font-black text-green-900">{stats.active}</p>
             </div>
-          </>
+          </div>
         )}
       </div>
 
       <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
         <div className="flex bg-gray-100 p-1 rounded-lg w-fit">
-          <button 
-            onClick={() => { setActiveFilter("ACTIVOS"); setCurrentPage(1); }} 
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "ACTIVOS" ? "bg-white text-green-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          <button
+            onClick={() => toggleActiveView(true)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${isActiveView ? "bg-white text-green-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
           >
             Activos
           </button>
-          <button 
-            onClick={() => { setActiveFilter("INACTIVOS"); setCurrentPage(1); }} 
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "INACTIVOS" ? "bg-white text-slate-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          <button
+            onClick={() => toggleActiveView(false)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${!isActiveView ? "bg-white text-red-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
           >
             Inactivos
           </button>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-1">
-          <Table
-            columns={columns}
-            data={paginatedData as unknown as Item[]}
-            emptyMessage="No hay proveedores para mostrar."
-          />
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-10">
+              <span className="loading loading-spinner loading-xl text-blue-600"></span>
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              data={suppliersData.data as Item[]}
+              emptyMessage={searchParameter ? "No se encontraron proveedores que coincidan con la búsqueda." : "No hay proveedores registrados."}
+              {...actionProps} 
+            />
+          )}
 
           <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
             <p className="text-sm text-slate-500">
-              Página <span className="font-bold text-slate-800">{currentPage}</span> de <span className="font-bold text-slate-800">{totalPages || 1}</span>
+              Página <span className="font-bold">{currentPage}</span> de <span className="font-bold">{totalPages || 1}</span>
             </p>
             <div className="join gap-2">
               <button
-                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1 disabled:opacity-50"
+                className="join-item py-1.5 px-3 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded-md flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                 onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || isLoading}
               >
                 <i className="bi bi-arrow-left-short text-xl" /> Anterior
               </button>
               <button
-                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1 disabled:opacity-50"
+                className="join-item py-1.5 px-3 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded-md flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                 onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
+                disabled={currentPage === totalPages || totalPages === 0 || isLoading}
               >
                 Siguiente <i className="bi bi-arrow-right-short text-xl" />
               </button>
@@ -201,6 +254,47 @@ export default function Suppliers() {
           </div>
         </div>
       </section>
+
+      <AddSupplierModal
+        isOpen={modals.register}
+        onClose={handleCloseRegister}
+        formState={newSupplierForm}
+        onChange={handleChange}
+        onSubmit={handleRegisterSubmit}
+        isLoading={isSubmitting}
+      />
+
+      <EditSupplierModal
+        isOpen={modals.edit}
+        onClose={() => toggleModal("edit", false)}
+        editingSupplier={editSupplierState}
+        onChange={handleEditChange}
+        onSubmit={handleEditSubmit}
+        isLoading={isSubmitting}
+      />
+
+      <ViewSupplierModal
+        isOpen={modals.details}
+        onClose={() => toggleModal("details", false)}
+        supplier={currentSupplier}
+      />
+
+      <DeleteSupplierModal
+        isOpen={modals.delete}
+        onClose={() => toggleModal("delete", false)}
+        deletingSupplier={currentSupplier}
+        onDelete={handleConfirmDelete}
+        isLoading={isSubmitting}
+      />
+
+      <RestoreSupplierModal
+        isOpen={modals.restore}
+        onClose={() => toggleModal("restore", false)}
+        restoringSupplier={currentSupplier}
+        onRestore={handleConfirmRestore}
+        isLoading={isSubmitting}
+      />
+
     </div>
   );
 }

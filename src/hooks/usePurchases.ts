@@ -26,6 +26,8 @@ export const usePurchases = () => {
   const [searchParameter, setSearchParameter] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
 
+  const [dateFilter, setDateFilter] = useState<{startDate: string, endDate: string}>({ startDate: "", endDate: "" });
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setDebouncedSearch(searchParameter);
@@ -34,16 +36,25 @@ export const usePurchases = () => {
     return () => clearTimeout(timeoutId);
   }, [searchParameter]);
 
+  useEffect(() => {
+    fetchDependencies();
+  }, []);
+
   const fetchDependencies = async () => {
     setIsLoadingData(true);
     try {
-      const [suppliersRes, paymentsRes, productsRes] = await Promise.all([
-        SupplierService.getAll(),
+    const [suppliersRes, paymentsRes, productsRes] = await Promise.all([
+        SupplierService.getAll({ limit: "100", active: "true" }), 
         PayMethodService.getAll({ limit: "100", active: "true" }),
         ProductService.getAll({ limit: "100", active: "true" }),
       ]);
       
-      setSuppliers(suppliersRes);
+      setSuppliers(
+        suppliersRes.data.data.map((s: any) => ({
+          id: s.supplierId,
+          name: s.companyName,
+        }))
+      );
       
       setPaymentMethods(
         paymentsRes.data.data.map((pm: { paymentMethodId: number; name: string }) => ({
@@ -66,30 +77,40 @@ export const usePurchases = () => {
     }
   };
 
-  const fetchPurchaseHistory = useCallback(async (page: number = 1, param: string = "") => {
+  const fetchPurchaseHistory = useCallback(async (page: number = 1, param: string = "", dates?: {startDate: string, endDate: string}) => {
     setIsLoadingData(true);
+    setError(null);
     try {
-      const response = await PurchaseService.getAll({ page, limit: 5, param });
+      const queryParams: any = { page, limit: 5, param };
+      if (dates?.startDate && dates?.endDate) {
+        queryParams.startDate = dates.startDate;
+        queryParams.endDate = dates.endDate;
+      }
       
+      const response = await PurchaseService.getAll(queryParams);
       const rawData: PurchaseApi[] = response.result?.data || [];
-      const sortedData = rawData.sort((a: PurchaseApi, b: PurchaseApi) => b.purchaseId - a.purchaseId);
       
-      setPurchasesHistory(sortedData);
+      setPurchasesHistory(rawData);
       setTotalPages(response.result?.meta?.totalPages || 1);
-    } catch (err) {
-      console.error("Error cargando historial de compras:", err);
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 404) {
+         
+          setPurchasesHistory([]);
+          setTotalPages(1);
+        } else {
+          console.error("Error cargando historial de compras:", err);
+          setError(err.response?.data?.message || "Ocurrió un error.");
+        }
+      }
     } finally {
       setIsLoadingData(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchDependencies();
-  }, []);
-
-  useEffect(() => {
-    fetchPurchaseHistory(currentPage, debouncedSearch);
-  }, [fetchPurchaseHistory, currentPage, debouncedSearch]);
+    fetchPurchaseHistory(currentPage, debouncedSearch, dateFilter);
+  }, [fetchPurchaseHistory, currentPage, debouncedSearch, dateFilter]);
 
   const handleSearchChange = (value: string) => {
     setSearchParameter(value);
@@ -154,5 +175,7 @@ export const usePurchases = () => {
     setError,
     registerPurchase,
     changeStatus,
+    fetchDependencies,
+      setDateFilter
   };
 };
