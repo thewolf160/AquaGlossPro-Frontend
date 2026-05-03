@@ -19,6 +19,7 @@ import Pays from "./pages/Settings/Pays";
 import Suppliers from "./pages/Suppliers";
 import ServiceCatalog from "./pages/ServiceCatalog";
 import KanbanBoard from "./pages/KanbanBoard";
+import Categories from "./pages/Settings/Categories";
 
 export default function App() {
   return (
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="jobs" element={<Jobs/>}/>
             <Route path="typesVehicles" element={<TypesVehicles/>}/>
             <Route path="pays" element={<Pays/>}/>
+            <Route path="categories" element={<Categories/>}/>
           </Route>
           <Route path="reports" element={<Reports />} />
         </Route>

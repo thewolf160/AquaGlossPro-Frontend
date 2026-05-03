@@ -6,7 +6,7 @@ function Sales() {
       <div className="flex flex-row gap-6">
         <section className="flex flex-col gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Nueva Venta</h1>
+            <h1 className="text-2xl font-bold text-slate-800">Nuevo Servicio</h1>
             <p className="text-slate-500">
               Selecciona los servicios elegidos por el cliente
             </p>
@@ -99,7 +99,7 @@ function Sales() {
               </label>
 
               <button className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-lg font-medium text-white py-3 rounded-md transition-colors shadow-sm">
-                Registrar Venta
+                Registrar Nuevo Servicio
               </button>
             </div>
           </div>
