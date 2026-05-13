@@ -1,126 +1,238 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import HeaderPortal from "../components/HeaderPortal";
 import HeaderSearch from "../components/HeaderSearch";
 import Table from "../components/Table/Table";
 import Input from "../components/Modal/Input";
 import Modal from "../components/Modal/Modal";
+import { useUsers } from "../hooks/useUsers";
+import { useRoles } from "../hooks/useRoles";
 
 function Users() {
+  const {
+    usersData,
+    isLoading,
+    error,
+    setError,
+    successMsg,
+    isActiveTab,
+    setIsActiveTab,
+    currentPage,
+    setCurrentPage,
+    createUser,
+    updateUser,
+    deleteUser,
+    restoreUser,
+  } = useUsers();
+
+  const { rolesData } = useRoles();
+  const availableRoles = rolesData?.data || [];
+
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [userName, setUserName] = useState("");
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
+  const [modalMode, setModalMode] = useState<"add" | "edit" | "view">("add");
+
+  const [formData, setFormData] = useState({
+    userId: 0,
+    name: "",
+    email: "",
+    password: "",
+    roleId: 0,
+  });
+
+  // BUSCADOR LOCAL EN LA PÁGINA ACTUAL
+
+  const filteredUsers = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    const currentList = usersData.data || [];
+    if (!term) return currentList;
+
+    return currentList.filter(
+      (user) =>
+        user.name.toLowerCase().includes(term) ||
+        user.email.toLowerCase().includes(term) ||
+        String(user.userId).includes(term),
+    );
+  }, [usersData.data, searchTerm]);
+
+  // Manejadores de Modal de Borrado / Restauración
   const handleOpenDeleteModal = (user: any) => {
-    setUserName(user.name + " ");
+    setSelectedUser(user);
     setIsDeleteModalOpen(true);
   };
-  const handleCloseDeleteModal = () => {
-    setIsDeleteModalOpen(false);
+
+  const handleConfirmDeleteRestore = async () => {
+    if (!selectedUser) return;
+    let success = false;
+
+    if (isActiveTab) {
+      success = await deleteUser(selectedUser.userId);
+    } else {
+      success = await restoreUser(selectedUser.userId);
+    }
+
+    if (success) {
+      setIsDeleteModalOpen(false);
+      setSelectedUser(null);
+    }
   };
-  const handleDeleteUser = () => {
-    console.log("Eliminando usuario:", userName);
-  };
+
   const deleteButton = (
     <button
-      onClick={handleDeleteUser}
-      className="btn bg-red-600 text-white hover:bg-red-700"
+      onClick={handleConfirmDeleteRestore}
+      disabled={isLoading}
+      className={`btn text-white ${isActiveTab ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
     >
-      {" "}
-      Eliminar{" "}
+      {isLoading ? "Procesando..." : isActiveTab ? "Eliminar" : "Restaurar"}
     </button>
   );
 
-  const [formData, setFormData] = useState({
-    ci: "",
-    name: "",
+  // MODAL VACÍO AGREGAR
 
-    email: "",
-    phone: "",
-    rol: "",
-    salary: "",
-  });
+  const handleOpenAdd = () => {
+    setModalMode("add");
+    setError(null);
+    setFormData({
+      userId: 0,
+      name: "",
+      email: "",
+      password: "",
+      roleId: 0,
+    });
+    setIsModalOpen(true);
+  };
 
-  const users = [
-    {
-      id: 1,
-      ci: "31161696",
-      name: "Yonathan Nieles",
-      email: "yonathannieles011@gmail.com",
-      phone: "04164537225",
-      rol: "Admin",
-      salary: "2000$",
-    },
-    {
-      id: 2,
-      ci: "32137510",
-      name: "Jesus Cortez",
-      email: "jesus@gmail.com",
-      phone: "04164342389",
-      rol: "Cajero",
-      salary: "1600$",
-    },
-    {
-      id: 3,
-      ci: "30345431",
-      name: "Mauricio Valera",
-      email: "mauricio@gmail.com",
-      phone: "04125617794",
-      rol: "Cajero",
-      salary: "1600$",
-    },
-    {
-      id: 4,
-      ci: "31532234",
-      name: "Fabian Da Cal",
-      email: "fabian@gmail.com",
-      phone: "04164342389",
-      rol: "Supervisor de Pista",
-      salary: "1600$",
-    },
-    {
-      id: 5,
-      ci: "30444555",
-      name: "Jose Vasquez",
-      email: "jose@gmail.com",
-      phone: "04164342389",
-      rol: "Supervisor de Pista",
-      salary: "1600$",
-    },
-    {
-      id: 6,
-      ci: "29991333",
-      name: "Juan Perdomo",
-      email: "juan@gmail.com",
-      phone: "04164342389",
-      rol: "Supervisor de Pista",
-      salary: "1600$",
-    },
-  ];
+  const handleOpenEdit = (user: any) => {
+    setModalMode("edit");
+    setError(null);
+    setFormData({
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      password: "",
+      roleId: user.role?.roleId || 0,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenView = (user: any) => {
+    setModalMode("view");
+    setError(null);
+    setFormData({
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      password: "",
+      roleId: user.role?.roleId || 0,
+    });
+    setIsModalOpen(true);
+  };
+
+  // Guardar (POST / PATCH)
+  const handleSubmit = async () => {
+    if (!formData.name.trim() || !formData.email.trim() || !formData.roleId) {
+      setError(
+        "Por favor completa los campos obligatorios (Nombre, Correo y Rol).",
+      );
+      return;
+    }
+
+    let success = false;
+    if (modalMode === "add") {
+      if (!formData.password) {
+        setError("La contraseña es obligatoria para crear un usuario.");
+        return;
+      }
+      success = await createUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        roleId: Number(formData.roleId),
+      });
+    } else if (modalMode === "edit") {
+      const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        roleId: Number(formData.roleId),
+      };
+      if (formData.password.trim()) {
+        payload.password = formData.password;
+      }
+      success = await updateUser(formData.userId, payload);
+    }
+
+    if (success) {
+      setIsModalOpen(false);
+    }
+  };
+
+  const modalTitle =
+    modalMode === "add"
+      ? "Agregar Usuario"
+      : modalMode === "edit"
+        ? "Editar Usuario"
+        : "Detalles del Usuario";
+
+  // COLUMNAS DINÁMICAS: BYPASS DE BOTÓN EN LA PAPELERA
 
   const columns = [
-    { key: "ci", header: "CI" },
+    { key: "userId", header: "ID" },
     { key: "name", header: "Nombre" },
     { key: "email", header: "Correo" },
-    { key: "phone", header: "Teléfono" },
-    { key: "rol", header: "Rol" },
-    { key: "actions", header: "Acciones" },
+    {
+      key: "rol",
+      header: "Rol",
+      render: (item: any) => (
+        <span className="font-bold text-slate-700">
+          {item.role?.name || "N/A"}
+        </span>
+      ),
+    },
+    isActiveTab
+      ? { key: "actions", header: "Acciones" }
+      : {
+          key: "customRestore",
+          header: "Acciones",
+          render: (item: any) => (
+            <button
+              onClick={() => handleOpenDeleteModal(item)}
+              className="px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+              title="Restaurar Usuario"
+            >
+              Restaurar
+            </button>
+          ),
+        },
   ];
 
   return (
-    <section className="flex flex-col gap-6 p-4">
+    <section className="flex flex-col gap-6 p-4 animate-fade-in max-w-7xl mx-auto w-full">
+      {successMsg && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-bold text-sm text-center shadow-sm animate-slide-down">
+          {successMsg}
+        </div>
+      )}
+      {error && !isModalOpen && (
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl font-bold text-sm text-center shadow-sm animate-slide-down">
+          {error}
+        </div>
+      )}
+
       <HeaderPortal>
         <HeaderSearch
-          searchPlaceholder="Buscar usuario..."
+          searchPlaceholder="Buscar por nombre, ID o correo..."
           buttonText="Agregar Usuario"
           searchTerm={searchTerm}
           onSearchChange={(value) => setSearchTerm(value)}
-          onAddClick={() => setIsModalOpen(true)}
+          onAddClick={handleOpenAdd}
         />
       </HeaderPortal>
 
-      <section className="grid grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-rose-200  hover:shadow-md transition-shadow flex items-center gap-4">
+      {/* Tarjetas de Contadores Conectadas al Backend */}
+      <section className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-rose-200 hover:shadow-md transition-shadow flex items-center gap-4">
           <div className="p-3 rounded-full bg-rose-100">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -146,7 +258,9 @@ function Users() {
           </div>
           <div className="pr-12">
             <p className="font-medium text-sm text-rose-700">Total Usuarios</p>
-            <p className="text-2xl font-bold text-rose-900">24</p>
+            <p className="text-2xl font-bold text-rose-900">
+              {usersData.totals.general}
+            </p>
           </div>
         </div>
 
@@ -173,241 +287,305 @@ function Users() {
           </div>
           <div className="pr-20">
             <p className="font-medium text-sm text-purple-500">Admins</p>
-            <p className="text-2xl font-bold text-purple-900">1</p>
+            <p className="text-2xl font-bold text-purple-900">
+              {
+                usersData.data.filter(
+                  (u) => u.role?.name?.toUpperCase() === "ADMIN",
+                ).length
+              }
+            </p>
           </div>
         </div>
 
+        {/* ICONO DE SOL */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-emerald-200 hover:shadow-md transition-shadow flex items-center gap-4">
-          <div className="p-3 rounded-full bg-emerald-100">
+          <div className="p-3 rounded-full bg-emerald-100 flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              className="text-emerald-800"
+              className="w-5 h-5 text-emerald-800"
+              viewBox="0 0 32 32"
             >
-              <g
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeMiterlimit="1.5"
-                strokeWidth="1.5"
-              >
-                <path d="M12 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6m1-6s1-2 1-4s-2-4-2-4s-2 2-2 4s1 4 1 4" />
-                <path d="M9 11s-2-1-4-1s-4 2-4 2s2 2 4 2s4-1 4-1m4 2s1 2 1 4s-2 4-2 4s-2-2-2-4s1-4 1-4m4-4s2-1 4-1s4 2 4 2s-2 2-4 2s-4-1-4-1m-4.414-3.828S9.879 7.05 8.464 5.636C7.05 4.222 4.222 4.222 4.222 4.222s0 2.828 1.414 4.243c1.414 1.414 3.536 2.121 3.536 2.121m0 2.828s-2.122.707-3.536 2.122c-1.414 1.414-1.414 4.242-1.414 4.242s2.828 0 4.242-1.414s2.122-3.536 2.122-3.536m4.243-1.414s2.12.707 3.535 2.122c1.414 1.414 1.414 4.242 1.414 4.242s-2.828 0-4.242-1.414s-2.122-3.536-2.122-3.536m0-5.656s.707-2.122 2.122-3.536c1.414-1.414 4.242-1.414 4.242-1.414s0 2.828-1.414 4.243c-1.414 1.414-3.536 2.121-3.536 2.121" />
-              </g>
+              <path
+                fill="currentColor"
+                d="M15 2h2v4.96h-2zm6.687 6.89l3.507-3.506l1.414 1.414l-3.507 3.507zM25.04 15H30v2h-4.96zm-3.347 8.104l1.414-1.414l3.507 3.507L25.2 26.61zM15 25.04h2V30h-2zm-9.604.162l3.508-3.507l1.414 1.414l-3.507 3.507zM2 15h4.96v2H2zm3.39-8.197l1.415-1.414l3.507 3.507l-1.414 1.414zM16 12a4 4 0 1 1-4 4a4 4 0 0 1 4-4m0-2a6 6 0 1 0 6 6a6 6 0 0 0-6-6"
+              />
             </svg>
           </div>
           <div className="pr-20">
             <p className="font-medium text-sm text-emerald-500">Activos</p>
-            <p className="text-2xl font-bold text-emerald-900">6</p>
+            <p className="text-2xl font-bold text-emerald-900">
+              {usersData.totals.active}
+            </p>
           </div>
         </div>
 
+        {/* ICONO DE LUNA */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-200 hover:shadow-md transition-shadow flex items-center gap-4">
-          <div className="p-3 rounded-full bg-amber-100">
+          <div className="p-3 rounded-full bg-amber-100 flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              fill="currentColor"
-              className="bi bi-pause-circle text-amber-800"
-              viewBox="0 0 16 16"
+              className="w-5 h-5 text-amber-800"
+              viewBox="0 0 32 32"
             >
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-              <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z" />
+              <path
+                fill="currentColor"
+                d="M13.503 5.414a15.076 15.076 0 0 0 11.593 18.194a11.1 11.1 0 0 1-7.975 3.39c-.138 0-.278.005-.418 0a11.094 11.094 0 0 1-3.2-21.584M14.98 3a1 1 0 0 0-.175.016a13.096 13.096 0 0 0 1.825 25.981c.164.006.328 0 .49 0a13.07 13.07 0 0 0 10.703-5.555a1.01 1.01 0 0 0-.783-1.565A13.08 13.08 0 0 1 15.89 4.38A1.015 1.015 0 0 0 14.98 3"
+              />
             </svg>
           </div>
           <div className="pr-20">
             <p className="font-medium text-sm text-amber-500">Inactivos</p>
-            <p className="text-2xl font-bold text-amber-900">8</p>
+            <p className="text-2xl font-bold text-amber-900">
+              {usersData.totals.inactive}
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Tabla */}
-      <section className="shadow-md rounded-xl overflow-hidden border border-slate-300">
+      {/* Pestañas de Filtro Activos / Inactivos */}
+      <div className="px-2 flex gap-2">
+        <button
+          onClick={() => {
+            setIsActiveTab(true);
+            setCurrentPage(1);
+          }}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            isActiveTab
+              ? "bg-white text-blue-600 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Usuarios Activos
+        </button>
+        <button
+          onClick={() => {
+            setIsActiveTab(false);
+            setCurrentPage(1);
+          }}
+          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            !isActiveTab
+              ? "bg-white text-rose-600 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          Papelera (Inactivos)
+        </button>
+      </div>
+
+      {/* Tabla Gestionada */}
+      <section className="shadow-md rounded-xl overflow-hidden border border-slate-300 bg-white">
         <div className="bg-white px-6 py-3 border-b border-slate-200">
           <h2 className="font-bold text-slate-800 text-xl tracking-tight">
-            Gestión de Usuarios
+            Gestión de Usuarios{" "}
+            {isLoading && (
+              <span className="loading loading-spinner loading-xs ml-2 text-blue-600 animate-spin"></span>
+            )}
           </h2>
         </div>
 
         <Table
           columns={columns}
-          data={users}
-          onEdit={(user) => {
-            setFormData(user);
-            setIsModalOpen(true);
-          }}
-          onDelete={(user) => handleOpenDeleteModal(user)}
-          onView={(user) => console.log("Ver usuario:", user)}
-          emptyMessage="No hay usuarios registrados"
+          data={filteredUsers}
+          onEdit={handleOpenEdit}
+          onDelete={handleOpenDeleteModal}
+          onView={handleOpenView}
+          emptyMessage={
+            isLoading
+              ? "Cargando usuarios desde el servidor..."
+              : "No se encontraron usuarios registrados"
+          }
         />
 
-        <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
+        {/* FOOTER */}
+        <div className="bg-white px-6 py-4 flex items-center justify-between border-t border-slate-200">
           <p className="text-sm font-medium text-slate-500">
-            Mostrando{" "}
-            <span className="text-slate-900 font-semibold">{users.length}</span>{" "}
-            de <span className="text-slate-900 font-semibold">24</span> usuarios
+            Página{" "}
+            <span className="font-semibold text-slate-900">{currentPage}</span>{" "}
+            de{" "}
+            <span className="font-semibold text-slate-900">
+              {usersData.totalPages || 1}
+            </span>
           </p>
-          <div className="join gap-1">
-            <button className="join-item py-2 px-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="currentColor"
-                className="bi bi-arrow-left-short"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5"
-                />
-              </svg>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1 || isLoading}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer disabled:cursor-not-allowed transition-colors"
+            >
+              Anterior
             </button>
-            <button className="join-item py-2 px-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="currentColor"
-                className="bi bi-arrow-right-short"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8"
-                />
-              </svg>
+
+            <button
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.min(prev + 1, usersData.totalPages),
+                )
+              }
+              disabled={
+                currentPage >= usersData.totalPages ||
+                usersData.totalPages === 0 ||
+                isLoading
+              }
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer disabled:cursor-not-allowed transition-colors"
+            >
+              Siguiente
             </button>
           </div>
         </div>
       </section>
 
-      {/* Modal con formulario */}
+      {/* MODAL CONECTADO AL BACKEND*/}
+
       <Modal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setFormData({
-            ci: "",
-            name: "",
-            lastname: "",
-            email: "",
-            phone: "",
-            rol: "",
-            salary: "",
-          });
-        }}
-        title="Editar Usuario"
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
         actions={
-          <div className="flex justify-end gap-3">
-            <button
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-              onClick={() => {
-                console.log("Guardar usuario:", formData);
-                setIsModalOpen(false);
-              }}
-            >
-              Guardar Usuario
-            </button>
-          </div>
+          modalMode !== "view" ? (
+            <div className="flex justify-end gap-3">
+              <button
+                disabled={isLoading}
+                className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:bg-blue-700 transition active:scale-95 disabled:opacity-50"
+                onClick={handleSubmit}
+              >
+                {isLoading
+                  ? "Guardando..."
+                  : modalMode === "add"
+                    ? "Registrar Usuario"
+                    : "Guardar Cambios"}
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-end">
+              <button
+                className="bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-300 transition"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Cerrar Detalles
+              </button>
+            </div>
+          )
         }
       >
-        <form className="grid grid-cols-2 gap-5">
+        <form
+          className="grid grid-cols-2 gap-5 py-2 outline-none"
+          onSubmit={(e) => e.preventDefault()}
+        >
+          {error && isModalOpen && (
+            <div className="col-span-2 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl font-bold text-xs">
+              {error}
+            </div>
+          )}
+
           <div className="col-span-2">
             <Input
-              label="Nombre:"
-              placeholder="Nombre y Apellido"
+              label="Nombre del Usuario: *"
+              placeholder="Ingresa el nombre completo"
               name="name"
               type="text"
               value={formData.name}
+              readOnly={modalMode === "view"}
               onChange={(e: any) =>
                 setFormData({ ...formData, name: e.target.value })
               }
             />
           </div>
 
-          <div className="col-span-2">
+          <div className="col-span-2 sm:col-span-1">
             <Input
-              label="Cédula:"
-              placeholder="Cédula de Identidad"
-              min={1}
-              required
-              name="ci"
-              type="number"
-              value={formData.ci}
-              onChange={(e: any) =>
-                setFormData({ ...formData, ci: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="col-span-2">
-            <Input
-              label="Correo Electrónico:"
-              placeholder="Correo Electrónico"
+              label="Correo Electrónico: *"
+              placeholder="usuario@correo.com"
               name="email"
               type="email"
               value={formData.email}
+              readOnly={modalMode === "view"}
               onChange={(e: any) =>
                 setFormData({ ...formData, email: e.target.value })
               }
             />
           </div>
-          <div className="col-span-2">
-            <label className="flex flex-col gap-1">
-              <span>Rol</span>
+
+          <div className="col-span-2 sm:col-span-1">
+            <label className="flex flex-col gap-1 text-[13px] font-bold text-slate-700">
+              <span>Rol Asignado: *</span>
               <select
-                className="border border-gray-300 rounded px-3 py-3 outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-300 bg-white text-gray-700 shadow-sm"
+                className={`border border-gray-300 rounded-xl px-3 py-3 outline-none text-sm shadow-sm ${
+                  modalMode === "view"
+                    ? "bg-slate-100 cursor-not-allowed text-slate-500"
+                    : "bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
+                }`}
+                value={formData.roleId}
+                disabled={modalMode === "view"}
                 onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
+                  setFormData({ ...formData, roleId: Number(e.target.value) })
                 }
               >
-                <option value="Rol">Elige un Rol</option>
-                <option value="admin">Admin</option>
-                <option value="user">Cajero</option>
-                <option value="guest">Supervisor de Pista</option>
+                <option value={0} disabled>
+                  Selecciona un Rol
+                </option>
+                {availableRoles.map((r: any) => (
+                  <option key={r.roleId} value={r.roleId}>
+                    {r.name}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
 
-          <Input
-            label="Teléfono:"
-            name="phone"
-            placeholder="Teléfono"
-            type="tel"
-            value={formData.phone}
-            onChange={(e: any) =>
-              setFormData({ ...formData, phone: e.target.value })
-            }
-          />
-          <Input
-            label="Salario Mensual:"
-            placeholder="Salario Mensual"
-            name="salary"
-            type="text"
-            value={formData.salary}
-            onChange={(e: any) =>
-              setFormData({ ...formData, salary: e.target.value })
-            }
-          />
+          {modalMode !== "view" && (
+            <div className="col-span-2">
+              <Input
+                label={
+                  modalMode === "add"
+                    ? "Contraseña: *"
+                    : "Nueva Contraseña (Opcional):"
+                }
+                placeholder="Mínimo 8 caracteres"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={(e: any) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+              />
+              <span className="text-[10px] text-slate-400 block mt-1">
+                {modalMode === "add"
+                  ? "Requerida por el sistema para el acceso."
+                  : "Déjala en blanco si no deseas cambiar la contraseña actual."}
+              </span>
+            </div>
+          )}
         </form>
       </Modal>
+
+      {/* Modal de Confirmación de Borrado / Restauración */}
       <Modal
         isOpen={isDeleteModalOpen}
-        onClose={handleCloseDeleteModal}
-        deleteText="Eliminar Usuario"
+        onClose={() => setIsDeleteModalOpen(false)}
+        title={
+          isActiveTab ? "Confirmar Desactivación" : "Confirmar Restauración"
+        }
         actions={deleteButton}
       >
-        <div className="pt-4">
-          <p className="text-center text-slate-700">
-            ¿ Estás seguro de que deseas eliminar a{" "}
-            <span className="font-semibold text-slate-800">{userName}</span>?
-          </p>
+        <div className="py-4 text-center text-sm text-slate-700">
+          {isActiveTab ? (
+            <>
+              ¿Estás seguro de que deseas mover a la papelera al usuario{" "}
+              <span className="font-bold text-slate-900">
+                {selectedUser?.name}
+              </span>
+              ?
+            </>
+          ) : (
+            <>
+              ¿Deseas reactivar en el sistema al usuario{" "}
+              <span className="font-bold text-slate-900">
+                {selectedUser?.name}
+              </span>
+              ?
+            </>
+          )}
         </div>
       </Modal>
     </section>
