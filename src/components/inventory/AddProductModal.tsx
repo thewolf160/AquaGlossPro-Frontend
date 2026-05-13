@@ -10,7 +10,7 @@ interface AddProductModalProps {
   formState: NewProductForm;
   categories: { categoryId: number; name: string }[];
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => Promise<void> | void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
 }
 
@@ -21,71 +21,78 @@ export default function AddProductModal({
   categories,
   onChange,
   onSubmit,
-  isLoading
+  isLoading,
 }: AddProductModalProps) {
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Registro de Nuevo Producto"
-      actions={<ActionButton type="register" isLoading={isLoading} form="RegisterForm" />}
+      title="Registrar Nuevo Producto"
+      actions={<ActionButton type="register" form="add-product-form" isLoading={isLoading} />}
     >
-      <form id="RegisterForm" className="flex flex-col gap-3" onSubmit={onSubmit}>
-        <Input 
-          name="name" 
-          label="Nombre del Producto:" 
-          type="text" 
-          onChange={onChange} 
-          value={formState.form.name} 
+      <form id="add-product-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+        <Input
+          name="name"
+          label="Nombre del Producto:"
+          type="text"
+          placeholder="Ej: Champú Cera Especial"
+          value={formState.form.name}
+          onChange={onChange}
+          required
         />
-        
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
-            <label htmlFor="categoryId" className="block text-sm font-medium text-slate-700">Categoría:</label>
-            <select 
-              id="categoryId" 
-              name="categoryId" 
-              onChange={onChange} 
-              value={formState.form.categoryId || ""} 
+            <label className="block text-sm font-medium text-slate-700">Categoría:</label>
+            <select
+              name="categoryId"
+              value={formState.form.categoryId !== null ? String(formState.form.categoryId) : ""}
+              onChange={onChange}
               className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+              required
             >
-              <option value="" disabled>-- Selecciona una --</option>
-              {categories.map(c => (
-                <option key={c.categoryId} value={c.categoryId}>{c.name}</option>
+              <option value="" disabled>-- Seleccione una --</option>
+              {categories.map((cat) => (
+                <option key={cat.categoryId} value={String(cat.categoryId)}>
+                  {cat.name}
+                </option>
               ))}
             </select>
           </div>
           <div className="flex flex-col gap-2">
-            <label htmlFor="unitType" className="block text-sm font-medium text-slate-700">Unidad de Medida:</label>
-            <select 
-              id="unitType" 
-              name="unitType" 
-              onChange={onChange} 
-              value={formState.form.unitType} 
+            <label className="block text-sm font-medium text-slate-700">Tipo de Unidad:</label>
+            <select
+              name="unitType"
+              value={formState.form.unitType}
+              onChange={onChange}
               className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+              required
             >
-              <option value="" disabled>-- Selecciona una --</option>
+              <option value="" disabled>-- Seleccione una --</option>
               <option value="L">Litros (L)</option>
               <option value="G">Galones (G)</option>
               <option value="U">Unidades (U)</option>
             </select>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Input name="minStock" label="Stock Mínimo:" type="number" onChange={onChange} value={String(formState.form.minStock)} />
-          <Input 
-            name="unitCostLiter" 
-            label="Costo/Precio:" 
-            type="number" 
-            onChange={onChange} 
-            value={String(formState.form.unitCostLiter)} 
-            icon={<i className="bi bi-currency-dollar"></i>} 
-          />
-        </div>
         
-        <div className="flex justify-center items-center h-8">
-          {formState.error && <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">{formState.errorMsg}</span>}
+        <Input
+          name="minStock"
+          label="Stock Mínimo Permitido:"
+          type="number"
+          placeholder="Ej: 5"
+          min={0}
+          /* Convertimos el número a string */
+          value={String(formState.form.minStock)}
+          onChange={onChange}
+          required
+        />
+
+        <div className="flex justify-center items-center h-6">
+          {formState.error && (
+            <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+              {formState.errorMsg}
+            </span>
+          )}
         </div>
       </form>
     </Modal>

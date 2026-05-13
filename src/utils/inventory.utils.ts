@@ -1,6 +1,5 @@
 import type { Product, ProductApi, NewProductForm } from "../types/inventory.types";
 
-
 export const mapProductsFromApi = (apiData: ProductApi[]): Product[] => {
   return apiData.map((item) => ({
     id: item.productId, 
@@ -15,7 +14,6 @@ export const mapProductsFromApi = (apiData: ProductApi[]): Product[] => {
   }));
 };
 
-
 export const isProductFormDirty = (
   currentForm: NewProductForm["form"],
   initialForm: NewProductForm["form"]
@@ -24,8 +22,6 @@ export const isProductFormDirty = (
     currentForm.name !== initialForm.name ||
     currentForm.categoryId !== initialForm.categoryId ||
     currentForm.unitType !== initialForm.unitType ||
-    currentForm.unitCostLiter !== initialForm.unitCostLiter ||
-    currentForm.currentStock !== initialForm.currentStock ||
     currentForm.minStock !== initialForm.minStock
   );
 };

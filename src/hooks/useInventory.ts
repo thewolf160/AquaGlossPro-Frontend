@@ -144,7 +144,6 @@ export const useInventory = () => {
       !newProductForm.form.name || 
       !newProductForm.form.categoryId || 
       !newProductForm.form.unitType || 
-      newProductForm.form.unitCostLiter === "" || 
       newProductForm.form.minStock === ""
     ) {
       setNewProductForm((prev) => ({ ...prev, error: true, errorMsg: "Todos los campos obligatorios deben estar llenos" }));
@@ -157,9 +156,7 @@ export const useInventory = () => {
         name: newProductForm.form.name,
         categoryId: Number(newProductForm.form.categoryId),
         unitType: newProductForm.form.unitType,
-        unitCostLiter: Number(newProductForm.form.unitCostLiter),
         minStock: Number(newProductForm.form.minStock),
-        active: true 
       });
       getProducts(currentPage, debouncedSearch, activeFilter);
       return true;
@@ -185,7 +182,6 @@ export const useInventory = () => {
     try {
       const formattedChanges = { ...changedFields };
       if (formattedChanges.categoryId) formattedChanges.categoryId = Number(formattedChanges.categoryId);
-      if (formattedChanges.unitCostLiter) formattedChanges.unitCostLiter = Number(formattedChanges.unitCostLiter);
       if (formattedChanges.currentStock) formattedChanges.currentStock = Number(formattedChanges.currentStock);
       if (formattedChanges.minStock) formattedChanges.minStock = Number(formattedChanges.minStock);
 

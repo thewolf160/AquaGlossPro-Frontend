@@ -135,7 +135,6 @@ export default function PurchaseHistory() {
       columnStyles: { 1: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' } }
     });
     
-    // 2. Le indicamos a TypeScript que trate a 'doc' como nuestro documento extendido
     const docWithPlugin = doc as jsPDFWithPlugin;
     const finalY = docWithPlugin.lastAutoTable.finalY + 10;
 
@@ -173,28 +172,32 @@ export default function PurchaseHistory() {
     {
       key: "purchaseDate",
       header: "Fecha",
-      mobile: true,
-      render: (item: Item) => <span className="text-gray-600 font-medium">{(item as PurchaseApi).purchaseDate.split(' ')[0]}</span>,
+      mobile: false, 
+      render: (item: Item) => ((item as PurchaseApi).purchaseDate.split(' ')[0]),
     },
     {
       key: "invoiceNumber",
       header: "Factura",
-      mobile: true,
-      render: (item: Item) => <span className="font-bold text-gray-900">{(item as PurchaseApi).invoiceNumber}</span>,
+      mobile: false, 
     },
     {
-      key: "details",
-      header: "Proveedor / Pago",
+      key: "supplierName",
+      header: "Proveedor",
       mobile: true,
       render: (item: Item) => {
         const p = item as PurchaseApi;
+        const config = getStatusConfig(p.purchaseStatus);
+        const supplierName = typeof p.supplier === 'object' ? p.supplier?.companyName : p.supplier;
+        
         return (
-          <div className="text-left text-xs">
-            <span className="block font-bold text-gray-800">
-              {typeof p.supplier === 'object' ? p.supplier?.companyName : p.supplier}
-            </span>
-            <span className="text-gray-500">
-              {typeof p.paymentMethod === 'object' ? p.paymentMethod?.name : p.paymentMethod}
+          <div className="text-left flex flex-col min-w-[120px]">
+            <span className="font-bold text-gray-800 leading-tight">{supplierName || 'Desconocido'}</span>
+            
+            <span className="text-[10px] text-gray-500 sm:hidden mt-0.5">Factura: {p.invoiceNumber}</span>
+            <span className="text-[10px] text-gray-500 sm:hidden">Fecha: {p.purchaseDate.split(' ')[0]}</span>
+            <span className="text-xs font-bold text-blue-600 sm:hidden mt-0.5">${Number(p.totalAmount).toFixed(2)}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border w-fit mt-1 sm:hidden ${config.className}`}>
+              {config.label}
             </span>
           </div>
         );
@@ -203,16 +206,16 @@ export default function PurchaseHistory() {
     {
       key: "totalAmount",
       header: "Total",
-      mobile: false,
-      render: (item: Item) => <span className="font-black text-blue-600">${Number((item as PurchaseApi).totalAmount).toFixed(2)}</span>,
+      mobile: false, 
+      render: (item: Item) => (`$${Number((item as PurchaseApi).totalAmount).toFixed(2)}`),
     },
     {
       key: "purchaseStatus",
       header: "Estado",
-      mobile: true,
+      mobile: false, // Oculto en móvil
       render: (item: Item) => {
         const config = getStatusConfig((item as PurchaseApi).purchaseStatus);
-        return <span className={`px-3 py-1 text-xs font-bold rounded-full border ${config.className}`}>{config.label}</span>;
+        return <span className={`px-3 py-1 rounded-full text-xs font-medium border ${config.className}`}>{config.label}</span>;
       }
     },
     {
@@ -222,31 +225,31 @@ export default function PurchaseHistory() {
       render: (item: Item) => {
         const p = item as PurchaseApi;
         return (
-          <div className="flex justify-center items-center gap-2">
+          <div className="flex justify-center items-center gap-1.5 md:gap-2">
             {p.purchaseStatus === "W" ? (
               <>
                 <button
                   onClick={() => handleOpenConfirm(p.purchaseId, "P")}
-                  className="bg-green-100 rounded-md text-green-600 hover:bg-green-200 transition-all cursor-pointer px-2.5 py-2 flex items-center justify-center shadow-sm"
+                  className="bg-green-50 rounded-md text-green-600 hover:bg-green-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
                   title="Confirmar Pedido"
                 >
-                  <i className="bi bi-check-lg text-lg"></i>
+                  <i className="bi bi-check-lg"></i>
                 </button>
                 <button
                   onClick={() => handleOpenConfirm(p.purchaseId, "C")}
-                  className="bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2 flex items-center justify-center shadow-sm"
+                  className="bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
                   title="Anular Pedido"
                 >
-                  <i className="bi bi-x-lg text-lg"></i>
+                  <i className="bi bi-x-lg"></i>
                 </button>
               </>
             ) : (
               <button
                 onClick={() => handlePrintInvoice(p)}
-                className="bg-sky-50 rounded-md text-sky-600 hover:bg-blue-100 cursor-pointer transition-all px-2.5 py-2 flex items-center justify-center shadow-sm"
+                className="bg-sky-50 rounded-md text-sky-600 hover:bg-blue-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
                 title="Imprimir Factura"
               >
-                <i className="bi bi-printer text-lg"></i>
+                <i className="bi bi-printer"></i>
               </button>
             )}
           </div>
@@ -256,99 +259,111 @@ export default function PurchaseHistory() {
   ];
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <>
       <HeaderPortal>
         <HeaderSearch
-          searchPlaceholder="Buscar por proveedor o factura..."
+          searchPlaceholder="Buscar proveedor o factura..."
           searchTerm={textSearch}
           onSearchChange={onTextChange}
         />
       </HeaderPortal>
 
-      <div className="flex flex-col md:flex-row gap-6 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-bold text-slate-700">Estado:</label>
-          <select 
-            className="p-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-600 cursor-pointer"
-            value={statusFilter}
-            onChange={(e) => onStatusChange(e.target.value)}
-          >
-            <option value="">Todos los estados</option>
-            <option value="P">Pagados / Confirmados</option>
-            <option value="W">En Espera / Pendientes</option>
-            <option value="C">Anulados</option>
-          </select>
-        </div>
+      <div className="flex flex-col gap-6">
         
-        <div className="w-px bg-slate-200 hidden md:block"></div>
+        <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-slate-200 space-y-4 overflow-hidden">
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 w-full">
+            
+            <div className="flex flex-col gap-1.5 w-full md:w-1/3">
+              <label className="text-sm font-medium text-slate-700">Estado:</label>
+              <select 
+                className="w-full p-2.5 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+                value={statusFilter}
+                onChange={(e) => onStatusChange(e.target.value)}
+              >
+                <option value="">Todos los estados</option>
+                <option value="P">Pagados / Confirmados</option>
+                <option value="W">En Espera / Pendientes</option>
+                <option value="C">Anulados</option>
+              </select>
+            </div>
+            
+            <div className="flex flex-col gap-1.5 w-full md:w-2/3">
+              <label className="text-sm font-medium text-slate-700">Rango de Fechas:</label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+                <input 
+                  type="date" 
+                  value={dateRange.start} 
+                  onChange={e => handleDateChange('start', e.target.value)} 
+                  className="w-full sm:flex-1 p-2.5 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+                />
+                <span className="hidden sm:inline text-slate-400 font-bold">-</span>
+                <input 
+                  type="date" 
+                  value={dateRange.end} 
+                  onChange={e => handleDateChange('end', e.target.value)} 
+                  min={dateRange.start} 
+                  className="w-full sm:flex-1 p-2.5 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+                />
+              </div>
+              {(dateRange.start || dateRange.end) && (
+                <button onClick={clearDates} className="text-xs font-medium text-red-500 hover:text-red-700 mt-1 self-start">
+                  Limpiar Fechas
+                </button>
+              )}
+            </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-sm font-bold text-slate-700">Rango de Fechas:</label>
-          <div className="flex items-center gap-2">
-            <input 
-              type="date" 
-              value={dateRange.start} 
-              onChange={e => handleDateChange('start', e.target.value)} 
-              className="p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 text-slate-600 cursor-pointer"
-            />
-            <span className="text-slate-400 font-bold">-</span>
-            <input 
-              type="date" 
-              value={dateRange.end} 
-              onChange={e => handleDateChange('end', e.target.value)} 
-              min={dateRange.start} 
-              className="p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 text-slate-600 cursor-pointer"
-            />
           </div>
           
-          {(dateRange.start || dateRange.end) && (
-            <button 
-              onClick={clearDates}
-              className="text-sm text-red-500 hover:text-red-700 font-bold transition-colors md:ml-2 cursor-pointer"
-            >
-              <i className="bi bi-eraser-fill mr-1"></i> Limpiar
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-        {isLoadingData ? (
-          <div className="flex items-center justify-center p-10">
-            <span className="loading loading-spinner loading-xl text-blue-600"></span>
-          </div>
-        ) : (
-          <Table
-            columns={columns}
-            data={purchasesHistory as Item[]}
-            emptyMessage={
-              textSearch || statusFilter || dateRange.start
-                ? "No se encontraron compras con los criterios seleccionados." 
-                : "No hay compras registradas en el sistema."
-            }
-          />
-        )}
-
-        <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
-          <p className="text-sm font-medium text-slate-500">
-            Página <span className="text-slate-900 font-bold">{currentPage}</span> de <span className="text-slate-900 font-bold">{totalPages}</span>
-          </p>
-          <div className="join gap-2">
-            <button
-              className="join-item py-1.5 px-3 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded-md flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1 || isLoadingData}
-            >
-              <i className="bi bi-arrow-left-short text-xl" /> Anterior
-            </button>
-            <button
-              className="join-item py-1.5 px-3 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded-md flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages || isLoadingData}
-            >
-              Siguiente <i className="bi bi-arrow-right-short text-xl" />
-            </button>
-          </div>
+          <section className="shadow-sm rounded-xl overflow-hidden border border-slate-200 w-full">
+            <div className="bg-white px-4 md:px-6 py-3 border-b border-slate-200">
+              <h2 className="font-bold text-slate-800 text-lg md:text-xl tracking-tight">
+                Historial de Compras
+              </h2>
+            </div>
+            <div className="w-full">
+              {isLoadingData ? (
+                <div className="flex items-center justify-center p-10">
+                  <span className="loading loading-spinner loading-xl text-blue-600"></span>
+                </div>
+              ) : (
+                <Table
+                  columns={columns}
+                  data={purchasesHistory as Item[]}
+                  emptyMessage={
+                    textSearch || statusFilter || dateRange.start
+                      ? "No se encontraron compras." 
+                      : "No hay compras registradas."
+                  }
+                />
+              )}
+            </div>
+            
+            <div className="bg-slate-50 p-4 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 gap-3 w-full">
+              <p className="text-xs md:text-sm text-slate-500 text-center sm:text-left">
+                Página <span className="font-bold text-slate-900">{currentPage}</span> de{" "}
+                <span className="font-bold text-slate-900">{totalPages}</span>
+              </p>
+              <div className="join gap-2 w-full sm:w-auto flex justify-center">
+                <button
+                  className="join-item py-1.5 px-3 text-xs md:text-sm cursor-pointer border border-slate-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1 disabled:opacity-50 flex-1 sm:flex-none"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoadingData}
+                >
+                  <i className="bi bi-arrow-left-short text-lg md:text-xl" />
+                  Anterior
+                </button>
+                <button
+                  className="join-item py-1.5 px-3 text-xs md:text-sm cursor-pointer border border-slate-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1 disabled:opacity-50 flex-1 sm:flex-none"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages || isLoadingData}
+                >
+                  Siguiente
+                  <i className="bi bi-arrow-right-short text-lg md:text-xl" />
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -359,6 +374,6 @@ export default function PurchaseHistory() {
         status={confirmModal.status}
         isSubmitting={isSubmitting}
       />
-    </div>
+    </>
   );
 }

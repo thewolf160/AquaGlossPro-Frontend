@@ -36,7 +36,6 @@ export interface NewProductForm {
     categoryId: number | null;
     name: string;
     unitType: UnitType | "";
-    unitCostLiter: number | string;
     minStock: number | string;
   };
   error: boolean;
@@ -48,7 +47,6 @@ export const InitialNewProductForm: NewProductForm = {
     categoryId: null,
     name: "",
     unitType: "",
-    unitCostLiter: "",
     minStock: "",
   },
   error: false,
@@ -72,11 +70,15 @@ export const InitialProductsData: ProductsData = {
 export interface ProductApi {
   productId: number;
   name: string;
-  unitCostLiter: string | number; 
+  unitCostLiter: string | number;
   currentStock: string | number;
   minStock: string | number;
-  unitType?: UnitType;
+  unitType: UnitType | "";
   active: boolean;
-  createdAt: string;
-  category: InventoryCategory;
+  category?: {
+    categoryId: number;
+    name: string;
+    type: CategoryType;
+  } | null;
+  stockStatus?: string;
 }

@@ -38,15 +38,15 @@ export const useCatalog = () => {
         safeFetch<ServicePriceApi>(CatalogServiceApi.getServicesPrices({ active: "true", limit: "100" }))
       ]);
 
-      const serviceCategories = categoriesRes.data.data.filter((c: CategoryApi) => c.type === "S");
-      setCategories(serviceCategories);
+const serviceCategories = categoriesRes.data.data.filter(
+  (c: CategoryApi) => c.type?.toUpperCase() === "S"
+);      setCategories(serviceCategories);
 
       const types = typesRes.data.data;
       const allPrices = pricesRes.data.data;
       setRawPricesRelations(allPrices);
 
       const formattedServices: CatalogService[] = servicesRes.data.data.map((srv: ServiceApi) => {
-        // LÓGICA 100% DINÁMICA
         const servicePrices: CatalogServicePrice[] = types.map((tv: TypeVehicleApi) => {
           const existingPrice = allPrices.find((p: ServicePriceApi) => p.serviceId === srv.serviceId && p.typeVehicleId === tv.typeVehicleId);
           return { 

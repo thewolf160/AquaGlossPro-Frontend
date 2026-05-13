@@ -9,7 +9,8 @@ import InventoryCards from "../components/inventory/InventoryCards";
 import AddProductModal from "../components/inventory/AddProductModal";
 import EditProductModal from "../components/inventory/EditProductModal";
 import DeleteProductModal from "../components/inventory/DeleteProductModal";
-import RestoreProductModal from "../components/inventory/RestoreClientModal"; 
+import RestoreProductModal from "../components/inventory/RestoreClientModal";
+import ViewProductModal from "../components/inventory/ViewProductModal"; 
 
 import Alert from "../components/Alert";
 
@@ -88,6 +89,7 @@ export default function Inventory() {
     toggleModal("edit", true);
     setEditProductState((prev) => ({ ...prev, ...(item as unknown as Product) }));
   };
+
   const handleCloseEdit = () => {
     toggleModal("edit", false);
     setEditProductState(InitialProduct);
@@ -107,6 +109,7 @@ export default function Inventory() {
     setCurrentProduct((prev) => ({ ...prev, ...(item as unknown as Product) }));
     toggleModal("delete", true);
   };
+
   const handleCloseDelete = () => {
     toggleModal("delete", false);
     setCurrentProduct(InitialProduct);
@@ -115,6 +118,11 @@ export default function Inventory() {
   const handleDelete = async () => {
     const success = await deleteProduct(String(currentProduct.id));
     if (success) handleCloseDelete();
+  };
+
+  const handleOpenDetails = (item: Item) => {
+    setCurrentProduct(item as unknown as Product);
+    toggleModal("details", true);
   };
 
   const unitNames: Record<string, string> = {
@@ -139,6 +147,17 @@ export default function Inventory() {
     return false;
   };
 
+  const actionProps = activeFilter !== "INACTIVOS"
+    ? {
+        onView: handleOpenDetails,
+        onEdit: handleOpenEdit,
+        onDelete: handleOpenDelete,
+      }
+    : {
+        onView: handleOpenDetails,
+        onRestore: (item: Item) => handleOpenRestore(item as unknown as Product),
+      };
+
   const columns = [
     {
       header: "Producto",
@@ -147,9 +166,9 @@ export default function Inventory() {
       render: (item: Item) => {
         const product = item as unknown as Product;
         return (
-          <div className="text-left">
-            <div className="font-bold text-gray-800">{product.name}</div>
-            <div className="text-xs text-gray-500">{product.categoryName}</div>
+          <div className="text-left flex flex-col max-w-45 sm:max-w-none">
+            <span className="font-bold text-gray-800 truncate">{product.name}</span>
+            <span className="text-xs text-gray-500 truncate">{product.categoryName}</span>
           </div>
         );
       },
@@ -157,7 +176,7 @@ export default function Inventory() {
     {
       header: "Stock",
       key: "currentStock",
-      mobile: true,
+      mobile: false, 
       render: (item: Item) => {
         const product = item as unknown as Product;
         const stock = Number(product.currentStock);
@@ -172,7 +191,7 @@ export default function Inventory() {
         const fillPercentage = isOutOfStock || minStock === 0 ? 0 : Math.min(100, (stock / (minStock * 2)) * 100);
 
         return (
-          <div className="w-full max-w-35 mx-auto flex flex-col gap-1.5">
+          <div className="w-full min-w-25 max-w-35 mx-auto flex flex-col gap-1.5">
             <div className="flex justify-between items-end">
               <span className="font-black mr-2 text-lg leading-none text-gray-800">{stock}</span>
               <span className="text-xs font-medium text-gray-500">
@@ -191,53 +210,28 @@ export default function Inventory() {
     {
       header: "Minimo",
       key: "minStock",
-      mobile: true,
+      mobile: false, 
       render: (item: Item) => <span className="text-sm font-bold text-slate-800">{(item as unknown as Product).minStock}</span>,
     },
     {
       header: "Valor total",
       key: "totalValue",
-      mobile: false,
+      mobile: false, 
       render: (item: Item) => {
         const product = item as unknown as Product;
         const totalValue = Number(product.currentStock) * Number(product.unitCostLiter);
         return <span className="font-bold text-gray-900">${totalValue.toFixed(2)}</span>;
       },
     },
-    ...(activeFilter !== "INACTIVOS" ? [
-     {
-        header: "Acciones",
-        key: "actions",
-        mobile: true,
-        render: (item: Item) => {
-          return (
-            <div className="flex justify-center gap-2">
-              <button onClick={() => handleOpenEdit(item)} className="btn bg-sky-50 text-sky-600 h-9 w-9 p-0 cursor-pointer">
-                <i className="bi bi-pencil-square"></i>
-              </button>
-              <button onClick={() => handleOpenDelete(item)} className="btn bg-red-50 text-red-600 h-9 w-9 p-0 cursor-pointer">
-                <i className="bi bi-trash"></i>
-              </button>
-            </div>
-          );
-        }
-      }
-    ] : [
-      {
-        header: "Acciones",
-        key: "restore",
-        mobile: true,
-        render: (item: Item) => (
-          <button onClick={() => handleOpenRestore(item as unknown as Product)} className="px-3 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer mx-auto">
-            <i className="bi bi-arrow-clockwise"></i> Reactivar
-          </button>
-        )
-      }
-    ])
+    {
+      header: "Acciones",
+      key: "actions", 
+      mobile: true,
+    }
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <>
       {successMessage && <Alert message={successMessage} />}
       
       <HeaderPortal>
@@ -250,56 +244,67 @@ export default function Inventory() {
         />
       </HeaderPortal>
       
-      <InventoryCards stats={inventoryTotals} activeFilter={activeFilter} />
+      <div className="flex flex-col gap-6">
+        
+        <InventoryCards stats={inventoryTotals} activeFilter={activeFilter} />
 
-      <section className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex bg-gray-100 p-1 rounded-lg">
-            <button onClick={() => handleFilterChange("ACTIVOS")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "ACTIVOS" ? "bg-white text-green-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Activos</button>
-            <button onClick={() => handleFilterChange("CRITICOS")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "CRITICOS" ? "bg-white text-yellow-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Críticos</button>
-            <button onClick={() => handleFilterChange("AGOTADOS")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "AGOTADOS" ? "bg-white text-red-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Agotados</button>
-            <button onClick={() => handleFilterChange("INACTIVOS")} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "INACTIVOS" ? "bg-white text-slate-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Inactivos</button>
-          </div>
-        </div>
-
-       <div className="shadow-sm rounded-xl overflow-hidden border border-gray-200 bg-white">
-          <div>
-            {isLoading ? (
-              <div className="flex items-center justify-center p-10">
-                <span className="loading loading-spinner loading-xl text-blue-600"></span>
-              </div>
-            ) : (
-              <Table
-                columns={columns}
-                data={productsData.data as unknown as Item[]}
-                emptyMessage="No hay productos que coincidan con los criterios."
-              />
-            )}
-          </div>
-
-          <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
-            <p className="text-sm text-slate-500">
-              Página <span className="font-bold">{currentPage}</span> de <span className="font-bold">{totalPages}</span>
-            </p>
-            <div className="join gap-2">
-              <button
-                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1 disabled:opacity-50"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1 || isLoading}
-              >
-                <i className="bi bi-arrow-left-short text-xl" /> Anterior
-              </button>
-              <button
-                className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1 disabled:opacity-50"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages || isLoading}
-              >
-                Siguiente <i className="bi bi-arrow-right-short text-xl" />
-              </button>
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
+          
+          {/* 3. Reestructuración responsiva del contenedor de botones con flex-wrap */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex flex-wrap justify-center bg-gray-100 p-1 rounded-lg gap-1 w-full sm:w-auto">
+              <button onClick={() => handleFilterChange("ACTIVOS")} className={`flex-1 sm:flex-none whitespace-nowrap px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "ACTIVOS" ? "bg-white text-green-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Activos</button>
+              <button onClick={() => handleFilterChange("CRITICOS")} className={`flex-1 sm:flex-none whitespace-nowrap px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "CRITICOS" ? "bg-white text-yellow-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Críticos</button>
+              <button onClick={() => handleFilterChange("AGOTADOS")} className={`flex-1 sm:flex-none whitespace-nowrap px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "AGOTADOS" ? "bg-white text-red-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Agotados</button>
+              <button onClick={() => handleFilterChange("INACTIVOS")} className={`flex-1 sm:flex-none whitespace-nowrap px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "INACTIVOS" ? "bg-white text-slate-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Inactivos</button>
             </div>
           </div>
+
+          <section className="shadow-sm rounded-xl overflow-hidden border border-gray-200">
+            <div className="bg-white px-6 py-3 border-b border-slate-200">
+              <h2 className="font-bold text-slate-800 text-xl tracking-tight">
+                Gestión de Inventario
+              </h2>
+            </div>
+            <div>
+              {isLoading ? (
+                <div className="flex items-center justify-center p-10">
+                  <span className="loading loading-spinner loading-xl"></span>
+                </div>
+              ) : (
+                <Table
+                  columns={columns}
+                  data={productsData.data as unknown as Item[]}
+                  emptyMessage="No hay productos que coincidan con los criterios."
+                  {...actionProps} // Pasamos el objeto entero desestructurado (spread)
+                />
+              )}
+            </div>
+            <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
+              <p className="text-sm text-slate-500">
+                Página <span className="font-bold">{currentPage}</span> de{" "}
+                <span className="font-bold">{totalPages}</span>
+              </p>
+              <div className="join gap-2">
+                <button
+                  className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1 || isLoading}
+                >
+                  <i className="bi bi-arrow-left-short text-xl" /> Anterior
+                </button>
+                <button
+                  className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages || isLoading}
+                >
+                  Siguiente <i className="bi bi-arrow-right-short text-xl" />
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
 
       <AddProductModal
         isOpen={modals.register}
@@ -337,6 +342,12 @@ export default function Inventory() {
         isLoading={isSubmitting}
       />
 
-    </div>
+      <ViewProductModal
+        isOpen={modals.details}
+        onClose={() => toggleModal("details", false)}
+        product={currentProduct}
+      />
+
+    </>
   );
 }

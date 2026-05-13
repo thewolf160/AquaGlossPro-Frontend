@@ -10,7 +10,7 @@ interface EditProductModalProps {
   editingProduct: Product & { error?: boolean; errorMsg?: string };
   categories: { categoryId: number; name: string }[];
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => Promise<void> | void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
 }
 
@@ -21,50 +21,52 @@ export default function EditProductModal({
   categories,
   onChange,
   onSubmit,
-  isLoading
+  isLoading,
 }: EditProductModalProps) {
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title="Editar Producto"
-      actions={<ActionButton type="edit" isLoading={isLoading} form="EditForm" />}
+      actions={<ActionButton type="edit" form="edit-product-form" isLoading={isLoading} />}
     >
-      <form id="EditForm" className="flex flex-col gap-3" onSubmit={onSubmit}>
-        <Input 
-          name="name" 
-          label="Nombre del Producto:" 
-          type="text" 
-          onChange={onChange} 
-          value={editingProduct.name} 
+      <form id="edit-product-form" onSubmit={onSubmit} className="flex flex-col gap-4">
+        <Input
+          name="name"
+          label="Nombre del Producto:"
+          type="text"
+          value={editingProduct.name}
+          onChange={onChange}
+          required
         />
-        
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
-            <label htmlFor="edit_categoryId" className="block text-sm font-medium text-slate-700">Categoría:</label>
-            <select 
-              id="edit_categoryId" 
-              name="categoryId" 
-              onChange={onChange} 
-              value={editingProduct.categoryId || ""} 
+            <label className="block text-sm font-medium text-slate-700">Categoría:</label>
+            <select
+              name="categoryId"
+              value={editingProduct.categoryId !== null ? String(editingProduct.categoryId) : ""}
+              onChange={onChange}
               className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+              required
             >
-              <option value="" disabled>-- Selecciona una --</option>
-              {categories.map(c => (
-                <option key={c.categoryId} value={c.categoryId}>{c.name}</option>
+              <option value="" disabled>-- Seleccione una --</option>
+              {categories.map((cat) => (
+                <option key={cat.categoryId} value={String(cat.categoryId)}>
+                  {cat.name}
+                </option>
               ))}
             </select>
           </div>
           <div className="flex flex-col gap-2">
-            <label htmlFor="edit_unitType" className="block text-sm font-medium text-slate-700">Unidad de Medida:</label>
-            <select 
-              id="edit_unitType" 
-              name="unitType" 
-              onChange={onChange} 
-              value={editingProduct.unitType} 
+            <label className="block text-sm font-medium text-slate-700">Tipo de Unidad:</label>
+            <select
+              name="unitType"
+              value={editingProduct.unitType}
+              onChange={onChange}
               className="w-full p-3 border border-slate-300 rounded-sm shadow-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all ease-in"
+              required
             >
-              <option value="" disabled>-- Selecciona una --</option>
+              <option value="" disabled>-- Seleccione una --</option>
               <option value="L">Litros (L)</option>
               <option value="G">Galones (G)</option>
               <option value="U">Unidades (U)</option>
@@ -72,26 +74,22 @@ export default function EditProductModal({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Input 
-            name="minStock" 
-            label="Stock Mínimo:" 
-            type="number" 
-            onChange={onChange} 
-            value={String(editingProduct.minStock)} 
-          />
-          <Input 
-            name="unitCostLiter" 
-            label="Costo/Precio:" 
-            type="number" 
-            onChange={onChange} 
-            value={String(editingProduct.unitCostLiter)} 
-            icon={<i className="bi bi-currency-dollar"></i>} 
-          />
-        </div>
+        <Input
+          name="minStock"
+          label="Stock Mínimo Permitido:"
+          type="number"
+          min={0}
+          value={String(editingProduct.minStock)}
+          onChange={onChange}
+          required
+        />
 
-        <div className="flex justify-center items-center h-8">
-          {editingProduct.error && <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">{editingProduct.errorMsg}</span>}
+        <div className="flex justify-center items-center h-6">
+          {editingProduct.error && (
+            <span className="text-red-400 text-sm font-medium bg-red-400/10 px-3 py-1 rounded-md">
+              {editingProduct.errorMsg}
+            </span>
+          )}
         </div>
       </form>
     </Modal>
