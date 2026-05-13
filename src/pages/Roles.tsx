@@ -2,69 +2,59 @@ import React, { useState, useMemo } from "react";
 import HeaderSearch from "../components/HeaderSearch";
 import HeaderPortal from "../components/HeaderPortal";
 import Modal from "../components/Modal/Modal";
-
-const columns = [
-  { key: "id", header: "ID" },
-  { key: "name", header: "Rol" },
-  { key: "access", header: "Permisos de Módulos" },
-];
-
-const ALL_ACCESSES = [
-  "Vehículos",
-  "Inventario",
-  "Empleados",
-  "Usuarios",
-  "Servicios",
-  "Ventas",
-  "Reportes",
-  "Compras",
-];
-
-const mockRoles = [
-  {
-    id: "ROL-001",
-    name: "Administrador",
-    access: [...ALL_ACCESSES],
-  },
-  {
-    id: "ROL-002",
-    name: "Cajero",
-    access: ["Ventas", "Servicios"],
-  },
-  {
-    id: "ROL-003",
-    name: "Supervisor de Pista",
-    access: ["Vehículos", "Empleados", "Servicios", "Reportes"],
-  },
-];
+import Alert from "../components/Alert";
+import { useRoles } from "../hooks/useRoles";
+import { usePermissions } from "../hooks/usePermissions";
 
 export default function Roles() {
-  const [roles, setRoles] = useState(mockRoles);
-  const [expandedRole, setExpandedRole] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const {
+    rolesData,
+    isLoading,
+    error,
+    setError,
+    successMsg,
+    filteredRoles,
+    searchTerm,
+    setSearchTerm,
+    isActiveTab,
+    setIsActiveTab,
+    handleCreateComplete,
+    removeRoles,
+    restoreRole,
+  } = useRoles();
+
+  const { permissions, isLoading: permissionsLoading } = usePermissions();
+
+  const [expandedRole, setExpandedRole] = useState<number | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
+
+  // ESTADOS DE PAGINACIÓN CALCULADA
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Cantidad de roles visibles por página
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [roleToRestore, setRoleToRestore] = useState<number | null>(null);
 
   const [newRoleName, setNewRoleName] = useState("");
-  const [newRoleAccess, setNewRoleAccess] = useState<string[]>([]);
-
   const [nameError, setNameError] = useState(false);
+  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
 
-  const displayRoles = useMemo(() => {
-    return roles.filter((r) =>
-      `${r.id} ${r.name} ${r.access.join(" ")}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()),
-    );
-  }, [searchTerm, roles]);
+  // LÓGICA DE RECORTES PARA PAGINACIÓN
 
-  const handleRowClick = (id: string) => {
+  const totalPages = Math.ceil(filteredRoles.length / itemsPerPage);
+
+  const paginatedRoles = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredRoles.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredRoles, currentPage]);
+
+  const handleRowClick = (id: number) =>
     setExpandedRole(expandedRole === id ? null : id);
-  };
 
-  const handleSelectRole = (e: React.MouseEvent, id: string) => {
+  const handleSelectRole = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
     setSelectedRoles((prev) =>
       prev.includes(id) ? prev.filter((rId) => rId !== id) : [...prev, id],
@@ -72,76 +62,115 @@ export default function Roles() {
   };
 
   const handleSelectAll = () => {
-    if (selectedRoles.length === displayRoles.length) {
+    if (selectedRoles.length === filteredRoles.length) {
       setSelectedRoles([]);
     } else {
-      setSelectedRoles(displayRoles.map((r) => r.id));
+      setSelectedRoles(filteredRoles.map((role) => role.roleId));
     }
   };
 
-  // NUEVA LÓGICA: Valida que exista el nombre antes de permitir seleccionar accesos
-  const toggleNewRoleAccess = (mod: string) => {
+  const handleConfirmCreate = async () => {
     if (!newRoleName.trim()) {
       setNameError(true);
       return;
     }
-    setNewRoleAccess((prev) =>
-      prev.includes(mod) ? prev.filter((a) => a !== mod) : [...prev, mod],
+
+    const success = await handleCreateComplete(
+      newRoleName,
+      selectedPermissions,
     );
-  };
 
-  const handleCreateRole = () => {
-    if (!newRoleName.trim()) {
-      setNameError(true);
-      return;
+    if (success) {
+      setIsAddModalOpen(false);
+      setNewRoleName("");
+      setNameError(false);
+      setSelectedPermissions([]);
     }
-    const newId = `ROL-00${roles.length + 1}`;
-    setRoles([
-      ...roles,
-      { id: newId, name: newRoleName, access: newRoleAccess },
-    ]);
-
-    setIsAddModalOpen(false);
-    setNewRoleName("");
-    setNewRoleAccess([]);
-    setNameError(false);
   };
 
-  // Función para manejar el cambio en el input y limpiar el error automáticamente
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewRoleName(e.target.value);
     if (e.target.value.trim()) {
       setNameError(false);
+      setError(null);
     }
   };
 
-  const handleConfirmDelete = () => {
-    setRoles(roles.filter((r) => !selectedRoles.includes(r.id)));
-    setSelectedRoles([]);
-    setIsDeleteModalOpen(false);
+  const handleConfirmDelete = async () => {
+    const success = await removeRoles(selectedRoles);
+    if (success) {
+      setIsDeleteModalOpen(false);
+      setSelectedRoles([]);
+    }
   };
 
-  const handleAccessToggle = (id: string, mod: string) => {
-    setRoles((prev) =>
-      prev.map((r) => {
-        if (r.id === id) {
-          const hasAccess = r.access.includes(mod);
-          return {
-            ...r,
-            access: hasAccess
-              ? r.access.filter((a) => a !== mod)
-              : [...r.access, mod],
-          };
-        }
-        return r;
-      }),
+  const handleConfirmRestore = async () => {
+    if (!roleToRestore) return;
+    const success = await restoreRole(roleToRestore);
+    if (success) {
+      setIsRestoreModalOpen(false);
+      setRoleToRestore(null);
+    }
+  };
+
+  const handlePermissionChange = (permissionId: number, checked: boolean) => {
+    setSelectedPermissions((prev) =>
+      checked
+        ? [...prev, permissionId]
+        : prev.filter((id) => id !== permissionId),
+    );
+  };
+
+  // AGRUPACIÓN
+
+  const groupedPermissions = permissions.reduce((acc: any, perm: any) => {
+    if (!perm || !perm.modul) return acc;
+
+    const moduleId = perm.modul.moduleId;
+
+    if (moduleId === 3 || moduleId === 6) return acc;
+
+    let moduleName = perm.modul.name;
+
+    if (!acc[moduleId]) {
+      acc[moduleId] = {
+        module: { ...perm.modul, name: moduleName },
+        permissions: [],
+      };
+    }
+
+    const exists = acc[moduleId].permissions.some(
+      (p: any) => p.permissionId === perm.permissionId,
+    );
+
+    if (!exists) {
+      acc[moduleId].permissions.push(perm);
+    }
+
+    return acc;
+  }, {});
+
+  const handleSelectAllModule = (moduleId: number, checked: boolean) => {
+    const moduleData = groupedPermissions[moduleId];
+    if (!moduleData) return;
+
+    const modulePermissionIds = moduleData.permissions.map(
+      (p: any) => p.permissionId,
+    );
+
+    setSelectedPermissions((prev) =>
+      checked
+        ? [...new Set([...prev, ...modulePermissionIds])]
+        : prev.filter((id) => !modulePermissionIds.includes(id)),
     );
   };
 
   return (
-    <section className="p-2 sm:p-4 animate-fade-in max-w-6xl mx-auto w-full">
+    <section className="p-2 sm:p-4 animate-fade-in max-w-6xl mx-auto w-full space-y-4">
+      {successMsg && <Alert message={successMsg} type="success" />}
+      {error && !isAddModalOpen && <Alert message={error} type="error" />}
+
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        {/* HEADER DE ACCIÓN */}
         <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
@@ -152,23 +181,25 @@ export default function Roles() {
                 Jerarquía de Roles
               </h2>
               <p className="text-[11px] sm:text-xs text-slate-400 font-medium">
-                Gestiona permisos y accesos al sistema
+                Gestiona los accesos del sistema
               </p>
             </div>
           </div>
 
-          <button
-            onClick={() => setIsDeleteModalOpen(true)}
-            disabled={selectedRoles.length === 0}
-            className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${
-              selectedRoles.length === 0
-                ? "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed"
-                : "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 shadow-sm"
-            }`}
-          >
-            <i className="bi bi-trash3"></i>
-            Eliminar {selectedRoles.length > 0 && `(${selectedRoles.length})`}
-          </button>
+          {isActiveTab && (
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              disabled={selectedRoles.length === 0 || isLoading}
+              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl transition-all ${
+                selectedRoles.length === 0
+                  ? "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed"
+                  : "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 shadow-sm"
+              }`}
+            >
+              <i className="bi bi-trash3"></i>
+              Eliminar {selectedRoles.length > 0 && `(${selectedRoles.length})`}
+            </button>
+          )}
         </div>
 
         <HeaderPortal>
@@ -176,263 +207,407 @@ export default function Roles() {
             searchPlaceholder="Filtrar roles..."
             buttonText="Crear Nuevo Rol"
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={(val) => {
+              setSearchTerm(val);
+              setCurrentPage(1);
+            }}
             onAddClick={() => {
               setIsAddModalOpen(true);
               setNameError(false);
+              setError(null);
             }}
           />
         </HeaderPortal>
 
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4">
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-center sm:text-left">
+            <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+              Total roles
+            </p>
+            <p className="mt-1 text-3xl font-black text-slate-900">
+              {rolesData.totals.general}
+            </p>
+          </div>
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-center sm:text-left">
+            <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+              Activos
+            </p>
+            <p className="mt-1 text-3xl font-black text-emerald-600">
+              {rolesData.totals.active}
+            </p>
+          </div>
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-center sm:text-left">
+            <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+              Inactivos
+            </p>
+            <p className="mt-1 text-3xl font-black text-rose-600">
+              {rolesData.totals.inactive}
+            </p>
+          </div>
+        </div>
+
+        <div className="px-6 py-2 border-y border-slate-100 bg-slate-50/50 flex gap-2">
+          <button
+            onClick={() => {
+              setIsActiveTab(true);
+              setSelectedRoles([]);
+              setCurrentPage(1);
+            }}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              isActiveTab
+                ? "bg-white text-blue-600 shadow-sm border border-slate-200"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Roles Activos
+          </button>
+          <button
+            onClick={() => {
+              setIsActiveTab(false);
+              setSelectedRoles([]);
+              setCurrentPage(1);
+            }}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              !isActiveTab
+                ? "bg-white text-rose-600 shadow-sm border border-slate-200"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            Papelera (Inactivos)
+          </button>
+        </div>
+
         <div className="overflow-x-auto w-full">
           <table className="min-w-[700px] w-full table-auto">
-            <thead className="bg-slate-50/50">
+            <thead className="bg-slate-50/80">
               <tr>
-                <th className="px-4 sm:px-6 py-3 text-left w-12 sm:w-14">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                    checked={
-                      displayRoles.length > 0 &&
-                      selectedRoles.length === displayRoles.length
-                    }
-                    onChange={handleSelectAll}
-                  />
-                </th>
-                <th className="px-3 py-3 text-left text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                {isActiveTab && (
+                  <th className="px-4 sm:px-6 py-3 w-12">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded text-blue-600"
+                      checked={
+                        filteredRoles.length > 0 &&
+                        selectedRoles.length === filteredRoles.length
+                      }
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                )}
+                <th
+                  className={`px-3 py-3 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest ${!isActiveTab ? "pl-6" : ""}`}
+                >
                   ID
                 </th>
-                <th className="px-3 py-3 text-left text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                <th className="px-3 py-3 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">
                   Nombre del Rol
                 </th>
-                <th className="px-3 py-3 text-left text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                  Módulos Activos
+                <th className="px-3 py-3 text-left text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                  Módulos Asignados
                 </th>
-                <th className="w-8 sm:w-10"></th>
+                <th className="w-24 pr-6 text-right text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                  Acción
+                </th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-50">
-              {displayRoles.map((role) => (
-                <React.Fragment key={role.id}>
-                  <tr
-                    className={`group hover:bg-blue-50/30 cursor-pointer transition-colors ${
-                      expandedRole === role.id ? "bg-blue-50/20" : ""
-                    }`}
-                    onClick={() => handleRowClick(role.id)}
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={isActiveTab ? 5 : 4}
+                    className="p-12 text-center"
                   >
-                    <td
-                      className="px-4 sm:px-6 py-3"
-                      onClick={(e) => handleSelectRole(e, role.id)}
+                    <span className="loading loading-spinner loading-lg text-blue-600"></span>
+                  </td>
+                </tr>
+              ) : filteredRoles.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={isActiveTab ? 5 : 4}
+                    className="p-12 text-center text-slate-400 font-medium"
+                  >
+                    No se encontraron roles.
+                  </td>
+                </tr>
+              ) : (
+                paginatedRoles.map((role) => (
+                  <React.Fragment key={role.roleId}>
+                    <tr
+                      className="group hover:bg-blue-50/30 cursor-pointer"
+                      onClick={() => handleRowClick(role.roleId)}
                     >
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        checked={selectedRoles.includes(role.id)}
-                        readOnly
-                      />
-                    </td>
-                    <td className="px-3 py-3">
-                      <span className="font-mono text-[10px] sm:text-[11px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md border border-slate-200">
-                        {role.id}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <span className="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">
-                        {role.name}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3">
-                      {role.access.length === ALL_ACCESSES.length ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                          <span className="text-[10px] sm:text-[11px] font-black text-emerald-600 uppercase tracking-tighter bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 whitespace-nowrap">
-                            Acceso Total
-                          </span>
-                        </div>
-                      ) : (
-                        <p className="text-[11px] sm:text-xs text-slate-400 font-medium truncate max-w-[200px] sm:max-w-xs">
-                          {role.access.join(" • ")}
-                        </p>
+                      {isActiveTab && (
+                        <td
+                          className="px-4 sm:px-6 py-3"
+                          onClick={(e) => handleSelectRole(e, role.roleId)}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedRoles.includes(role.roleId)}
+                            readOnly
+                            className="w-4 h-4"
+                          />
+                        </td>
                       )}
-                    </td>
-                    <td className="px-4 sm:px-6 py-3 text-right">
-                      <i
-                        className={`bi bi-chevron-right text-slate-300 transition-transform duration-300 flex justify-end ${
-                          expandedRole === role.id
-                            ? "rotate-90 text-blue-500"
-                            : ""
-                        }`}
-                      ></i>
-                    </td>
-                  </tr>
-
-                  {/* PANEL EXPANDIBLE: CORRECCIÓN DEL GLITCH DE ANIMACIÓN */}
-                  <tr>
-                    <td colSpan={5} className="p-0 border-none bg-slate-50/30">
-                      <div
-                        className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out ${
-                          expandedRole === role.id
-                            ? "max-h-[800px] opacity-100"
-                            : "max-h-0 opacity-0"
-                        }`}
-                      >
-                        {/* Se eliminó animate-slide-down para evitar conflictos con max-h */}
-                        <div className="px-4 sm:px-12 py-4 sm:py-6">
-                          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-5 gap-3">
-                              <div>
-                                <h3 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-widest mb-1">
-                                  Configuración de Permisos
-                                </h3>
-                                <p className="text-[11px] sm:text-xs text-slate-400">
-                                  Activa o desactiva los módulos disponibles
-                                  para {role.name}
-                                </p>
-                              </div>
-                              <button
-                                onClick={() => setExpandedRole(null)}
-                                className="w-full sm:w-auto text-[11px] font-bold text-white sm:text-blue-600 bg-blue-600 sm:bg-transparent px-3 py-2 sm:p-0 rounded-lg sm:rounded-none hover:text-blue-800 uppercase tracking-widest transition-colors"
-                              >
-                                Guardar y Cerrar
-                              </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
-                              {ALL_ACCESSES.map((mod) => {
-                                const active = role.access.includes(mod);
-                                return (
-                                  <button
-                                    key={mod}
-                                    onClick={() =>
-                                      handleAccessToggle(role.id, mod)
-                                    }
-                                    className={`flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 transition-all ${
-                                      active
-                                        ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
-                                        : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
-                                    }`}
-                                  >
-                                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-tight truncate mr-2">
-                                      {mod}
-                                    </span>
-                                    <i
-                                      className={`bi ${active ? "bi-check-circle-fill" : "bi-circle"} text-base sm:text-lg shrink-0`}
-                                    ></i>
-                                  </button>
-                                );
-                              })}
+                      <td className={`px-3 py-3 ${!isActiveTab ? "pl-6" : ""}`}>
+                        <span className="font-mono text-[11px] bg-slate-100 px-2 py-1 rounded border">
+                          {role.roleId}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className="text-sm font-bold text-slate-800">
+                          {role.name}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className="text-xs text-slate-500 truncate block max-w-xs">
+                          {role.modules?.map((m) => m.moduleName).join(" • ") ||
+                            "Sin módulos"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        {isActiveTab ? (
+                          <i
+                            className={`bi bi-chevron-right transition-transform ${expandedRole === role.roleId ? "rotate-90 text-blue-500" : "text-slate-300"}`}
+                          ></i>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setRoleToRestore(role.roleId);
+                              setIsRestoreModalOpen(true);
+                            }}
+                            className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded border border-emerald-200"
+                          >
+                            Restaurar
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {isActiveTab && expandedRole === role.roleId && (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="p-0 bg-slate-50/30 border-none"
+                        >
+                          <div className="px-12 py-6 animate-slide-down">
+                            <div className="bg-white rounded-2xl p-6 border shadow-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                              {role.modules?.map((mod) => (
+                                <div
+                                  key={mod.moduleId}
+                                  className="p-3 bg-slate-50 rounded-xl border"
+                                >
+                                  <span className="text-xs font-bold text-slate-700 block mb-2">
+                                    {mod.moduleName}
+                                  </span>
+                                  <div className="flex flex-wrap gap-1">
+                                    {mod.permissions.map((p) => (
+                                      <span
+                                        key={p.permissionId}
+                                        className="px-2 py-0.5 bg-blue-50 text-blue-700 font-black text-[10px] rounded border border-blue-100"
+                                      >
+                                        {p.type}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </React.Fragment>
-              ))}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+
+        {/* FOOTER */}
+
+        <div className="bg-white px-6 py-4 flex items-center justify-between border-t border-slate-200">
+          <p className="text-sm font-medium text-slate-500">
+            Página{" "}
+            <span className="font-semibold text-slate-900">{currentPage}</span>{" "}
+            de{" "}
+            <span className="font-semibold text-slate-900">
+              {totalPages || 1}
+            </span>
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1 || isLoading}
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer disabled:cursor-not-allowed transition-colors"
+            >
+              Anterior
+            </button>
+
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={
+                currentPage >= totalPages || totalPages === 0 || isLoading
+              }
+              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer disabled:cursor-not-allowed transition-colors"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* MODAL: AGREGAR ROL */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Definir Nuevo Rol"
+        title="Crear Nuevo Rol"
         actions={
           <button
-            onClick={handleCreateRole}
-            className="w-full sm:w-auto px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95"
+            onClick={handleConfirmCreate}
+            disabled={isLoading}
+            className="bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg"
           >
-            Crear Rol
+            Guardar Rol
           </button>
         }
       >
         <div className="space-y-5 py-2">
+          {error && isAddModalOpen && (
+            <div className="p-3 bg-red-50 text-red-600 rounded-xl border border-red-200 text-xs font-bold">
+              {error}
+            </div>
+          )}
           <div>
-            <label
-              className={`block text-[11px] font-black uppercase tracking-widest mb-2 transition-colors ${nameError ? "text-red-500" : "text-slate-400"}`}
-            >
-              Identificador del Rol <span className="text-red-500">*</span>
+            <label className="block text-[11px] font-black uppercase text-slate-400 mb-2">
+              Nombre del rol *
             </label>
             <input
               type="text"
-              placeholder="Ej: Gerente Operativo"
-              className={`w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none transition-all font-medium text-sm ${
-                nameError
-                  ? "border-red-400 focus:ring-4 focus:ring-red-100 text-red-900 placeholder:text-red-300 bg-red-50/50"
-                  : "border-slate-200 focus:ring-4 focus:ring-blue-100 text-slate-700 placeholder:text-slate-300"
-              }`}
+              placeholder="Ej: VENDEDOR"
+              className={`w-full px-4 py-3 bg-slate-50 border rounded-xl uppercase text-sm outline-none focus:ring-4 ${nameError ? "border-red-400 focus:ring-red-100" : "border-slate-200 focus:ring-blue-100"}`}
               value={newRoleName}
               onChange={handleNameChange}
             />
-            {/* MENSAJE DE ERROR DINÁMICO */}
             {nameError && (
-              <p className="text-red-500 text-[11px] font-bold mt-2 flex items-center gap-1.5 animate-pulse">
-                <i className="bi bi-exclamation-circle-fill"></i>
-                Debes colocar un nombre al rol obligatoriamente
+              <p className="text-red-500 text-[11px] font-bold mt-2">
+                Nombre obligatorio
               </p>
             )}
           </div>
-
           <div>
-            <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3">
-              Asignar Módulos Iniciales
+            <label className="block text-[11px] font-black uppercase text-slate-400 mb-2">
+              Permisos
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              {ALL_ACCESSES.map((mod) => {
-                const isSel = newRoleAccess.includes(mod);
-                return (
-                  <button
-                    key={mod}
-                    onClick={() => toggleNewRoleAccess(mod)}
-                    className={`px-2 sm:px-3 py-2.5 rounded-lg border-2 text-[10px] font-black uppercase transition-all truncate ${
-                      isSel
-                        ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                        : "bg-white border-slate-100 text-slate-400 hover:bg-slate-50"
-                    }`}
-                  >
-                    {mod}
-                  </button>
-                );
-              })}
-            </div>
+            {permissionsLoading ? (
+              <div className="flex justify-center py-6">
+                <span className="loading loading-spinner text-blue-600"></span>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                {Object.values(groupedPermissions).map(
+                  ({ module, permissions: perms }: any) => (
+                    <div
+                      key={module.moduleId}
+                      className="border rounded-xl p-3 bg-white"
+                    >
+                      <div className="flex items-center gap-2 mb-2 border-b pb-2">
+                        <input
+                          type="checkbox"
+                          checked={perms.every((p: any) =>
+                            selectedPermissions.includes(p.permissionId),
+                          )}
+                          onChange={(e) =>
+                            handleSelectAllModule(
+                              module.moduleId,
+                              e.target.checked,
+                            )
+                          }
+                          className="w-4 h-4"
+                        />
+                        <span className="text-xs font-bold text-slate-800">
+                          {module.name}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {perms.map((perm: any) => (
+                          <label
+                            key={perm.permissionId}
+                            className="flex items-center gap-2 text-[10px] font-medium text-slate-600 cursor-pointer p-1.5 bg-slate-50 rounded border border-slate-100"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedPermissions.includes(
+                                perm.permissionId,
+                              )}
+                              onChange={(e) =>
+                                handlePermissionChange(
+                                  perm.permissionId,
+                                  e.target.checked,
+                                )
+                              }
+                              className="w-3 h-3"
+                            />
+                            <span>
+                              {perm.typePermission === "C"
+                                ? "Crear"
+                                : perm.typePermission === "R"
+                                  ? "Leer"
+                                  : perm.typePermission === "U"
+                                    ? "Editar"
+                                    : "Eliminar"}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
+            )}
           </div>
         </div>
       </Modal>
 
-      {/* MODAL: ELIMINAR ROL */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Confirmar Eliminación"
+        title="Confirmar Desactivación"
         actions={
           <button
             onClick={handleConfirmDelete}
-            className="w-full sm:w-auto px-8 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2"
+            disabled={isLoading}
+            className="bg-red-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg"
           >
-            <i className="bi bi-exclamation-triangle-fill"></i>
-            Sí, Eliminar
+            Sí, Desactivar
           </button>
         }
       >
-        <div className="py-4 text-center sm:text-left">
-          <p className="text-slate-500 font-medium leading-relaxed text-sm">
-            Estás a punto de eliminar{" "}
-            <span className="text-slate-800 font-bold">
-              {selectedRoles.length} roles
-            </span>{" "}
-            del sistema. Esta acción revocará automáticamente el acceso a todos
-            los usuarios vinculados.
-          </p>
-          <div className="mt-4 p-3 bg-red-50 rounded-xl border border-red-100">
-            <p className="text-[10px] sm:text-[11px] text-red-600 font-bold uppercase tracking-widest flex items-center justify-center sm:justify-start gap-2">
-              <i className="bi bi-info-circle-fill"></i>
-              Esta acción no se puede deshacer
-            </p>
-          </div>
+        <div className="py-4 text-sm text-slate-600">
+          ¿Estás seguro de que deseas desactivar {selectedRoles.length} roles?
+          Se moverán a la papelera.
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isRestoreModalOpen}
+        onClose={() => setIsRestoreModalOpen(false)}
+        title="Restaurar Rol"
+        actions={
+          <button
+            onClick={handleConfirmRestore}
+            disabled={isLoading}
+            className="bg-emerald-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg"
+          >
+            Sí, Restaurar
+          </button>
+        }
+      >
+        <div className="py-4 text-sm text-slate-600">
+          ¿Deseas reactivar este rol? Volverá a estar operativo con sus permisos
+          originales.
         </div>
       </Modal>
     </section>
