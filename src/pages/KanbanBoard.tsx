@@ -4,7 +4,7 @@ import { useKanban } from "../hooks/useKanban";
 import { useModals } from "../hooks/useModals";
 import Modal from "../components/Modal/Modal";
 import Alert from "../components/Alert";
-import type { SaleItem } from "../types/sales.types";
+import type { SaleItem } from "../types/kanban.types";
 
 export default function KanbanBoard() {
   const { tickets, loading, changeTicketStatus } = useKanban();

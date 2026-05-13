@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { SaleItem, StatusWashing } from '../types/sales.types';
-import { getDailySales, updateWashingStatus } from '../services/sales.services';
+import type { SaleItem, StatusWashing } from '../types/kanban.types';
+import { getDailySales, updateWashingStatus } from '../services/kanban.services';
 
 export const useKanban = () => {
   const [tickets, setTickets] = useState<SaleItem[]>([]);

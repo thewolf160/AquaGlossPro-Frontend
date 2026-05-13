@@ -1,11 +1,19 @@
 import api from '../config/api';
-import type { SaleItem, StatusWashing } from '../types/sales.types';
 
-export const getDailySales = async (date: string): Promise<SaleItem[]> => {
-  const response = await api.get(`/sales?date=${date}`);
-  return response.data.data.data; 
-};
+export const SalesService = {
+  getAll: async (params: {
+    page?: string;
+    limit?: string;
+    date?: string;
+    statusWashing?: string;
+    param?: string; 
+  }) => {
+    const response = await api.get(`/sales`, { params });
+    return response.data.data; 
+  },
 
-export const updateWashingStatus = async (id: number, statusWashing: StatusWashing): Promise<void> => {
-  await api.patch(`/sales/status/washing/${id}`, { statusWashing });
+  getById: async (id: number) => {
+    const response = await api.get(`/sales/${id}`);
+    return response.data.data;
+  }
 };

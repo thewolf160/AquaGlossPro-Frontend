@@ -32,6 +32,7 @@ export interface SaleItem {
   details: {
     comboServices: ServiceDetail[];
     independentServices: ServiceDetail[];
+    totalAmount: number;
   };
 }
 

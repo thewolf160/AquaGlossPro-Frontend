@@ -20,6 +20,7 @@ import Suppliers from "./pages/Suppliers";
 import ServiceCatalog from "./pages/ServiceCatalog";
 import KanbanBoard from "./pages/KanbanBoard";
 import Categories from "./pages/Settings/Categories";
+import ServiceHistory from "./pages/ServiceHistory";
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="purchases" element={<Purchases />} />
           <Route path="clients" element={<Clients />} />
           <Route path="sales" element={<Sales />} />
+          <Route path="serviceHistory" element={<ServiceHistory />} />
           <Route path="servicesCatalog" element={<ServiceCatalog />} />
           <Route path="washes" element={<KanbanBoard />} />
           <Route path="users" element={<Users />} />

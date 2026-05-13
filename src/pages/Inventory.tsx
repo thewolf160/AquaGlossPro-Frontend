@@ -117,7 +117,11 @@ export default function Inventory() {
 
   const handleDelete = async () => {
     const success = await deleteProduct(String(currentProduct.id));
-    if (success) handleCloseDelete();
+    if (success) {
+      handleCloseDelete();
+      setSuccessMessage("Producto eliminado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
   };
 
   const handleOpenDetails = (item: Item) => {
@@ -250,7 +254,6 @@ export default function Inventory() {
 
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4">
           
-          {/* 3. Reestructuración responsiva del contenedor de botones con flex-wrap */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex flex-wrap justify-center bg-gray-100 p-1 rounded-lg gap-1 w-full sm:w-auto">
               <button onClick={() => handleFilterChange("ACTIVOS")} className={`flex-1 sm:flex-none whitespace-nowrap px-4 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${activeFilter === "ACTIVOS" ? "bg-white text-green-700 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>Activos</button>
@@ -276,7 +279,7 @@ export default function Inventory() {
                   columns={columns}
                   data={productsData.data as unknown as Item[]}
                   emptyMessage="No hay productos que coincidan con los criterios."
-                  {...actionProps} // Pasamos el objeto entero desestructurado (spread)
+                  {...actionProps} 
                 />
               )}
             </div>
@@ -332,6 +335,7 @@ export default function Inventory() {
         deletingProduct={currentProduct}
         onDelete={handleDelete}
         isLoading={isSubmitting}
+        
       />
 
       <RestoreProductModal
