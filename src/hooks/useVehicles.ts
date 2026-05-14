@@ -24,7 +24,8 @@ export const useVehicles = () => {
   });
   const [isActiveVehicles, setIsActiveVehicles] = useState<boolean>(true);
   const [searchParameter, setSearchParameter] = useState<string>("");
-  const [vehiclesData, setVehiclesData] = useState<VehiclesData>(InitialVehiclesData);
+  const [vehiclesData, setVehiclesData] =
+    useState<VehiclesData>(InitialVehiclesData);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentVehicle, setCurrentVehicle] = useState<Vehicle>(InitialVehicle);
@@ -37,7 +38,8 @@ export const useVehicles = () => {
     setIsLoading(true);
 
     try {
-      const isTargetActive = activeOverride !== undefined ? activeOverride : isActiveVehicles;
+      const isTargetActive =
+        activeOverride !== undefined ? activeOverride : isActiveVehicles;
 
       const response = await VehicleService.getAll({
         page: page.toString(),
@@ -100,7 +102,7 @@ export const useVehicles = () => {
         typeVehicleId: newVehicleForm.typeVehicleId,
         ownerId: newVehicleForm.ownerId,
         plate: newVehicleForm.plate,
-        id: null
+        id: null,
       });
       await getVehicles();
       return true;
@@ -268,6 +270,6 @@ export const useVehicles = () => {
     setIsActiveVehicles,
     getVehicles,
     restoreVehicle,
-    setNewVehicleForm
+    setNewVehicleForm,
   };
 };

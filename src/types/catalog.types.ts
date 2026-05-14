@@ -16,8 +16,6 @@ export interface ServiceApi {
   category: CategoryApi;
 }
 
-
-
 export interface TypeVehicleApi {
   typeVehicleId: number;
   name: string;
@@ -59,7 +57,7 @@ export interface CatalogService extends Item {
   name: string;
   category: string;
   comissionPercentage: number;
-  prices: CatalogServicePrice[]; 
+  prices: CatalogServicePrice[];
 }
 
 export interface ServiceFormState {
@@ -68,21 +66,47 @@ export interface ServiceFormState {
   comissionPercentage: number | string;
 }
 
+// export interface ComboServiceRelationApi {
+//   servicesTypeVehicle: {
+//     service: { serviceId: number; name: string; };
+//     typeVehicle: { typeVehicleId: number; name: string; };
+//   };
+// }
+
 export interface ComboServiceRelationApi {
+  comboServiceId: number;
+  comboId: number;
+  // 👇 ESTE ES EL ID QUE TYPESCRIPT NO ENCONTRABA
+  servicesTypeVehicleId: number;
+  active?: boolean;
+
   servicesTypeVehicle: {
-    service: { serviceId: number; name: string; };
-    typeVehicle: { typeVehicleId: number; name: string; };
+    // 👇 ESTE ES EL PRECIO QUE USAMOS PARA EL TICKET
+    price: string | number;
+    serviceId?: number;
+    typeVehicleId?: number;
+
+    serviceTypeVehicleId: number;
+
+    service: {
+      serviceId: number;
+      name: string;
+    };
+    typeVehicle: {
+      typeVehicleId: number;
+      name: string;
+    };
   };
 }
 
 export interface ComboApi {
   comboId: number;
   name: string;
-  discountPercentage: string | number; 
+  discountPercentage: string | number;
   isPromotion: boolean;
   expirationDate: string | null;
   active: boolean;
-  combosServices?: ComboServiceRelationApi[]; 
+  combosServices?: ComboServiceRelationApi[];
 }
 
 export interface CreateComboPayload {
@@ -90,13 +114,12 @@ export interface CreateComboPayload {
   discountPercentage: number;
   isPromotion: boolean;
   expirationDate?: Date | null;
-  servicesTypeVehicleIds: number[]; 
+  servicesTypeVehicleIds: number[];
 }
 
 export interface ComboFormState {
   name: string;
   discountPercentage: string;
   isPromotion: boolean;
-  selectedServiceIds: number[]; 
+  selectedServiceIds: number[];
 }
-
