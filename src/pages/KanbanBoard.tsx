@@ -20,9 +20,9 @@ export default function KanbanBoard() {
 
   const handleConfirmCancel = async () => {
     if (!ticketToCancel) return;
-    
+
     toggleModal("delete", false);
-    
+
     const result = await changeTicketStatus(ticketToCancel, "C");
     setTicketToCancel(null);
 
@@ -46,9 +46,9 @@ export default function KanbanBoard() {
     return "bi-car-front";
   };
 
-  const waitingTickets = tickets.filter((t) => t.sale.statusWashing === "W"); 
-  const inProgressTickets = tickets.filter((t) => t.sale.statusWashing === "I"); 
-  const completedTickets = tickets.filter((t) => t.sale.statusWashing === "D"); 
+  const waitingTickets = tickets.filter((t) => t.sale.statusWashing === "W");
+  const inProgressTickets = tickets.filter((t) => t.sale.statusWashing === "I");
+  const completedTickets = tickets.filter((t) => t.sale.statusWashing === "D");
 
   if (loading) {
     return (
@@ -61,7 +61,7 @@ export default function KanbanBoard() {
   const TicketCard = ({ ticket }: { ticket: SaleItem }) => {
     const placa = ticket.vehicle?.plate || "Sin Placa";
     const modelo = ticket.vehicle?.typeVehicle || "Vehículo";
-    
+
     const allServices = [
       ...(ticket.details?.comboServices || []),
       ...(ticket.details?.independentServices || [])
@@ -106,7 +106,7 @@ export default function KanbanBoard() {
               {employeeNames.map((empName, index) => (
                 <span key={index} className="bg-blue-50 text-blue-700 text-[10px] px-2 py-1 rounded-full border border-blue-100 font-medium">
                   <i className="bi-person-fill mr-1"></i> {empName}
-                </span>  
+                </span>
               ))}
             </div>
           )}
@@ -128,7 +128,7 @@ export default function KanbanBoard() {
                 type="button"
                 onClick={() => {
                   setTicketToCancel(ticket.sale.saleId);
-                  toggleModal("delete", true); 
+                  toggleModal("delete", true);
                 }}
                 className="text-xs text-red-500 hover:text-red-700 px-2 py-1.5 font-bold transition-colors"
               >
@@ -164,7 +164,7 @@ export default function KanbanBoard() {
   return (
     <>
       {alertInfo && <Alert message={alertInfo.message} type={alertInfo.type} />}
-      
+
       <div className="animate-fade-in h-full flex flex-col">
         <div className="flex justify-between items-center mb-6 shrink-0">
           <h2 className="text-xl font-bold text-gray-800">Lavados del Día</h2>
