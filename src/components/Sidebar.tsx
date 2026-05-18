@@ -44,7 +44,14 @@ const menuItems: SidebarItem[] = [
     { label: "Catálogo de Servicios", path: "/servicesCatalog" },
     { label: "Lavados del dia", path: "/washes" },
   ] },
-  { path: "/sales", label: "Servicios", icon: "bi bi-currency-dollar" },
+  {
+    label: "Servicios",
+    icon: "bi bi-currency-dollar",
+    subItems: [
+      { label: "Nuevo Servicio", path: "/sales" },
+      { label: "Historial", path: "/serviceHistory" },
+    ]
+  },
   { path: "/reports", label: "Reportes", icon: "bi bi-graph-up" },
     { path: "/settings", label: "Ajustes", icon: "bi bi-gear" },
 ];
