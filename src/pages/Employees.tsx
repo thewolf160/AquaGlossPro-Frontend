@@ -14,6 +14,7 @@ import { useModals } from "../hooks/useModals";
 import Alert from "../components/Alert";
 import type React from "react";
 import { useJobs } from "../hooks/useJobs";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 const columns = [
   { key: "ci", header: "CI", mobile: true },
@@ -180,13 +181,13 @@ function Employees() {
 
   const actionProps = isActiveEmployees
     ? {
-        onDelete: handleOpenDelete,
-        onEdit: handleOpenEdit,
-        onView: handleOpenDetails,
+      ...(hasPermission("EMPLOYEES", "D") && {onDelete: handleOpenDelete}),
+       ...(hasPermission("EMPLOYEES", "U") && { onEdit: handleOpenEdit }),
+       ...(hasPermission("EMPLOYEES", "R") && { onView: handleOpenDetails }),
       }
     : {
-        onView: handleOpenDetails,
-        onRestore: handleOpenRestore,
+         ...(hasPermission("EMPLOYEES", "R") && { onView: handleOpenDetails }),
+        ...(hasPermission("EMPLOYEES", "U") && { onRestore: handleOpenRestore }),
       };
 
   return (
@@ -195,7 +196,7 @@ function Employees() {
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar empleado..."
-          buttonText="Agregar Empleado"
+          buttonText={hasPermission("EMPLOYEES", "C") ? "Agregar Empleado" : undefined}
           searchTerm={searchParameter}
           onSearchChange={handleSearchChange}
           onAddClick={handleOpenRegister}

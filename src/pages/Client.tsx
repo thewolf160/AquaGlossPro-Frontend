@@ -21,6 +21,7 @@ import { useClients } from "../hooks/useClients";
 import { useModals } from "../hooks/useModals";
 import { ClientService } from "../services/clients.services";
 import { VehicleService } from "../services/vehicles.services";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 function Clients() {
   const {
@@ -270,13 +271,13 @@ function Clients() {
 
   const actionProps = isActiveView
     ? {
-        onView: handleOpenDetails,
-        onEdit: handleOpenEdit,
-        onDelete: handleOpenDelete,
+        ...(hasPermission("CLIENTS", "R") && {onView: handleOpenDetails}),
+        ...(hasPermission("CLIENTS", "U") && {onEdit: handleOpenEdit}),
+        ...(hasPermission("CLIENTS", "D") &&{ onDelete: handleOpenDelete}),
       }
     : {
-        onView: handleOpenDetails,
-        onRestore: handleOpenRestore,
+        ...(hasPermission("CLIENTS", "R") && {onView: handleOpenDetails}),
+        ...(hasPermission("CLIENTS", "U") &&{onRestore: handleOpenRestore}),
       };
 
   return (
@@ -285,7 +286,7 @@ function Clients() {
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar cliente por nombre o cédula..."
-          buttonText="Agregar Cliente"
+          buttonText={hasPermission("CLIENTS", "C") ? "Agregar Cliente" : undefined}
           searchTerm={searchParameter}
           onSearchChange={handleSearchChange}
           onAddClick={handleOpenRegister}

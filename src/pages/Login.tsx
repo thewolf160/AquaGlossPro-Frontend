@@ -62,8 +62,11 @@ function Login() {
         email: formState.form.email,
         password: formState.form.password,
       });
-
+      console.log(response)
       localStorage.setItem("token", response.data.tokens)
+
+      const permissionsData = response.data.permissions;
+      localStorage.setItem("user_permissions", JSON.stringify(permissionsData))
       
       navigate("/home", { replace: true });
     } catch (error: unknown) {

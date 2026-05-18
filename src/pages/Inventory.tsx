@@ -18,6 +18,7 @@ import { useInventory } from "../hooks/useInventory";
 import { useModals } from "../hooks/useModals";
 import { InitialProduct, InitialNewProductForm, type InventoryCategory } from "../types/inventory.types";
 import api from "../config/api";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 export default function Inventory() {
   const {
@@ -153,13 +154,13 @@ export default function Inventory() {
 
   const actionProps = activeFilter !== "INACTIVOS"
     ? {
-        onView: handleOpenDetails,
-        onEdit: handleOpenEdit,
-        onDelete: handleOpenDelete,
+        ...(hasPermission("PRODUCTS", "R")&&{onView: handleOpenDetails}),
+        ...(hasPermission("PRODUCTS", "U") && {onEdit: handleOpenEdit}),
+        ...(hasPermission("PRODUCTS", "D") && {onDelete: handleOpenDelete}),
       }
     : {
-        onView: handleOpenDetails,
-        onRestore: (item: Item) => handleOpenRestore(item as unknown as Product),
+        ...(hasPermission("PRODUCTS", "R")&&{onView: handleOpenDetails}),
+        ...(hasPermission("PRODUCTS", "U") && {onRestore: (item: Item) => handleOpenRestore(item as unknown as Product)}),
       };
 
   const columns = [
@@ -241,7 +242,7 @@ export default function Inventory() {
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar producto o categoría..."
-          buttonText="Agregar Producto"
+          buttonText={hasPermission("PRODUCTS", "C") ? "Agregar Producto" : undefined}
           searchTerm={searchParameter}
           onSearchChange={handleSearchChange}
           onAddClick={handleOpenRegister}

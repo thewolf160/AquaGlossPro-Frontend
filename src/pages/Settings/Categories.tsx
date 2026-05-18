@@ -12,6 +12,7 @@ import Input from "../../components/Modal/Input";
 import ActionButton from "../../components/Modal/ActionButton";
 import Alert from "../../components/Alert";
 import NavBar from "./ui/NavBar";
+import { hasPermission } from "../../utils/checkPermissions.utils";
 
 const columns = [
   { key: "name", header: "Nombre", mobile: true },
@@ -141,7 +142,12 @@ function Categories() {
     <>
       {successMessage && <Alert message={successMessage} />}
       <div className="space-y-6">
-        <NavBar title="Categorías" onRegister={handleOpenRegister} />
+        <NavBar
+          title="Categorías"
+          onRegister={
+            hasPermission("CATEGORIES", "C") ? handleOpenRegister : undefined
+          }
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {isLoading ? (
             <div className="p-10 col-span-full flex items-center justify-center">
@@ -161,18 +167,22 @@ function Categories() {
                           <i className="bi bi-tags text-2xl text-blue-500" />
                         </div>
                         <div className="flex gap-2">
-                          <button
-                            className="cursor-pointer text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5"
-                            onClick={() => handleOpenEdit(categorie)}
-                          >
-                            <i className="bi bi-pencil-square " />
-                          </button>
-                          <button
-                            className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5 "
-                            onClick={() => handleOpenDelete(categorie)}
-                          >
-                            <i className="bi bi-trash " />
-                          </button>
+                          {hasPermission("CATEGORIES", "U") && (
+                            <button
+                              className="cursor-pointer text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5"
+                              onClick={() => handleOpenEdit(categorie)}
+                            >
+                              <i className="bi bi-pencil-square " />
+                            </button>
+                          )}
+                          {hasPermission("CATEGORIES", "D") && (
+                            <button
+                              className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5 "
+                              onClick={() => handleOpenDelete(categorie)}
+                            >
+                              <i className="bi bi-trash " />
+                            </button>
+                          )}
                         </div>
                       </div>
                       <div className="mt-2">
@@ -196,7 +206,7 @@ function Categories() {
                   <p className="text-slate-500  text-center">
                     No se encontraron categorías registradas
                   </p>
-              </div>
+                </div>
               )}
             </>
           )}
@@ -227,7 +237,11 @@ function Categories() {
                         ? "Producto"
                         : cat.type,
                 }))}
-                onRestore={handleOpenRestore}
+                onRestore={
+                  hasPermission("CATEGORIES", "U")
+                    ? handleOpenRestore
+                    : undefined
+                }
               />
             )}
 

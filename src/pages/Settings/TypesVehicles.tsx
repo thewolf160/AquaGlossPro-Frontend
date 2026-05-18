@@ -11,6 +11,7 @@ import Input from "../../components/Modal/Input";
 import ActionButton from "../../components/Modal/ActionButton";
 import Alert from "../../components/Alert";
 import NavBar from "./ui/NavBar";
+import { hasPermission } from "../../utils/checkPermissions.utils";
 
 const columns = [
   { key: "name", header: "Nombre", mobile: true },
@@ -41,7 +42,7 @@ function TypesVehicles() {
     restoreTypeVehicle,
     currentPage,
     setCurrentPage,
-    totalPages
+    totalPages,
   } = useTypesVehicles();
 
   const { modals, toggleModal } = useModals();
@@ -142,7 +143,12 @@ function TypesVehicles() {
     <>
       {successMessage && <Alert message={successMessage} />}
       <div className="space-y-6">
-        <NavBar title="Tipos de Vehículos" onRegister={handleOpenRegister} />
+        <NavBar
+          title="Tipos de Vehículos"
+          onRegister={
+            hasPermission("TYPE_VEHICLES", "C") ? handleOpenRegister : undefined
+          }
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {isLoading ? (
             <div className="p-10 col-span-full flex items-center justify-center">
@@ -150,45 +156,51 @@ function TypesVehicles() {
             </div>
           ) : (
             <>
-              {
-              typesVehiclesData.data.length > 0 ? (
-              typesVehiclesData.data.map((typeVehicle: Item) => (
-                <div
-                  key={typeVehicle.id}
-                  className="card bg-white border border-slate-200 border-t-5 border-t-blue-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ease-out duration-200"
-                >
-                  <div className="card-body gap-4">
-                    <div className="flex items-center justify-between">
-                      <div className="bg-blue-100 px-2 py-1 rounded-lg">
-                        <i className="bi bi-car-front-fill text-2xl text-blue-500" />
+              {typesVehiclesData.data.length > 0 ? (
+                typesVehiclesData.data.map((typeVehicle: Item) => (
+                  <div
+                    key={typeVehicle.id}
+                    className="card bg-white border border-slate-200 border-t-5 border-t-blue-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ease-out duration-200"
+                  >
+                    <div className="card-body gap-4">
+                      <div className="flex items-center justify-between">
+                        <div className="bg-blue-100 px-2 py-1 rounded-lg">
+                          <i className="bi bi-car-front-fill text-2xl text-blue-500" />
+                        </div>
+                        <div className="flex gap-2">
+                          {hasPermission("TYPE_VEHICLES", "U") && (
+                            <button
+                              className="cursor-pointer text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5"
+                              onClick={() => handleOpenEdit(typeVehicle)}
+                            >
+                              <i className="bi bi-pencil-square " />
+                            </button>
+                          )}
+                          {hasPermission("TYPE_VEHICLES", "D") && (
+                            <button
+                              className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5 "
+                              onClick={() => handleOpenDelete(typeVehicle)}
+                            >
+                              <i className="bi bi-trash " />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          className="cursor-pointer text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5"
-                          onClick={() => handleOpenEdit(typeVehicle)}
-                        >
-                          <i className="bi bi-pencil-square " />
-                        </button>
-                        <button
-                          className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5 "
-                          onClick={() => handleOpenDelete(typeVehicle)}
-                        >
-                          <i className="bi bi-trash " />
-                        </button>
+                      <div className="mt-2">
+                        <h3 className="card-title text-xl">
+                          {typeVehicle.name}
+                        </h3>
+                        <p>Categoría de Vehiculo</p>
                       </div>
-                    </div>
-                    <div className="mt-2">
-                      <h3 className="card-title text-xl">{typeVehicle.name}</h3>
-                      <p>Categoría de Vehiculo</p>
                     </div>
                   </div>
-                </div>
-              ))) : (
+                ))
+              ) : (
                 <div className="col-span-full p-5">
                   <p className="text-slate-500  text-center">
                     No se encontraron tipos de vehículos registrados
                   </p>
-              </div>
+                </div>
               )}
             </>
           )}
@@ -211,7 +223,11 @@ function TypesVehicles() {
               <Table
                 columns={columns}
                 data={inactiveTypesVehicleData.data}
-                onRestore={handleOpenRestore}
+                onRestore={
+                  hasPermission("TYPE_VEHICLES", "U")
+                    ? handleOpenRestore
+                    : undefined
+                }
               />
             )}
 
@@ -232,7 +248,7 @@ function TypesVehicles() {
                 <button
                   className="join-item py-1 px-2 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded flex items-center justify-center gap-1"
                   onClick={() => setCurrentPage(currentPage + 1)}
-                   disabled={currentPage === totalPages || isLoading}
+                  disabled={currentPage === totalPages || isLoading}
                 >
                   Siguiente
                   <i className="bi bi-arrow-right-short text-xl" />
@@ -280,11 +296,7 @@ function TypesVehicles() {
         onClose={handleCloseEdit}
         title="Editar Tipo de Vehículo"
         actions={
-          <ActionButton
-            type="edit"
-            isLoading={isSubmitting}
-            form="EditForm"
-          />
+          <ActionButton type="edit" isLoading={isSubmitting} form="EditForm" />
         }
       >
         <form

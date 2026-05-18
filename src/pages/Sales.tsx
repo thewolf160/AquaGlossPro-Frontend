@@ -4,6 +4,7 @@ import { useEmployees } from "../hooks/useEmployees";
 import { usePays } from "../hooks/usePays";
 import { useSales } from "../hooks/useSales";
 import ErrorAlert from "../components/ErrorAlert";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 function Sales() {
   const { clientsData } = useClients();
@@ -20,46 +21,54 @@ function Sales() {
     handleEmployeeChange,
     toggleService,
     toggleCombo, // Agregado
+    handleGeneralDiscountChange,
     registerSale,
     isSubmitting,
     successMessage,
-    error
+    error,
   } = useSales();
 
   // Cálculo robusto del Total, Subtotal y Descuentos
   const ticketCalculations = newSale.services.reduce(
     (acc, currentItem) => {
-      // 1. Buscamos precio en servicios individuales
-      const serviceDetail = availableServices.find(
-        (s) =>
-          (s.prices[0]?.relationId ?? 0) === currentItem.serviceTypeVehicleId,
-      );
+      let basePrice = 0;
+      let comboDiscountPercentage = 0;
 
-      let basePrice = serviceDetail
-        ? Number(serviceDetail.prices[0]?.price ?? 0)
-        : 0;
-
-      // 2. Si no está en individuales, lo buscamos en los combos
-      if (!basePrice) {
+      // Si es parte de un combo
+      if (currentItem.comboOriginId) {
         const comboDetail = availableCombos?.find(
           (c) => c.comboId === currentItem.comboOriginId,
         );
         const comboServiceDetail = comboDetail?.combosServices?.find(
           (cs) =>
-            (cs.servicesTypeVehicle?.serviceTypeVehicleId || cs.servicesTypeVehicleId) ===
-            currentItem.serviceTypeVehicleId,
+            (cs.servicesTypeVehicle?.serviceTypeVehicleId ||
+              cs.servicesTypeVehicleId) === currentItem.serviceTypeVehicleId,
         );
+        
         basePrice = comboServiceDetail
           ? Number(comboServiceDetail.servicesTypeVehicle?.price ?? 0)
           : 0;
+
+        if (comboDetail) {
+          comboDiscountPercentage = Number(comboDetail.discountPercentage) / 100;
+        }
+      } else {
+        // Si es un servicio individual
+        const serviceDetail = availableServices.find(
+          (s) =>
+            (s.prices[0]?.relationId ?? 0) === currentItem.serviceTypeVehicleId,
+        );
+        basePrice = serviceDetail
+          ? Number(serviceDetail.prices[0]?.price ?? 0)
+          : 0;
       }
 
-      const discountAmount = currentItem.discount || 0;
+      const comboDiscountAmount = basePrice * comboDiscountPercentage;
 
       return {
         subtotal: acc.subtotal + basePrice,
-        totalDiscount: acc.totalDiscount + discountAmount,
-        total: acc.total + (basePrice - discountAmount),
+        totalDiscount: acc.totalDiscount + comboDiscountAmount,
+        total: acc.total + (basePrice - comboDiscountAmount),
       };
     },
     { subtotal: 0, totalDiscount: 0, total: 0 },
@@ -77,19 +86,21 @@ function Sales() {
           <p className=" text-slate-500">Nuevo Servicio</p>
         </div>
         <div>
-          <button
-            onClick={registerSale}
-            className="btn bg-blue-600 text-white rounded-lg flex gap-2"
-          >
-            {isSubmitting ? (
-              <span className="loading loading-spinner loading-xl"></span>
-            ) : (
-              <>
-                <i className="bi bi-floppy" />
-                Procesar Orden
-              </>
-            )}
-          </button>
+          {hasPermission("SALES", "C") && (
+            <button
+              onClick={registerSale}
+              className="btn bg-blue-600 text-white rounded-lg flex gap-2"
+            >
+              {isSubmitting ? (
+                <span className="loading loading-spinner loading-xl"></span>
+              ) : (
+                <>
+                  <i className="bi bi-floppy" />
+                  Procesar Orden
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -102,7 +113,10 @@ function Sales() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <label htmlFor="clientId" className="font-semibold text-slate-700">
+                <label
+                  htmlFor="clientId"
+                  className="font-semibold text-slate-700"
+                >
                   Cliente
                 </label>
                 <select
@@ -123,7 +137,10 @@ function Sales() {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label htmlFor="vehicleId" className="font-semibold text-slate-700">
+                <label
+                  htmlFor="vehicleId"
+                  className="font-semibold text-slate-700"
+                >
                   Vehículo
                 </label>
                 <select
@@ -244,7 +261,10 @@ function Sales() {
                               </p>
                               {combo.combosServices?.map((cs) => {
                                 const relationId =
-                                  cs.servicesTypeVehicle?.serviceTypeVehicleId || cs.servicesTypeVehicleId || 0;
+                                  cs.servicesTypeVehicle
+                                    ?.serviceTypeVehicleId ||
+                                  cs.servicesTypeVehicleId ||
+                                  0;
                                 const selectedServiceData =
                                   newSale.services.find(
                                     (s) =>
@@ -383,7 +403,10 @@ function Sales() {
                 3. Transacción
               </h2>
               <div className="flex flex-col gap-2">
-                <label htmlFor="paymentMethodId" className="font-semibold text-slate-700">
+                <label
+                  htmlFor="paymentMethodId"
+                  className="font-semibold text-slate-700"
+                >
                   Método de Pago
                 </label>
                 <select
@@ -445,26 +468,16 @@ function Sales() {
                 newSale.services.map((selectedItem, index) => {
                   let serviceName = "Servicio Desconocido";
                   let basePrice = 0;
-                  let isComboItem = false;
+                  let isComboItem = !!selectedItem.comboOriginId;
 
-                  // Buscar nombre/precio en individuales
-                  const individualSvc = availableServices.find(
-                    (s) =>
-                      (s.prices[0]?.relationId ?? 0) ===
-                      selectedItem.serviceTypeVehicleId,
-                  );
-
-                  if (individualSvc) {
-                    serviceName = individualSvc.name;
-                    basePrice = Number(individualSvc.prices[0]?.price ?? 0);
-                  } else {
-                    // Si no está, buscar en combos
+                  if (isComboItem) {
                     const comboSvc = availableCombos?.find(
                       (c) => c.comboId === selectedItem.comboOriginId,
                     );
                     const internalSvc = comboSvc?.combosServices?.find(
                       (cs) =>
-                        (cs.servicesTypeVehicle?.serviceTypeVehicleId || cs.servicesTypeVehicleId) ===
+                        (cs.servicesTypeVehicle?.serviceTypeVehicleId ||
+                          cs.servicesTypeVehicleId) ===
                         selectedItem.serviceTypeVehicleId,
                     );
 
@@ -475,15 +488,23 @@ function Sales() {
                       basePrice = Number(
                         internalSvc.servicesTypeVehicle?.price ?? 0,
                       );
-                      isComboItem = true;
+                    }
+                  } else {
+                    const individualSvc = availableServices.find(
+                      (s) =>
+                        (s.prices[0]?.relationId ?? 0) ===
+                        selectedItem.serviceTypeVehicleId,
+                    );
+
+                    if (individualSvc) {
+                      serviceName = individualSvc.name;
+                      basePrice = Number(individualSvc.prices[0]?.price ?? 0);
                     }
                   }
 
                   const employeeDetail = employeesData.data.find(
                     (e) => e.id === selectedItem.employeeId,
                   );
-                  const finalItemPrice =
-                    basePrice - (selectedItem.discount || 0);
 
                   return (
                     <div
@@ -520,7 +541,7 @@ function Sales() {
                         </div>
                       </div>
                       <span className="font-bold text-sm text-slate-800 p-4">
-                        ${finalItemPrice.toFixed(2)}
+                        ${basePrice.toFixed(2)}
                       </span>
                     </div>
                   );
@@ -550,12 +571,30 @@ function Sales() {
               </div>
             )}
 
+            <div className="flex justify-between items-center mb-2 mt-2 pt-2 border-t border-gray-200">
+              <span className="text-slate-500 font-medium tracking-wider text-sm">
+                Descuento Adicional
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-slate-500 font-medium">$</span>
+                <input 
+                  type="number"
+                  min="0"
+                  name="discount"
+                  value={newSale.discount || ""}
+                  onChange={handleGeneralDiscountChange}
+                  className="w-20 px-2 py-1 text-sm border border-slate-300 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
             <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
               <span className="text-slate-800 font-bold uppercase tracking-wider">
                 Total
               </span>
               <span className="text-2xl font-bold text-blue-600">
-                ${ticketCalculations.total.toFixed(2)}
+                ${Math.max(0, ticketCalculations.total - Number(newSale.discount || 0)).toFixed(2)}
               </span>
             </div>
           </div>

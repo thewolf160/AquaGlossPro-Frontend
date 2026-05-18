@@ -13,6 +13,7 @@ import type { ColumnsProps } from "../components/Table/Table.types";
 import AddComboModal from "../components/service/AddComboModal";
 import EditComboModal from "../components/service/EditComboModal";
 import DeleteComboModal from "../components/service/DeleteComboModal";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 export default function ServiceCatalog() {
   const { 
@@ -154,7 +155,7 @@ export default function ServiceCatalog() {
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar Servicio o Categoría..."
-          buttonText="Agregar Servicio"
+          buttonText={hasPermission("SERVICES", "C") ? "Agregar Servicio" : undefined}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           onAddClick={() => setIsAddModalOpen(true)}

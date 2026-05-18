@@ -13,6 +13,7 @@ import type React from "react";
 import { useVehicles } from "../hooks/useVehicles";
 import Alert from "../components/Alert";
 import { InitialVehicle, InitialNewVehicleForm } from "../types/vehicles.types";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 const columns = [
   { key: "plate", header: "Placa", mobile: true },
@@ -55,7 +56,7 @@ function Vehicles() {
     getVehicles,
     isLoading,
     setError,
-    setNewVehicleForm
+    setNewVehicleForm,
   } = useVehicles();
 
   const handleOpenRegister = () => {
@@ -83,7 +84,7 @@ function Vehicles() {
   const handleOpenDelete = (item: Item) => {
     setCurrentVehicle((prev) => ({
       ...prev,
-      ...item
+      ...item,
     }));
     toggleModal("delete", true);
   };
@@ -175,14 +176,15 @@ function Vehicles() {
 
   const actionProps = isActiveVehicles
     ? {
-      onDelete: handleOpenDelete,
-      onEdit: handleOpenEdit,
-      onView: handleOpenDetails,
-    }
+        ...(hasPermission("VEHICLES", "D") && { onDelete: handleOpenDelete }),
+        ...(hasPermission("VEHICLES", "U") && { onEdit: handleOpenEdit }),
+
+        ...(hasPermission("VEHICLES", "R") && { onView: handleOpenDetails }),
+      }
     : {
-      onView: handleOpenDetails,
-      onRestore: handleOpenRestore,
-    };
+        ...(hasPermission("VEHICLES", "R") && { onView: handleOpenDetails }),
+        ...(hasPermission("VEHICLES", "U") && { onRestore: handleOpenRestore }),
+      };
 
   return (
     <>
@@ -190,7 +192,9 @@ function Vehicles() {
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar Vehículo..."
-          buttonText="Agregar Vehículo"
+          buttonText={
+            hasPermission("VEHICLES", "C") ? "Agregar Vehículo" : undefined
+          }
           searchTerm={searchParameter}
           onSearchChange={handleSearchChange}
           onAddClick={handleOpenRegister}
@@ -215,7 +219,9 @@ function Vehicles() {
               <p className="font-medium text-sm text-blue-700">
                 Total Vehículos
               </p>
-              <p className="text-2xl font-bold text-blue-900">{vehiclesData.totalVehicles}</p>
+              <p className="text-2xl font-bold text-blue-900">
+                {vehiclesData.totalVehicles}
+              </p>
             </div>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm border border-yellow-200 hover:shadow-md transition-shadow flex items-center gap-4">
@@ -412,7 +418,10 @@ function Vehicles() {
         <div className="pt-4">
           <p className="text-center text-slate-700">
             ¿Estás seguro de que deseas eliminar el vehículo con placa{" "}
-            <span className="font-semibold text-slate-800">{currentVehicle.plate}</span>?
+            <span className="font-semibold text-slate-800">
+              {currentVehicle.plate}
+            </span>
+            ?
           </p>
         </div>
       </Modal>
@@ -432,9 +441,7 @@ function Vehicles() {
         >
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label
-                className="block text-sm font-medium text-slate-700"
-              >
+              <label className="block text-sm font-medium text-slate-700">
                 Tipo de Vehículo:
               </label>
               <select
@@ -464,9 +471,7 @@ function Vehicles() {
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2">
-              <label
-                className="block text-sm font-medium text-slate-700"
-              >
+              <label className="block text-sm font-medium text-slate-700">
                 Cliente Propietario:
               </label>
               <select
@@ -525,7 +530,9 @@ function Vehicles() {
             />
           </div>
           <div>
-            <h3 className="text-slate-800 mt-2 mb-2 border-b border-slate-200 pb-1">Datos del Propietario</h3>
+            <h3 className="text-slate-800 mt-2 mb-2 border-b border-slate-200 pb-1">
+              Datos del Propietario
+            </h3>
             <div className="grid grid-cols-2 gap-4 mb-3">
               <Input
                 name="ownerName"
