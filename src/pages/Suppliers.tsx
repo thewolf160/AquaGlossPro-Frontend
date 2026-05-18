@@ -15,6 +15,7 @@ import type { ColumnsProps } from "../components/Table/Table.types";
 import { useSuppliers } from "../hooks/useSuppliers";
 import { useModals } from "../hooks/useModals";
 import { InitialNewSupplierForm } from "../types/suppliers.types";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 export default function Suppliers() {
   const {
@@ -52,7 +53,6 @@ export default function Suppliers() {
     inactive: suppliersData.totals?.inactive || 0,
   };
 
-  
   const handleOpenDetails = (item: Item) => {
     setCurrentSupplier(item as unknown as Supplier);
     toggleModal("details", true);
@@ -74,7 +74,11 @@ export default function Suppliers() {
   };
 
   const handleOpenEdit = (item: Item) => {
-    setEditSupplierState({ ...(item as unknown as Supplier), error: false, errorMsg: "" });
+    setEditSupplierState({
+      ...(item as unknown as Supplier),
+      error: false,
+      errorMsg: "",
+    });
     toggleModal("edit", true);
   };
 
@@ -121,42 +125,58 @@ export default function Suppliers() {
       header: "Empresa",
       key: "companyName",
       mobile: true,
-      render: (item: Item) => <div className="font-bold text-gray-800 text-left">{(item as Supplier).companyName}</div>,
+      render: (item: Item) => (
+        <div className="font-bold text-gray-800 text-left">
+          {(item as Supplier).companyName}
+        </div>
+      ),
     },
     {
       header: "RIF",
       key: "rif",
       mobile: true,
-      render: (item: Item) => <span className="font-medium text-slate-700">{(item as Supplier).rif}</span>,
+      render: (item: Item) => (
+        <span className="font-medium text-slate-700">
+          {(item as Supplier).rif}
+        </span>
+      ),
     },
     {
       header: "Teléfono",
       key: "numberPhone",
       mobile: true,
-      render: (item: Item) => <span className="text-slate-600">{(item as Supplier).numberPhone}</span>,
+      render: (item: Item) => (
+        <span className="text-slate-600">{(item as Supplier).numberPhone}</span>
+      ),
     },
     {
       header: "Email",
       key: "email",
       mobile: false,
-      render: (item: Item) => <span className="text-sm text-slate-600">{(item as Supplier).email}</span>,
+      render: (item: Item) => (
+        <span className="text-sm text-slate-600">
+          {(item as Supplier).email}
+        </span>
+      ),
     },
     {
       header: "Acciones",
       key: "actions",
       mobile: true,
-    }
+    },
   ];
 
   const actionProps = isActiveView
     ? {
-        onView: handleOpenDetails,
-        onEdit: handleOpenEdit,
-        onDelete: handleOpenDelete,
+        ...(hasPermission("SUPPLIERS", "R") && { onView: handleOpenDetails }),
+        ...(hasPermission("SUPPLIERS", "U") && { onEdit: handleOpenEdit }),
+        ...(hasPermission("SUPPLIERS", "D") && { onDelete: handleOpenDelete }),
       }
     : {
-        onView: handleOpenDetails,
-        onRestore: handleOpenRestore,
+        ...(hasPermission("SUPPLIERS", "R") && { onView: handleOpenDetails }),
+        ...(hasPermission("SUPPLIERS", "U") && {
+          onRestore: handleOpenRestore,
+        }),
       };
 
   return (
@@ -166,7 +186,9 @@ export default function Suppliers() {
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar por empresa, RIF, email o teléfono..."
-          buttonText="Agregar Proveedor"
+          buttonText={
+            hasPermission("SUPPLIERS", "C") ? "Agregar Proveedor" : undefined
+          }
           searchTerm={searchParameter}
           onSearchChange={handleSearchChange}
           onAddClick={() => toggleModal("register", true)}
@@ -174,15 +196,25 @@ export default function Suppliers() {
       </HeaderPortal>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
-        <div className={`bg-white p-4 rounded-xl shadow-sm border flex items-center gap-4 ${!isActiveView ? 'border-slate-300' : 'border-blue-200'}`}>
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${!isActiveView ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-600'}`}>
-            <i className={`bi ${!isActiveView ? 'bi-trash3' : 'bi-truck'}`}></i>
+        <div
+          className={`bg-white p-4 rounded-xl shadow-sm border flex items-center gap-4 ${!isActiveView ? "border-slate-300" : "border-blue-200"}`}
+        >
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${!isActiveView ? "bg-slate-100 text-slate-600" : "bg-blue-100 text-blue-600"}`}
+          >
+            <i className={`bi ${!isActiveView ? "bi-trash3" : "bi-truck"}`}></i>
           </div>
           <div>
-            <p className={`text-sm font-medium ${!isActiveView ? 'text-slate-600' : 'text-blue-700'}`}>
-              {!isActiveView ? 'Total Inactivos' : 'Total Proveedores Registrados'}
+            <p
+              className={`text-sm font-medium ${!isActiveView ? "text-slate-600" : "text-blue-700"}`}
+            >
+              {!isActiveView
+                ? "Total Inactivos"
+                : "Total Proveedores Registrados"}
             </p>
-            <p className={`text-2xl font-black ${!isActiveView ? 'text-slate-800' : 'text-blue-800'}`}>
+            <p
+              className={`text-2xl font-black ${!isActiveView ? "text-slate-800" : "text-blue-800"}`}
+            >
               {!isActiveView ? stats.inactive : stats.total}
             </p>
           </div>
@@ -194,8 +226,12 @@ export default function Suppliers() {
               <i className="bi bi-check-circle"></i>
             </div>
             <div>
-              <p className="text-sm text-green-700 font-medium">Proveedores Activos</p>
-              <p className="text-2xl font-black text-green-900">{stats.active}</p>
+              <p className="text-sm text-green-700 font-medium">
+                Proveedores Activos
+              </p>
+              <p className="text-2xl font-black text-green-900">
+                {stats.active}
+              </p>
             </div>
           </div>
         )}
@@ -226,14 +262,19 @@ export default function Suppliers() {
             <Table
               columns={columns}
               data={suppliersData.data as Item[]}
-              emptyMessage={searchParameter ? "No se encontraron proveedores que coincidan con la búsqueda." : "No hay proveedores registrados."}
-              {...actionProps} 
+              emptyMessage={
+                searchParameter
+                  ? "No se encontraron proveedores que coincidan con la búsqueda."
+                  : "No hay proveedores registrados."
+              }
+              {...actionProps}
             />
           )}
 
           <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-t border-slate-200">
             <p className="text-sm text-slate-500">
-              Página <span className="font-bold">{currentPage}</span> de <span className="font-bold">{totalPages || 1}</span>
+              Página <span className="font-bold">{currentPage}</span> de{" "}
+              <span className="font-bold">{totalPages || 1}</span>
             </p>
             <div className="join gap-2">
               <button
@@ -246,7 +287,9 @@ export default function Suppliers() {
               <button
                 className="join-item py-1.5 px-3 text-sm cursor-pointer border border-gray-300 hover:bg-slate-100 rounded-md flex items-center justify-center gap-1 transition-colors disabled:opacity-50"
                 onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0 || isLoading}
+                disabled={
+                  currentPage === totalPages || totalPages === 0 || isLoading
+                }
               >
                 Siguiente <i className="bi bi-arrow-right-short text-xl" />
               </button>
@@ -294,7 +337,6 @@ export default function Suppliers() {
         onRestore={handleConfirmRestore}
         isLoading={isSubmitting}
       />
-
     </div>
   );
 }

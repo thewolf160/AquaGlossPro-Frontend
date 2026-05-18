@@ -3,6 +3,7 @@ export interface NewSale {
   vehicleId: number | "";
   paymentMethodId: number | "";
   initialState: string;
+  discount?: number | "";
   services: {
     employeeId: number | "";
     serviceTypeVehicleId: number;
@@ -17,5 +18,6 @@ export const InitialNewSale: NewSale = {
   vehicleId: "",
   paymentMethodId: "",
   initialState: "",
+  discount: "",
   services: [],
 };

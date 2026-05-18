@@ -39,7 +39,10 @@ export const useSales = () => {
   const availableCombos = combos
     .map((c) => {
       const validServices = (c.combosServices ?? []).filter(
-        (cs) => cs.servicesTypeVehicle?.typeVehicle?.typeVehicleId === currentTypeVehicleId || cs.servicesTypeVehicle?.typeVehicleId === currentTypeVehicleId,
+        (cs) =>
+          cs.servicesTypeVehicle?.typeVehicle?.typeVehicleId ===
+          currentTypeVehicleId ||
+          cs.servicesTypeVehicle?.typeVehicleId === currentTypeVehicleId,
       );
       return { ...c, combosServices: validServices };
     })
@@ -100,18 +103,15 @@ export const useSales = () => {
           services: prev.services.filter((s) => s.comboOriginId !== comboId),
         };
       } else {
-        const comboDiscount = Number(discountPercentage) / 100;
-
+        // Si no está seleccionado, preparamos todos los servicios de este combo
         const newServicesFromCombo = comboServicesData.map((cs) => {
-          const originalPrice = Number(cs.servicesTypeVehicle.price);
-          const discountValue = originalPrice * comboDiscount;
-
           return {
             employeeId: "" as const,
             serviceTypeVehicleId:
-              cs.servicesTypeVehicleId || cs.servicesTypeVehicle?.serviceTypeVehicleId || 0,
+              cs.servicesTypeVehicleId ||
+              cs.servicesTypeVehicle?.serviceTypeVehicleId ||
+              0,
             comboOriginId: comboId,
-            discount: Math.round(discountValue),
           };
         });
 
@@ -136,6 +136,14 @@ export const useSales = () => {
       services: prev.services.map((s) =>
         s.serviceTypeVehicleId === relationId ? { ...s, employeeId } : s,
       ),
+    }));
+  };
+
+  const handleGeneralDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewSale((prev) => ({
+      ...prev,
+      discount: value ? Number(value) : "",
     }));
   };
 
@@ -169,6 +177,8 @@ export const useSales = () => {
       return;
     }
 
+    console.log(newSale);
+
     try {
       await SalesServices.new(newSale);
       setSuccessMessage("Registrado con Éxito");
@@ -176,7 +186,6 @@ export const useSales = () => {
         setSuccessMessage(null);
       }, 3000);
       setNewSale(InitialNewSale);
-      console.log("registradooo");
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         setError({
@@ -202,6 +211,7 @@ export const useSales = () => {
     toggleService,
     toggleCombo,
     handleEmployeeChange,
+    handleGeneralDiscountChange,
     totalAmount,
     registerSale,
     isSubmitting,

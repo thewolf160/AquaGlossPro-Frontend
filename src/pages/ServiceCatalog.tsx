@@ -13,12 +13,13 @@ import type { ColumnsProps } from "../components/Table/Table.types";
 import AddComboModal from "../components/service/AddComboModal";
 import EditComboModal from "../components/service/EditComboModal";
 import DeleteComboModal from "../components/service/DeleteComboModal";
+import { hasPermission } from "../utils/checkPermissions.utils";
 import RestoreServiceModal from "../components/service/RestoreServiceModal";
 import RestoreComboModal from "../components/service/RestoreComboModal";
 
 export default function ServiceCatalog() {
-  const { 
-    services, combos, categories, isLoading, isSubmitting, 
+  const {
+    services, combos, categories, isLoading, isSubmitting,
     searchTerm, setSearchTerm, newServiceForm, handleChange, createService,
     deleteService, updateService, saveServicePrices, restoreService,
     isActiveServices, setIsActiveServices,
@@ -67,16 +68,16 @@ export default function ServiceCatalog() {
 
   const columns: ColumnsProps[] = [
     {
-       header: "Servicio",
-       key: "name",
-       mobile: true,
+      header: "Servicio",
+      key: "name",
+      mobile: true,
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
         return (
           <div className="text-left flex flex-col min-w-[120px]">
             <span className="font-bold text-gray-800 leading-tight">{servicio.name}</span>
             <span className="text-[10px] font-medium text-blue-600 mt-0.5">Comisión: {servicio.comissionPercentage}%</span>
-            
+
             <span className="mt-1 sm:hidden px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full text-[10px] font-medium w-fit border border-slate-200">
               {servicio.category}
             </span>
@@ -85,9 +86,9 @@ export default function ServiceCatalog() {
       }
     },
     {
-       header: "Categoría",
-       key: "category",
-       mobile: false, 
+      header: "Categoría",
+      key: "category",
+      mobile: false,
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
         return (
@@ -98,9 +99,9 @@ export default function ServiceCatalog() {
       }
     },
     {
-       header: "Tarifas por Vehículo",
-       key: "prices",
-       mobile: false,
+      header: "Tarifas por Vehículo",
+      key: "prices",
+      mobile: false,
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
         return (
@@ -120,9 +121,9 @@ export default function ServiceCatalog() {
       }
     },
     {
-       header: "Acciones",
-       key: "actions",
-       mobile: true,
+      header: "Acciones",
+      key: "actions",
+      mobile: true,
       render: (item: Item) => {
         const servicio = item as unknown as CatalogService;
         return (
@@ -161,16 +162,16 @@ export default function ServiceCatalog() {
                 </button>
               </>
             ) : (
-                <button
-                  onClick={() => {
-                    setSelectedService(servicio);
-                    setIsRestoreModalOpen(true);
-                  }}
-                  className="bg-green-100 rounded-md text-green-600 hover:bg-green-200 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
-                  title="Restaurar Servicio"
-                >
-                  <i className="bi bi-arrow-clockwise"></i>
-                </button>
+              <button
+                onClick={() => {
+                  setSelectedService(servicio);
+                  setIsRestoreModalOpen(true);
+                }}
+                className="bg-green-100 rounded-md text-green-600 hover:bg-green-200 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
+                title="Restaurar Servicio"
+              >
+                <i className="bi bi-arrow-clockwise"></i>
+              </button>
             )}
           </div>
         );
@@ -183,13 +184,13 @@ export default function ServiceCatalog() {
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar Servicio o Categoría..."
-          buttonText="Agregar Servicio"
+          buttonText={hasPermission("SERVICES", "C") ? "Agregar Servicio" : undefined}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           onAddClick={() => setIsAddModalOpen(true)}
         />
       </HeaderPortal>
-      
+
       {/* ── Sección Servicios ── */}
       <section className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-slate-200 w-full overflow-hidden">
         <div className="mb-4 px-2 md:px-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -209,7 +210,7 @@ export default function ServiceCatalog() {
             </button>
           </div>
         </div>
-        
+
         <div className="shadow-sm rounded-xl overflow-hidden border border-slate-200 w-full relative min-h-[300px]">
           {isLoading && services.length === 0 ? (
             <div className="flex items-center justify-center p-10 h-full">
@@ -222,10 +223,10 @@ export default function ServiceCatalog() {
                   <span className="loading loading-spinner loading-lg text-blue-600"></span>
                 </div>
               )}
-              <Table 
-                 columns={columns}    
-                 data={services}     
-                 emptyMessage={searchTerm ? "No hay servicios..." : "No hay servicios registrados."}
+              <Table
+                columns={columns}
+                data={services}
+                emptyMessage={searchTerm ? "No hay servicios..." : "No hay servicios registrados."}
               />
               <div className="bg-slate-50 px-6 py-3 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 gap-3">
                 <p className="text-sm text-slate-500">Página {currentPage} de {totalPages || 1}</p>
@@ -255,7 +256,7 @@ export default function ServiceCatalog() {
 
       {/* ── Sección Combos ── */}
       <section className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-slate-200 w-full overflow-hidden">
-        
+
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 md:mb-6 px-2 md:px-0">
           <h2 className="text-lg md:text-xl font-bold text-gray-800">Paquetes y Combos</h2>
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -274,19 +275,19 @@ export default function ServiceCatalog() {
                 Inactivos
               </button>
             </div>
-            <button 
-              onClick={() => setIsAddComboModalOpen(true)} 
+            <button
+              onClick={() => setIsAddComboModalOpen(true)}
               className="flex-1 sm:flex-none bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm md:text-base font-medium hover:bg-yellow-600 transition-colors border-none flex items-center justify-center gap-2 cursor-pointer shadow-sm"
             >
               <i className="bi bi-plus-lg"></i> Crear Combo
             </button>
           </div>
         </div>
-        
+
         {isLoading && combos.length === 0 ? (
-           <div className="flex items-center justify-center p-10">
-             <span className="loading loading-spinner loading-xl text-yellow-500"></span>
-           </div>
+          <div className="flex items-center justify-center p-10">
+            <span className="loading loading-spinner loading-xl text-yellow-500"></span>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 relative">
             {isLoading && (
@@ -308,11 +309,11 @@ export default function ServiceCatalog() {
                   ) :
                     <div className="absolute top-0 left-0 w-full h-1.5 bg-linear-to-r from-blue-500  via-blue-500 to-blue-500"></div>
                   }
-                  
+
                   <h3 className="text-base md:text-lg font-bold text-gray-800 border-b border-gray-100 pb-2 mb-3">
                     {combo.name}
                   </h3>
-                  
+
                   <div className="flex-1 mb-4 flex flex-col gap-3">
                     <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center">
                       <p className="text-[10px] md:text-xs uppercase tracking-wider font-bold">
@@ -338,19 +339,19 @@ export default function ServiceCatalog() {
                       </ul>
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-end pt-3 border-t border-gray-100">
                     <div className="flex gap-2">
                       {isActiveCombos ? (
                         <>
-                          <button 
+                          <button
                             onClick={() => { setSelectedCombo(combo); setIsEditComboModalOpen(true); }}
                             className="bg-sky-50 rounded-md text-sky-600 hover:bg-sky-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
                             title="Editar Combo"
                           >
                             <i className="bi bi-pencil-square"></i>
                           </button>
-                          <button 
+                          <button
                             onClick={() => { setSelectedCombo(combo); setIsDeleteComboModalOpen(true); }}
                             className="bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
                             title="Eliminar Combo"
@@ -376,44 +377,44 @@ export default function ServiceCatalog() {
         )}
       </section>
 
-      <AddServiceModal 
-         isOpen={isAddModalOpen} 
-         onClose={() => setIsAddModalOpen(false)} 
-         formState={newServiceForm}
-         categories={categories}
-         onChange={handleChange}
-         onSubmit={handleCreateSubmit}
-         isLoading={isSubmitting}
+      <AddServiceModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        formState={newServiceForm}
+        categories={categories}
+        onChange={handleChange}
+        onSubmit={handleCreateSubmit}
+        isLoading={isSubmitting}
       />
-      
-      <ServicePricesModal 
-         isOpen={isPricesModalOpen} 
-         onClose={() => setIsPricesModalOpen(false)} 
-         service={selectedService} 
-         onSave={handleSavePrices}
-         isLoading={isSubmitting}
-       />
-       
-      <EditServiceModal 
-        isOpen={isEditModalOpen} 
-        onClose={() => setIsEditModalOpen(false)} 
-        editingService={selectedService} 
+
+      <ServicePricesModal
+        isOpen={isPricesModalOpen}
+        onClose={() => setIsPricesModalOpen(false)}
+        service={selectedService}
+        onSave={handleSavePrices}
+        isLoading={isSubmitting}
+      />
+
+      <EditServiceModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        editingService={selectedService}
         categories={categories}
         onEdit={handleEditSubmit}
         isLoading={isSubmitting}
       />
 
-      <DeleteServiceModal 
-        isOpen={isDeleteModalOpen} 
-        onClose={() => setIsDeleteModalOpen(false)} 
+      <DeleteServiceModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
         deletingService={selectedService}
         onDelete={handleDeleteSubmit}
         isLoading={isSubmitting}
       />
 
-      <RestoreServiceModal 
-        isOpen={isRestoreModalOpen} 
-        onClose={() => setIsRestoreModalOpen(false)} 
+      <RestoreServiceModal
+        isOpen={isRestoreModalOpen}
+        onClose={() => setIsRestoreModalOpen(false)}
         restoringService={selectedService}
         onRestore={handleRestoreSubmit}
         isLoading={isSubmitting}

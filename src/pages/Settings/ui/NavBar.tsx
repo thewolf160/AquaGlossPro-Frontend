@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 interface NavBarProps {
   title: string;
-  onRegister: () => void;
+  onRegister?: () => void;
 }
 
 function NavBar({ title, onRegister }: NavBarProps) {
@@ -19,13 +19,16 @@ function NavBar({ title, onRegister }: NavBarProps) {
           <i className="bi bi-arrow-left" />
           Volver al Menú
         </button>
-        <button
+        {onRegister && (
+           <button
           className="btn bg-blue-600 text-white rounded-lg"
           onClick={onRegister}
         >
           <i className="bi bi-plus text-xl" />
           Agregar
         </button>
+        )}
+       
       </div>
     </div>
   );

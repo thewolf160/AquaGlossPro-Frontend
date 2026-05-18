@@ -6,6 +6,7 @@ import Input from "../components/Modal/Input";
 import Modal from "../components/Modal/Modal";
 import { useUsers } from "../hooks/useUsers";
 import { useRoles } from "../hooks/useRoles";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 function Users() {
   const {
@@ -190,22 +191,31 @@ function Users() {
         </span>
       ),
     },
+
+    // Evaluamos la pestaña actual
     isActiveTab
-      ? { key: "actions", header: "Acciones" }
+      ? { key: "actions", header: "Acciones" } // Pestaña Activos (Tu tabla ya maneja los botones con {...actionProps})
       : {
-          key: "customRestore",
-          header: "Acciones",
-          render: (item: any) => (
-            <button
-              onClick={() => handleOpenDeleteModal(item)}
-              className="px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold rounded-lg border border-emerald-200 transition-colors cursor-pointer"
-              title="Restaurar Usuario"
-            >
-              Restaurar
-            </button>
-          ),
+          // Pestaña Inactivos: Solo agregamos la columna si tiene permiso 'U' en USERS
+          ...(hasPermission("USERS", "U")
+            ? {
+                key: "customRestore",
+                header: "Acciones",
+                render: (item: any) => (
+                  <button
+                    onClick={() => handleOpenDeleteModal(item)} // Nota: Asegúrate de si es el modal de restaurar o eliminar
+                    className="px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                    title="Restaurar Usuario"
+                  >
+                    Restaurar
+                  </button>
+                ),
+              }
+            : {
+                // Si no tiene permisos, devolvemos un objeto vacío que React ignorará al desestructurar con ...
+              }),
         },
-  ];
+  ].filter(Boolean); // El .filter(Boolean) asegura limpiar cualquier espacio vacío si la condición no se cumple
 
   return (
     <section className="flex flex-col gap-6 p-4 animate-fade-in max-w-7xl mx-auto w-full">
@@ -223,7 +233,9 @@ function Users() {
       <HeaderPortal>
         <HeaderSearch
           searchPlaceholder="Buscar por nombre, ID o correo..."
-          buttonText="Agregar Usuario"
+          buttonText={
+            hasPermission("USERS", "C") ? "Agregar Usuario" : undefined
+          }
           searchTerm={searchTerm}
           onSearchChange={(value) => setSearchTerm(value)}
           onAddClick={handleOpenAdd}
@@ -386,9 +398,11 @@ function Users() {
         <Table
           columns={columns}
           data={filteredUsers}
-          onEdit={handleOpenEdit}
-          onDelete={handleOpenDeleteModal}
-          onView={handleOpenView}
+          onEdit={hasPermission("USERS", "U") ? handleOpenEdit : undefined}
+          onDelete={
+            hasPermission("USERS", "D") ? handleOpenDeleteModal : undefined
+          }
+          onView={hasPermission("USERS", "R") ? handleOpenView : undefined}
           emptyMessage={
             isLoading
               ? "Cargando usuarios desde el servidor..."

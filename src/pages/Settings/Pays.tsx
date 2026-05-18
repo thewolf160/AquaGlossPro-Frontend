@@ -3,14 +3,12 @@ import type { Item } from "../../types/models";
 import { useModals } from "../../hooks/useModals";
 import Modal from "../../components/Modal/Modal";
 import Table from "../../components/Table/Table";
-import {
-  InitialNewPayMethod,
-  InitialPayMethod,
-} from "../../types/pays.types";
+import { InitialNewPayMethod, InitialPayMethod } from "../../types/pays.types";
 import Input from "../../components/Modal/Input";
 import ActionButton from "../../components/Modal/ActionButton";
 import Alert from "../../components/Alert";
 import NavBar from "./ui/NavBar";
+import { hasPermission } from "../../utils/checkPermissions.utils";
 
 const columns = [
   { key: "name", header: "Nombre", mobile: true },
@@ -41,7 +39,7 @@ function Pays() {
     restorePayMethod,
     currentPage,
     setCurrentPage,
-    totalPages
+    totalPages,
   } = usePays();
 
   const { modals, toggleModal } = useModals();
@@ -142,7 +140,14 @@ function Pays() {
     <>
       {successMessage && <Alert message={successMessage} />}
       <div className="space-y-6">
-        <NavBar title="Métodos de Pago" onRegister={handleOpenRegister} />
+        <NavBar
+          title="Métodos de Pago"
+          onRegister={
+            hasPermission("PAYMENT_METHODS", "C")
+              ? handleOpenRegister
+              : undefined
+          }
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {isLoading ? (
             <div className="p-10 col-span-full flex items-center justify-center">
@@ -150,45 +155,49 @@ function Pays() {
             </div>
           ) : (
             <>
-              {
-              paysMethodsData.data.length > 0 ? (
-              paysMethodsData.data.map((payMethod: Item) => (
-                <div
-                  key={payMethod.id}
-                  className="card bg-white border border-slate-200 border-t-5 border-t-blue-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ease-out duration-200"
-                >
-                  <div className="card-body gap-4">
-                    <div className="flex items-center justify-between">
-                      <div className="bg-blue-100 px-2 py-1 rounded-lg">
-                        <i className="bi bi-wallet text-2xl text-blue-500" />
+              {paysMethodsData.data.length > 0 ? (
+                paysMethodsData.data.map((payMethod: Item) => (
+                  <div
+                    key={payMethod.id}
+                    className="card bg-white border border-slate-200 border-t-5 border-t-blue-500 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all ease-out duration-200"
+                  >
+                    <div className="card-body gap-4">
+                      <div className="flex items-center justify-between">
+                        <div className="bg-blue-100 px-2 py-1 rounded-lg">
+                          <i className="bi bi-wallet text-2xl text-blue-500" />
+                        </div>
+                        <div className="flex gap-2">
+                          {hasPermission("PAYMENT_METHODS", "U") && (
+                            <button
+                              className="cursor-pointer text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5"
+                              onClick={() => handleOpenEdit(payMethod)}
+                            >
+                              <i className="bi bi-pencil-square " />
+                            </button>
+                          )}
+                          {hasPermission("PAYMENT_METHODS", "D") && (
+                            <button
+                              className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5 "
+                              onClick={() => handleOpenDelete(payMethod)}
+                            >
+                              <i className="bi bi-trash " />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          className="cursor-pointer text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5"
-                          onClick={() => handleOpenEdit(payMethod)}
-                        >
-                          <i className="bi bi-pencil-square " />
-                        </button>
-                        <button
-                          className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5 "
-                          onClick={() => handleOpenDelete(payMethod)}
-                        >
-                          <i className="bi bi-trash " />
-                        </button>
+                      <div className="mt-2">
+                        <h3 className="card-title text-xl">{payMethod.name}</h3>
+                        <p>Método de Pago</p>
                       </div>
-                    </div>
-                    <div className="mt-2">
-                      <h3 className="card-title text-xl">{payMethod.name}</h3>
-                      <p>Métodos de Pago</p>
                     </div>
                   </div>
-                </div>
-              ))) : (
+                ))
+              ) : (
                 <div className="col-span-full p-5">
                   <p className="text-slate-500  text-center">
                     No se encontraron métodos de pago registrados
                   </p>
-              </div>
+                </div>
               )}
             </>
           )}
@@ -211,7 +220,7 @@ function Pays() {
               <Table
                 columns={columns}
                 data={inactivePaysMethodsData.data}
-                onRestore={handleOpenRestore}
+                onRestore={hasPermission("PAYMENT_METHODS", "U") ? handleOpenRestore : undefined}
               />
             )}
 
@@ -280,11 +289,7 @@ function Pays() {
         onClose={handleCloseEdit}
         title="Edición de Método de Pago"
         actions={
-          <ActionButton
-            type="edit"
-            isLoading={isSubmitting}
-            form="EditForm"
-          />
+          <ActionButton type="edit" isLoading={isSubmitting} form="EditForm" />
         }
       >
         <form
@@ -357,4 +362,3 @@ function Pays() {
 }
 
 export default Pays;
-

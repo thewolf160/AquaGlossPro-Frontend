@@ -9,6 +9,7 @@ import Table from "../../components/Table/Table";
 import type { Item } from "../../types/models";
 import Alert from "../../components/Alert";
 import NavBar from "./ui/NavBar";
+import { hasPermission } from "../../utils/checkPermissions.utils";
 
 const columns = [
   { key: "name", header: "Nombre", mobile: true },
@@ -149,7 +150,7 @@ function Jobs() {
     <>
       {successMessage && <Alert message={successMessage} />}
       <div className="space-y-6">
-        <NavBar title="Puestos de Trabajo" onRegister={handleOpenRegister}/>
+        <NavBar title="Puestos de Trabajo" onRegister={hasPermission("JOBS", "C") ? handleOpenRegister : undefined}/>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {isLoading ? (
             <div className="p-10 col-span-full flex items-center justify-center">
@@ -171,20 +172,25 @@ function Jobs() {
                       </div>
 
                       <div className="flex gap-2">
-                        <button
+                        {hasPermission("JOBS", "U") && (
+                          <button
                           className="cursor-pointer"
                           onClick={() => handleOpenEdit(job)}
                           title="Editar"
                         >
                           <i className="bi bi-pencil-square text-xl text-sky-500 hover:text-sky-600 transition-all ease-in hover:bg-sky-100 rounded-md p-1.5" />
                         </button>
-                        <button
+                        )}
+                        {hasPermission("JOBS", "D") && (
+                           <button
                           className="cursor-pointer text-xl text-red-500 hover:text-red-600 transition-all ease-in hover:bg-red-100 rounded-md p-1.5"
                           onClick={() => handleOpenDelete(job)}
                           title="Eliminar"
                         >
                           <i className="bi bi-trash " />
                         </button>
+                        )}
+                       
                       </div>
                     </div>
                     <h3 className="card-title text-xl text-slate-800">
@@ -228,7 +234,7 @@ function Jobs() {
               <Table
                 columns={columns}
                 data={inactiveJobsData.data}
-                onRestore={handleOpenRestore}
+                onRestore={hasPermission("JOBS", "U") ? handleOpenRestore : undefined}
               />
             )}
 
