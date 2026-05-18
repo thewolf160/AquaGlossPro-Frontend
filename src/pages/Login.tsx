@@ -64,7 +64,7 @@ function Login() {
       });
 
       localStorage.setItem("token", response.data.tokens)
-
+      
       navigate("/home", { replace: true });
     } catch (error: unknown) {
       let errorMessage = "Ocurrió un error inesperado";
