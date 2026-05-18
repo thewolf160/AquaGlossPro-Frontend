@@ -22,13 +22,22 @@ export const useServiceHistory = () => {
   const fetchSales = async () => {
     setIsLoading(true);
     try {
-      const response = await SalesService.getAll({
+      const params: any = {
         page: currentPage.toString(),
         limit: "10",
-        param: debouncedSearch,
-        startDate: dateFilter.startDate,
-        endDate: dateFilter.endDate
-      });
+      };
+
+      if (debouncedSearch) {
+        params.param = debouncedSearch;
+      }
+      if (dateFilter.startDate) {
+        params.startDate = dateFilter.startDate;
+      }
+      if (dateFilter.endDate) {
+        params.endDate = `${dateFilter.endDate}T23:59:59`;
+      }
+
+      const response = await SalesService.getAll(params);
       
       setSales(response.data);
       setTotalPages(response.meta.totalPages);

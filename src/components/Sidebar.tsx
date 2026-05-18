@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom"; 
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -40,10 +40,12 @@ const menuItems: SidebarItem[] = [
     ],
   },
   { path: "/clients", label: "Clientes", icon: "bi bi-person" },
-  { label: "Lavado", icon: "bi bi-stars", subItems: [
-    { label: "Catálogo de Servicios", path: "/servicesCatalog" },
-    { label: "Lavados del dia", path: "/washes" },
-  ] },
+  {
+    label: "Lavado", icon: "bi bi-stars", subItems: [
+      { label: "Catálogo de Servicios", path: "/servicesCatalog" },
+      { label: "Lavados del dia", path: "/washes" },
+    ]
+  },
   {
     label: "Servicios",
     icon: "bi bi-currency-dollar",
@@ -53,14 +55,14 @@ const menuItems: SidebarItem[] = [
     ]
   },
   { path: "/reports", label: "Reportes", icon: "bi bi-graph-up" },
-    { path: "/settings", label: "Ajustes", icon: "bi bi-gear" },
+  { path: "/settings", label: "Ajustes", icon: "bi bi-gear" },
 ];
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login", { replace: true });
@@ -103,14 +105,12 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         `}
       >
         <div
-          className={`flex items-center h-16 border-b border-gray-800 transition-all ${
-            isOpen ? "justify-between px-4" : "justify-center"
-          }`}
+          className={`flex items-center h-16 border-b border-gray-800 transition-all ${isOpen ? "justify-between px-4" : "justify-center"
+            }`}
         >
           <div
-            className={`font-bold text-xl tracking-wide flex items-center gap-2 overflow-hidden whitespace-nowrap ${
-              !isOpen && !isMobile ? "hidden" : "block"
-            }`}
+            className={`font-bold text-xl tracking-wide flex items-center gap-2 overflow-hidden whitespace-nowrap ${!isOpen && !isMobile ? "hidden" : "block"
+              }`}
           >
             <i className="bi bi-droplet-fill text-blue-500"></i>
             <span>AutoLavado</span>
@@ -147,10 +147,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                       className={`
                         flex items-center w-full py-3 rounded-lg transition-colors overflow-hidden whitespace-nowrap cursor-pointer
                         hover:bg-gray-800 hover:text-white
-                        ${
-                          isParentOfActiveSubitem
-                            ? "text-blue-400" 
-                            : "text-gray-400"
+                        ${isParentOfActiveSubitem
+                          ? "text-blue-400"
+                          : "text-gray-400"
                         }
                         ${!isOpen && !isMobile ? "justify-center px-0" : "justify-between px-3"}
                       `}
@@ -165,9 +164,8 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                         </span>
                       </div>
                       <i
-                        className={`bi bi-chevron-down text-sm transition-transform duration-300 ${
-                          !isOpen && !isMobile ? "hidden" : "block"
-                        } ${openMenus[item.label] ? "rotate-180" : ""}`}
+                        className={`bi bi-chevron-down text-sm transition-transform duration-300 ${!isOpen && !isMobile ? "hidden" : "block"
+                          } ${openMenus[item.label] ? "rotate-180" : ""}`}
                       ></i>
                     </button>
 
@@ -187,10 +185,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                             onClick={() => isMobile && toggleSidebar()}
                             className={`
                               flex items-center py-2 pl-11 pr-3 rounded-lg transition-colors overflow-hidden whitespace-nowrap text-sm
-                              ${
-                                isSubActive
-                                  ? "bg-blue-600 text-white font-medium"
-                                  : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                              ${isSubActive
+                                ? "bg-blue-600 text-white font-medium"
+                                : "text-gray-400 hover:text-white hover:bg-gray-800/50"
                               }
                             `}
                           >

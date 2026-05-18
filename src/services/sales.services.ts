@@ -16,6 +16,11 @@ export const SalesService = {
     const response = await api.get(`/sales/${id}`);
     return response.data.data;
   },
+
+  updateStatusPayment: async (id: number, statusPayment: "P" | "C") => {
+    const response = await api.patch(`/sales/status/payment/${id}`, { statusPayment });
+    return response.data;
+  },
 };
 
 import type { NewSale } from "../types/sales.types";

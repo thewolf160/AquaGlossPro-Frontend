@@ -86,26 +86,23 @@ export default function ServiceHistory() {
     const lightGray: [number, number, number] = [248, 250, 252];
     const textGray: [number, number, number] = [71, 85, 105];
 
-    // Header background
     doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
     doc.rect(0, 0, 210, 45, 'F');
-    
-    // Header Text
+
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.text("AQUAGLOSS PRO", 14, 20);
-    
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text("Rif: J-12345678-9 | Telf: 0412-1234567", 14, 27);
     doc.text("Av. Principal, Ciudad, País", 14, 33);
-    
-    // Invoice Info right side
+
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text("FACTURA", 196, 20, { align: "right" });
-    
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text(`NRO: #${String(sale.sale.saleId).padStart(6, '0')}`, 196, 27, { align: "right" });
@@ -116,7 +113,7 @@ export default function ServiceHistory() {
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("DATOS DEL CLIENTE:", 14, 55);
-    
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(textGray[0], textGray[1], textGray[2]);
@@ -127,18 +124,18 @@ export default function ServiceHistory() {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
     doc.text("PERSONAL ASIGNADO:", 110, 55);
-    
+
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(textGray[0], textGray[1], textGray[2]);
-    
+
     const uniqueEmployees = new Set<string>();
     const allServices = [...(sale.details.comboServices || []), ...(sale.details.independentServices || [])];
     allServices.forEach(srv => {
       if (srv.employee) uniqueEmployees.add(`${srv.employee.names} ${srv.employee.lastnames}`);
     });
     const employeesList = Array.from(uniqueEmployees).join(', ') || 'Sin asignar';
-    
+
     const empLines = doc.splitTextToSize(`Empleados: ${employeesList}`, 85);
     doc.text(empLines, 110, 62);
 
@@ -160,8 +157,8 @@ export default function ServiceHistory() {
       headStyles: { fillColor: primaryBlue, textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
       alternateRowStyles: { fillColor: lightGray },
       styles: { font: "helvetica", fontSize: 10, cellPadding: 6 },
-      columnStyles: { 
-        0: { halign: 'left', cellWidth: 'auto' }, 
+      columnStyles: {
+        0: { halign: 'left', cellWidth: 'auto' },
         1: { halign: 'right', cellWidth: 30 },
         2: { halign: 'right', cellWidth: 30 },
         3: { halign: 'right', cellWidth: 30 }
@@ -174,18 +171,18 @@ export default function ServiceHistory() {
     // Totals section
     doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
     doc.rect(120, finalY, 76, 25, 'F');
-    
+
     doc.setTextColor(darkSlate[0], darkSlate[1], darkSlate[2]);
     doc.setFont("helvetica", "normal");
     doc.text("Subtotal:", 125, finalY + 8);
-    
+
     const calculatedSubtotal = tableData.reduce((acc, row) => {
       const val = typeof row[3] === 'string' ? Number(row[3].replace('$', '')) : 0;
       return acc + (isNaN(val) ? 0 : val);
     }, 0);
-    
+
     doc.text(`$${calculatedSubtotal.toFixed(2)}`, 190, finalY + 8, { align: "right" });
-    
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.text("TOTAL:", 125, finalY + 18);
