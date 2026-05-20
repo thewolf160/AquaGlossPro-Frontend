@@ -21,6 +21,7 @@ import ServiceCatalog from "./pages/ServiceCatalog";
 import KanbanBoard from "./pages/KanbanBoard";
 import Categories from "./pages/Settings/Categories";
 import ServiceHistory from "./pages/ServiceHistory";
+import Commissions from "./pages/Commisions";
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
           {/* Rutas protegidas para usuarios autenticados */}
           <Route path="home" element={<Home />} />
           <Route path="employees" element={<Employees />} />
+          <Route path="commissions" element={<Commissions/>}/>
           <Route path="inventory" element={<Inventory />} />
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="purchases" element={<Purchases />} />

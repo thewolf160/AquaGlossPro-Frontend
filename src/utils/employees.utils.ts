@@ -1,11 +1,27 @@
 import type { EmployeeApi } from "../types/employees.types";
 
-const capitalizeFull = (text: string) => {
+export const capitalizeFull = (text: string) => {
   if (!text) return "";
   return text
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
+};
+
+export const statusPayment = (text: string) => {
+  if (!text) return "";
+
+  switch (text) {
+    case "W":
+      return "Pendiente";
+      break;
+    case "P":
+      return "Pagado";
+      break;
+    case "C":
+      return "Cancelado";
+      break;
+  }
 };
 
 export const transformData = (data: EmployeeApi[]) => {

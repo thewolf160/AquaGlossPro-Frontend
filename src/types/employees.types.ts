@@ -69,6 +69,8 @@ export const InitialEmployeesData: EmployeesData = {
   errorMsg: "",
 };
 
+
+
 //Como llegan los datos de la api
 export interface EmployeeApi {
   employeeId: number;
@@ -84,3 +86,4 @@ export interface EmployeeApi {
     baseSalary: string;
   };
 }
+

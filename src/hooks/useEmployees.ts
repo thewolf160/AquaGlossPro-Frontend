@@ -8,13 +8,15 @@ import {
   InitialEmployee,
   InitialEmployeesData,
 } from "../types/employees.types";
-import { transformData } from "../utils/employees.utils";
+import {
+  capitalizeFull,
+  transformData,
+} from "../utils/employees.utils";
 import axios from "axios";
 
 export const useEmployees = () => {
   const [employeesData, setEmployeesData] =
     useState<EmployeesData>(InitialEmployeesData);
-
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -69,6 +71,8 @@ export const useEmployees = () => {
     }
   };
 
+
+
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -84,6 +88,8 @@ export const useEmployees = () => {
 
     return () => clearTimeout(timeoutId);
   }, [currentPage, searchParameter, isActiveEmployees]);
+
+
 
   const deleteEmployee = async (id: string) => {
     setIsSubmitting(true);

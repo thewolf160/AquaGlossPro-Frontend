@@ -25,6 +25,7 @@ const columns = [
   { key: "actions", header: "Acciones", mobile: true },
 ];
 
+
 function Employees() {
   const {
     employeesData,
@@ -310,6 +311,7 @@ function Employees() {
             </div>
           </section>
         </div>
+
       </div>
       <Modal
         isOpen={modals.register}

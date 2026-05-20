@@ -36,12 +36,20 @@ const menuItems: SidebarItem[] = [
     ],
   },
   {
-    label: "Gestión de Personal",
+    label: "Gestión de Usuarios",
+    icon: "bi bi-people",
+    subItems: [
+      
+      { label: "Usuarios", path: "/users", module: "USERS" },
+      { label: "Roles y Acceso", path: "/roles", module: "USERS" }, // Usa USERS o el asignado
+    ],
+  },
+  {
+    label: "Gestión de Empleados",
     icon: "bi bi-people",
     subItems: [
       { label: "Empleados", path: "/employees", module: "EMPLOYEES" },
-      { label: "Usuarios", path: "/users", module: "USERS" },
-      { label: "Roles y Acceso", path: "/roles", module: "USERS" }, // Usa USERS o el asignado
+      {label: "Comisiones", path: "/commissions", module: "COMISSIONS"}
     ],
   },
   { path: "/clients", label: "Clientes", icon: "bi bi-person", module: "CLIENTS" },

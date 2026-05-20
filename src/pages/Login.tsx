@@ -171,7 +171,6 @@ function Login() {
                 </label>
                 <div className="relative group">
                   <input
-                    type="email"
                     placeholder="correo@ejemplo.com"
                     name="email"
                     onChange={handleChange}
