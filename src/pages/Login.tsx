@@ -76,6 +76,7 @@ function Login() {
       let errorMessage = "Ocurrió un error inesperado";
 
       if (axios.isAxiosError(error)) {
+        console.log("EL ERRRORRR:",error)
         if (!error.response) {
           errorMessage = "No se pudo conectar con el servidor";
         } else {

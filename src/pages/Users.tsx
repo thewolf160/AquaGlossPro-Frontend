@@ -44,7 +44,6 @@ function Users() {
   });
 
   // BUSCADOR LOCAL EN LA PÁGINA ACTUAL
-
   const filteredUsers = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     const currentList = usersData.data || [];
@@ -90,8 +89,7 @@ function Users() {
     </button>
   );
 
-  // MODAL VACÍO AGREGAR
-
+ 
   const handleOpenAdd = () => {
     setModalMode("add");
     setError(null);
@@ -131,9 +129,14 @@ function Users() {
     setIsModalOpen(true);
   };
 
-  // Guardar (POST / PATCH)
+  
   const handleSubmit = async () => {
-    if (!formData.name.trim() || !formData.email.trim() || !formData.roleId) {
+    
+    if (
+      !formData.name.trim() ||
+      !formData.email.trim() ||
+      (modalMode === "add" && !formData.roleId)
+    ) {
       setError(
         "Por favor completa los campos obligatorios (Nombre, Correo y Rol).",
       );
@@ -153,10 +156,10 @@ function Users() {
         roleId: Number(formData.roleId),
       });
     } else if (modalMode === "edit") {
+      // En la edición, omitimos el roleId completamente
       const payload: any = {
         name: formData.name,
         email: formData.email,
-        roleId: Number(formData.roleId),
       };
       if (formData.password.trim()) {
         payload.password = formData.password;
@@ -177,7 +180,6 @@ function Users() {
         : "Detalles del Usuario";
 
   // COLUMNAS DINÁMICAS: BYPASS DE BOTÓN EN LA PAPELERA
-
   const columns = [
     { key: "userId", header: "ID" },
     { key: "name", header: "Nombre" },
@@ -450,7 +452,6 @@ function Users() {
       </section>
 
       {/* MODAL CONECTADO AL BACKEND*/}
-
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -525,12 +526,12 @@ function Users() {
               <span>Rol Asignado: *</span>
               <select
                 className={`border border-gray-300 rounded-xl px-3 py-3 outline-none text-sm shadow-sm ${
-                  modalMode === "view"
+                  modalMode !== "add" // Se deshabilita en modo edit y view
                     ? "bg-slate-100 cursor-not-allowed text-slate-500"
                     : "bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
                 }`}
                 value={formData.roleId}
-                disabled={modalMode === "view"}
+                disabled={modalMode !== "add"} // Bloqueado para edit y view
                 onChange={(e) =>
                   setFormData({ ...formData, roleId: Number(e.target.value) })
                 }

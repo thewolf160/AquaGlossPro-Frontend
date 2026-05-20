@@ -6,20 +6,26 @@ import Modal from "../components/Modal/Modal";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
+type ChartTabType = "ingresos" | "egresos";
 
 interface PaymentMethodChartProps {
-  efectivoAmount: number;
-  pagoMovilAmount: number;
-  divisaAmount: number;
-  puntoAmount: number;
+  efectivoAmount?: number;
+  pagoMovilAmount?: number;
+  divisaAmount?: number;
+  puntoAmount?: number;
+  comprasInventarioAmount?: number;
+  pagoPersonalAmount?: number;
 }
 
 export default function PaymentMethodChart({
-  efectivoAmount,
-  pagoMovilAmount,
-  divisaAmount,
-  puntoAmount,
+  efectivoAmount = 0,
+  pagoMovilAmount = 0,
+  divisaAmount = 0,
+  puntoAmount = 0,
+  comprasInventarioAmount = 250,
+  pagoPersonalAmount = 180,
 }: PaymentMethodChartProps) {
+  const [activeTab, setActiveTab] = useState<ChartTabType>("ingresos");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeTimeFilter, setActiveTimeFilter] =
@@ -38,22 +44,50 @@ export default function PaymentMethodChart({
     custom: "total esp",
   };
 
-  const total = efectivoAmount + pagoMovilAmount + divisaAmount + puntoAmount;
+  const isIngresos = activeTab === "ingresos";
+
+  const totalIngresos =
+    (efectivoAmount || 0) +
+    (pagoMovilAmount || 0) +
+    (divisaAmount || 0) +
+    (puntoAmount || 0);
+  const totalEgresos =
+    (comprasInventarioAmount || 0) + (pagoPersonalAmount || 0);
+
+  const currentTotal = isIngresos ? totalIngresos : totalEgresos;
+
+  const currentData = isIngresos
+    ? [efectivoAmount, pagoMovilAmount, divisaAmount, puntoAmount]
+    : [comprasInventarioAmount, pagoPersonalAmount];
+
+  const currentLabels = isIngresos
+    ? ["Efectivo", "Pago Móvil", "Divisa", "Punto"]
+    : ["Compras (Inv.)", "Nómina y Comisiones"];
+
+  const currentColorsHex = isIngresos
+    ? ["#3b82f6", "#8b5cf6", "#a16207", "#06b6d4"]
+    : ["#ef4444", "#f97316"];
+
+  const currentColorsTailwind = isIngresos
+    ? ["bg-blue-500", "bg-violet-500", "bg-yellow-700", "bg-cyan-500"]
+    : ["bg-red-500", "bg-orange-500"];
 
   const getPercentage = (amount: number) => {
-    if (total === 0) return 0;
-    return Math.round((amount / total) * 100);
+    if (currentTotal === 0) return 0;
+    return Math.round((amount / currentTotal) * 100);
   };
 
   const formattedTotal =
-    total >= 1000 ? `${(total / 1000).toFixed(1)}k` : `$${total}`;
+    currentTotal >= 1000
+      ? `${(currentTotal / 1000).toFixed(1)}k`
+      : `$${currentTotal}`;
 
   const data = {
-    labels: ["Efectivo", "Pago Móvil", "Divisa", "Punto"],
+    labels: currentLabels,
     datasets: [
       {
-        data: [efectivoAmount, pagoMovilAmount, divisaAmount, puntoAmount],
-        backgroundColor: ["#3b82f6", "#8b5cf6", "#a16207", "#06b6d4"],
+        data: currentData,
+        backgroundColor: currentColorsHex,
         borderWidth: 0,
         cutout: "80%",
       },
@@ -77,13 +111,6 @@ export default function PaymentMethodChart({
     },
   };
 
-  const handleOpenModal = () => {
-    setTempTimeFilter(activeTimeFilter);
-    setTempDateFrom(activeDateFrom);
-    setTempDateTo(activeDateTo);
-    setIsModalOpen(true);
-  };
-
   const handleApplyFilters = () => {
     setActiveTimeFilter(tempTimeFilter);
     setActiveDateFrom(tempDateFrom);
@@ -93,73 +120,85 @@ export default function PaymentMethodChart({
 
   return (
     <>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 h-full flex flex-col">
-        <div className="flex justify-between items-start mb-6">
-          <h3 className="font-bold text-slate-800 text-lg">
-            Ventas por Método de Pago
-          </h3>
+      {/* 1. Fijamos la altura de la tarjeta principal (h-[520px]) para que no salte */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 h-[520px] flex flex-col transition-all">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="font-bold text-slate-800 text-lg">
+              Flujo de Capital
+            </h3>
+            <div className="flex bg-slate-100 p-1 rounded-lg mt-2 w-max">
+              <button
+                onClick={() => setActiveTab("ingresos")}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                  isIngresos
+                    ? "bg-white shadow-sm text-blue-600"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Ingresos
+              </button>
+              <button
+                onClick={() => setActiveTab("egresos")}
+                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                  !isIngresos
+                    ? "bg-white shadow-sm text-red-600"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Egresos
+              </button>
+            </div>
+          </div>
           <button
-            onClick={handleOpenModal}
-            className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors h-9 w-9 -mt-1 -mr-2"
+            onClick={() => setIsModalOpen(true)}
+            className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full h-9 w-9 -mt-1"
           >
             <i className="bi bi-three-dots-vertical text-lg"></i>
           </button>
         </div>
 
-        <div className="relative h-60 w-60 mx-auto mb-8">
+        {/* 2. Fijamos la altura del contenedor del gráfico (h-60) */}
+        <div className="relative h-60 w-60 mx-auto flex items-center justify-center">
           <Doughnut data={data} options={options} />
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <p className="text-3xl font-black text-slate-900 leading-none">
+            <p
+              className={`text-3xl font-black leading-none ${isIngresos ? "text-slate-900" : "text-rose-950"}`}
+            >
               {formattedTotal}
             </p>
-            {/* TEXTO CENTRAL DINÁMICO */}
-            <p className="text-[13px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
               {centerLabelText[activeTimeFilter]}
             </p>
           </div>
         </div>
 
-        <div className="space-y-3 pt-4 border-t border-slate-100">
-          {[
-            {
-              label: "Efectivo",
-              color: "bg-blue-500",
-              pct: getPercentage(efectivoAmount),
-            },
-            {
-              label: "Pago Móvil",
-              color: "bg-violet-500",
-              pct: getPercentage(pagoMovilAmount),
-            },
-            {
-              label: "Divisa",
-              color: "bg-yellow-700",
-              pct: getPercentage(divisaAmount),
-            },
-            {
-              label: "Punto",
-              color: "bg-cyan-500",
-              pct: getPercentage(puntoAmount),
-            },
-          ].map((item) => (
+        {/* 3. Fijamos la altura de la leyenda (h-[160px]) para que el espacio de 4 filas siempre se respete */}
+        <div className="pt-6 border-t border-slate-100 mt-auto h-[160px] flex flex-col justify-start gap-4">
+          {currentLabels.map((label, index) => (
             <div
-              key={item.label}
+              key={label}
               className="flex items-center justify-between text-sm"
             >
               <div className="flex items-center gap-3">
-                <span className={`w-3 h-3 rounded-full ${item.color}`}></span>
-                <span className="font-medium text-slate-700">{item.label}</span>
+                <span
+                  className={`w-3 h-3 rounded-full ${currentColorsTailwind[index]}`}
+                ></span>
+                <span className="font-medium text-slate-700">{label}</span>
               </div>
-              <span className="font-bold text-slate-900">{item.pct}%</span>
+              <span className="font-bold text-slate-900">
+                {getPercentage(currentData[index])}%
+              </span>
             </div>
           ))}
         </div>
       </div>
 
+      {/* MODAL DE FILTROS */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Filtros de Ventas"
+        title="Filtros del Gráfico"
         actions={
           <button
             className="btn bg-blue-600 hover:bg-blue-700 text-white border-none"
@@ -188,32 +227,6 @@ export default function PaymentMethodChart({
                   {type}
                 </button>
               ))}
-            </div>
-          </div>
-          <div className="divider my-0">Ó</div>
-          <div>
-            <p className="text-slate-700 font-medium mb-3">
-              Rango personalizado:
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <input
-                type="date"
-                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm"
-                value={tempDateFrom}
-                onChange={(e) => {
-                  setTempDateFrom(e.target.value);
-                  setTempTimeFilter("custom");
-                }}
-              />
-              <input
-                type="date"
-                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm"
-                value={tempDateTo}
-                onChange={(e) => {
-                  setTempDateTo(e.target.value);
-                  setTempTimeFilter("custom");
-                }}
-              />
             </div>
           </div>
         </div>
