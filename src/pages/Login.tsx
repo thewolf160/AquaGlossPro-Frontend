@@ -70,6 +70,7 @@ function Login() {
       let errorMessage = "Ocurrió un error inesperado";
 
       if (axios.isAxiosError(error)) {
+        console.log("EL ERRRORRR:",error)
         if (!error.response) {
           errorMessage = "No se pudo conectar con el servidor";
         } else {
@@ -168,7 +169,7 @@ function Login() {
                 </label>
                 <div className="relative group">
                   <input
-                    type="email"
+                    type="text"
                     placeholder="correo@ejemplo.com"
                     name="email"
                     onChange={handleChange}
