@@ -26,7 +26,8 @@ export default function EditClientModal({
     names: "",
     lastnames: "",
     ci: "",
-    numberPhone: ""
+    numberPhone: "",
+    email: ""
   });
   
   const [errorMsg, setErrorMsg] = useState("");
@@ -39,7 +40,8 @@ export default function EditClientModal({
       names: editingClient?.names || "",
       lastnames: editingClient?.lastnames || "",
       ci: editingClient?.ci || "",
-      numberPhone: editingClient?.numberPhone || ""
+      numberPhone: editingClient?.numberPhone || "",
+      email: editingClient?.email || ""
     });
     setErrorMsg(""); 
   }
@@ -83,6 +85,9 @@ export default function EditClientModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input name="ci" label="Cédula / RIF:" type="text" value={form.ci} onChange={handleChange} icon={<i className="bi bi-person-vcard text-xl" />} />
           <Input name="numberPhone" label="Teléfono:" type="tel" value={form.numberPhone} onChange={handleChange} icon={<i className="bi bi-telephone text-xl" />} />
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          <Input name="email" label="Correo Electrónico:" type="email" value={form.email} onChange={handleChange} icon={<i className="bi bi-envelope text-xl" />} />
         </div>
       </form>
     </Modal>

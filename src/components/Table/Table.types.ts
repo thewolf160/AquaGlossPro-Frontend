@@ -16,4 +16,5 @@ export interface TableProps {
   onEdit?: (item: Item) => void;
   onView?: (item: Item) => void;
   onRestore?: (item: Item) => void;
+  onDecreaseStock?: (item: Item) => void;
 }

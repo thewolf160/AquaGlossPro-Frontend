@@ -8,6 +8,7 @@ import type { SaleItem } from "../types/kanban.types";
 import ConfirmSalesModal from "../components/sales/ConfirmSalesModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 interface ConfirmModalState {
   show: boolean;
@@ -278,24 +279,28 @@ export default function ServiceHistory() {
       mobile: true,
       render: (item: Item) => {
         const sale = item as unknown as SaleItem;
-        // @ts-expect-error - Dependiendo de cómo lo mapees, asumimos que llega statusSale
+        // @ts-expect-error - statusSale
         if (sale.sale.statusSale === "W") {
           return (
             <div className="flex justify-center items-center gap-2">
-              <button
-                onClick={() => handleOpenConfirm(sale.sale.saleId, "P")}
-                className="bg-green-50 rounded-md text-green-600 hover:bg-green-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
-                title="Confirmar Pago"
-              >
-                <i className="bi bi-check-lg"></i>
-              </button>
-              <button
-                onClick={() => handleOpenConfirm(sale.sale.saleId, "C")}
-                className="bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
-                title="Anular Venta"
-              >
-                <i className="bi bi-x-lg"></i>
-              </button>
+              {hasPermission("SALES", "U") && (
+                <button
+                  onClick={() => handleOpenConfirm(sale.sale.saleId, "P")}
+                  className="bg-green-50 rounded-md text-green-600 hover:bg-green-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
+                  title="Confirmar Pago"
+                >
+                  <i className="bi bi-check-lg"></i>
+                </button>
+              )}
+              {hasPermission("SALES", "D") && (
+                <button
+                  onClick={() => handleOpenConfirm(sale.sale.saleId, "C")}
+                  className="bg-red-50 rounded-md text-red-500 hover:bg-red-100 transition-all cursor-pointer px-2.5 py-2.5 shadow-sm"
+                  title="Anular Venta"
+                >
+                  <i className="bi bi-x-lg"></i>
+                </button>
+              )}
             </div>
           );
         }

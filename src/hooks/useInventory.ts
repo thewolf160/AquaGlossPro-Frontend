@@ -137,6 +137,20 @@ export const useInventory = () => {
     }
   };
 
+  const decreaseStock = async (payload: { items: { productId: number; stock: number; unitType: string }[] }) => {
+    setIsSubmitting(true);
+    try {
+      await ProductService.decreaseStock(payload);
+      await getProducts(currentPage, debouncedSearch, activeFilter);
+      return true;
+    } catch (error: unknown) {
+      console.error(error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const registerProduct = async () => {
     setIsSubmitting(true);
     
@@ -249,5 +263,6 @@ export const useInventory = () => {
     activeFilter,
     handleFilterChange,
     inventoryTotals, 
+    decreaseStock,
   };
 };

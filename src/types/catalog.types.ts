@@ -76,26 +76,11 @@ export interface ServiceFormState {
 export interface ComboServiceRelationApi {
   comboServiceId: number;
   comboId: number;
-  // 👇 ESTE ES EL ID QUE TYPESCRIPT NO ENCONTRABA
-  servicesTypeVehicleId: number;
+  serviceId: number;
   active?: boolean;
-
-  servicesTypeVehicle: {
-    // 👇 ESTE ES EL PRECIO QUE USAMOS PARA EL TICKET
-    price: string | number;
-    serviceId?: number;
-    typeVehicleId?: number;
-
-    serviceTypeVehicleId: number;
-
-    service: {
-      serviceId: number;
-      name: string;
-    };
-    typeVehicle: {
-      typeVehicleId: number;
-      name: string;
-    };
+  service: {
+    serviceId: number;
+    name: string;
   };
 }
 
@@ -113,13 +98,14 @@ export interface CreateComboPayload {
   name: string;
   discountPercentage: number;
   isPromotion: boolean;
-  expirationDate?: Date | null;
-  servicesTypeVehicleIds: number[];
+  expirationDate?: string | null;
+  serviceIds: number[];
 }
 
 export interface ComboFormState {
   name: string;
   discountPercentage: string;
   isPromotion: boolean;
+  expirationDate: string;
   selectedServiceIds: number[];
 }

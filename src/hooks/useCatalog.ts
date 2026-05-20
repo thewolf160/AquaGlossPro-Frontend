@@ -39,6 +39,7 @@ export const useCatalog = () => {
     name: "",
     discountPercentage: "",
     isPromotion: false,
+    expirationDate: "",
     selectedServiceIds: [],
   });
 
@@ -50,8 +51,10 @@ export const useCatalog = () => {
       try {
         return await apiCall;
       } catch (error: unknown) {
-        if (axios.isAxiosError(error) && error.response?.status === 404)
+        if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 403)) {
+          console.warn(`Static data fetch failed with status ${error.response.status}`);
           return { data: { data: [] as T[], meta: { totalPages: 1 } } };
+        }
         throw error;
       }
     };
@@ -95,8 +98,10 @@ export const useCatalog = () => {
           try {
             return await apiCall;
           } catch (error: unknown) {
-            if (axios.isAxiosError(error) && error.response?.status === 404)
+            if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 403)) {
+              console.warn(`Dynamic data fetch failed with status ${error.response.status}`);
               return { data: { data: [] as T[], meta: { totalPages: 1 } } };
+            }
             throw error;
           }
         };
@@ -315,17 +320,12 @@ export const useCatalog = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const relatedTypeIds = rawPricesRelations
-        .filter((rel) =>
-          newComboForm.selectedServiceIds.includes(rel.serviceId),
-        )
-        .map((rel) => rel.serviceTypeVehicleId);
-
       const payload: CreateComboPayload = {
         name: newComboForm.name,
         discountPercentage: Number(newComboForm.discountPercentage),
         isPromotion: newComboForm.isPromotion,
-        servicesTypeVehicleIds: relatedTypeIds,
+        expirationDate: newComboForm.isPromotion && newComboForm.expirationDate ? new Date(newComboForm.expirationDate).toISOString() : null,
+        serviceIds: newComboForm.selectedServiceIds,
       };
 
       await CatalogServiceApi.createCombo(payload);
@@ -333,6 +333,7 @@ export const useCatalog = () => {
         name: "",
         discountPercentage: "",
         isPromotion: false,
+        expirationDate: "",
         selectedServiceIds: [],
       });
       await fetchData(searchTerm, currentPage, isActiveServices);
@@ -352,15 +353,12 @@ export const useCatalog = () => {
   const editCombo = async (id: number, formData: ComboFormState) => {
     setIsSubmitting(true);
     try {
-      const relatedTypeIds = rawPricesRelations
-        .filter((rel) => formData.selectedServiceIds.includes(rel.serviceId))
-        .map((rel) => rel.serviceTypeVehicleId);
-
       const payload: Partial<CreateComboPayload> = {
         name: formData.name,
         discountPercentage: Number(formData.discountPercentage),
         isPromotion: formData.isPromotion,
-        servicesTypeVehicleIds: relatedTypeIds,
+        expirationDate: formData.isPromotion && formData.expirationDate ? new Date(formData.expirationDate).toISOString() : null,
+        serviceIds: formData.selectedServiceIds,
       };
 
       await CatalogServiceApi.updateCombo(id, payload);

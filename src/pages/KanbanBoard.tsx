@@ -5,6 +5,7 @@ import { useModals } from "../hooks/useModals";
 import Modal from "../components/Modal/Modal";
 import Alert from "../components/Alert";
 import type { SaleItem } from "../types/kanban.types";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 export default function KanbanBoard() {
   const { tickets, loading, changeTicketStatus } = useKanban();
@@ -100,7 +101,7 @@ export default function KanbanBoard() {
           </div>
         )}
 
-        <div className="mt-auto pt-3 border-t border-gray-100 flex flex-col gap-3">
+          <div className="mt-auto pt-3 border-t border-gray-100 flex flex-col gap-3">
           {employeeNames.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {employeeNames.map((empName, index) => (
@@ -111,51 +112,53 @@ export default function KanbanBoard() {
             </div>
           )}
 
-          <div className="flex gap-2 shrink-0 items-center justify-end">
-            {ticket.sale.statusWashing === "I" && (
-              <button
-                type="button"
-                onClick={() => changeTicketStatus(ticket.sale.saleId, "W")}
-                className="text-gray-400 hover:text-gray-600 px-2"
-                title="Volver a En Espera"
-              >
-                <i className="bi-arrow-left-short text-xl"></i>
-              </button>
-            )}
+          {hasPermission("SALES", "U") && (
+            <div className="flex gap-2 shrink-0 items-center justify-end">
+              {ticket.sale.statusWashing === "I" && (
+                <button
+                  type="button"
+                  onClick={() => changeTicketStatus(ticket.sale.saleId, "W")}
+                  className="text-gray-400 hover:text-gray-600 px-2"
+                  title="Volver a En Espera"
+                >
+                  <i className="bi-arrow-left-short text-xl"></i>
+                </button>
+              )}
 
-            {(ticket.sale.statusWashing === "W" || ticket.sale.statusWashing === "I") && (
-              <button
-                type="button"
-                onClick={() => {
-                  setTicketToCancel(ticket.sale.saleId);
-                  toggleModal("delete", true);
-                }}
-                className="text-xs text-red-500 hover:text-red-700 px-2 py-1.5 font-bold transition-colors"
-              >
-                Cancelar
-              </button>
-            )}
+              {(ticket.sale.statusWashing === "W" || ticket.sale.statusWashing === "I") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTicketToCancel(ticket.sale.saleId);
+                    toggleModal("delete", true);
+                  }}
+                  className="text-xs text-red-500 hover:text-red-700 px-2 py-1.5 font-bold transition-colors"
+                >
+                  Cancelar
+                </button>
+              )}
 
-            {ticket.sale.statusWashing === "W" && (
-              <button
-                type="button"
-                onClick={() => changeTicketStatus(ticket.sale.saleId, "I")}
-                className="text-xs bg-orange-100 text-orange-700 px-3 py-1.5 rounded font-bold hover:bg-orange-200"
-              >
-                Iniciar <i className="bi bi-play-fill"></i>
-              </button>
-            )}
+              {ticket.sale.statusWashing === "W" && (
+                <button
+                  type="button"
+                  onClick={() => changeTicketStatus(ticket.sale.saleId, "I")}
+                  className="text-xs bg-orange-100 text-orange-700 px-3 py-1.5 rounded font-bold hover:bg-orange-200"
+                >
+                  Iniciar <i className="bi bi-play-fill"></i>
+                </button>
+              )}
 
-            {ticket.sale.statusWashing === "I" && (
-              <button
-                type="button"
-                onClick={() => changeTicketStatus(ticket.sale.saleId, "D")}
-                className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded font-bold hover:bg-green-200"
-              >
-                Finalizar <i className="bi bi-check2-all"></i>
-              </button>
-            )}
-          </div>
+              {ticket.sale.statusWashing === "I" && (
+                <button
+                  type="button"
+                  onClick={() => changeTicketStatus(ticket.sale.saleId, "D")}
+                  className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded font-bold hover:bg-green-200"
+                >
+                  Finalizar <i className="bi bi-check2-all"></i>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );

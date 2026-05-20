@@ -300,7 +300,7 @@ export default function ServiceCatalog() {
                 No hay combos {isActiveCombos ? "activos" : "inactivos"}.
               </div>
             ) : combos.map((combo: ComboApi) => {
-              const uniqueServices = Array.from(new Set(combo.combosServices?.map(cs => cs.servicesTypeVehicle.service.name) || []));
+              const uniqueServices = Array.from(new Set(combo.combosServices?.map(cs => cs.service?.name) || []));
 
               return (
                 <div key={combo.comboId} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 flex flex-col hover:shadow-md transition-shadow relative overflow-hidden">
@@ -316,13 +316,18 @@ export default function ServiceCatalog() {
 
                   <div className="flex-1 mb-4 flex flex-col gap-3">
                     <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center">
-                      <p className="text-[10px] md:text-xs uppercase tracking-wider font-bold">
-                        {combo.isPromotion ? (
-                          <span className="bg-linear-to-r from-red-500 via-green-500 to-blue-500 text-transparent bg-clip-text">
-                            Promoción Especial
-                          </span>
-                        ) : <span className="text-gray-600">Descuento Base</span>}
-                      </p>
+                      <div className="flex flex-col">
+                        <p className="text-[10px] md:text-xs uppercase tracking-wider font-bold">
+                          {combo.isPromotion ? (
+                            <span className="bg-linear-to-r from-red-500 via-green-500 to-blue-500 text-transparent bg-clip-text">
+                              Promoción Especial
+                            </span>
+                          ) : <span className="text-gray-600">Descuento Base</span>}
+                        </p>
+                        {combo.expirationDate && (
+                          <p className="text-[10px] text-red-500 mt-1 font-semibold">Expira: {new Date(combo.expirationDate).toLocaleString()}</p>
+                        )}
+                      </div>
                       <p className="text-base md:text-lg font-black text-green-600">
                         - {combo.discountPercentage}%
                       </p>
