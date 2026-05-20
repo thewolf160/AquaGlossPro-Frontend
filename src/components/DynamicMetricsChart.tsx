@@ -12,6 +12,7 @@ import Modal from "../components/Modal/Modal";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
+
 type TabType = "vehiculos" | "productos" | "empleados";
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
@@ -125,8 +126,7 @@ export default function DynamicMetricsChart() {
   return (
     <>
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 w-full">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          {/* CABECERA: Título con tipografía pequeña y clara */}
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
           <div>
             <h3 className="font-bold text-slate-800 text-lg leading-tight">
               {currentData.title}
@@ -134,13 +134,13 @@ export default function DynamicMetricsChart() {
             <div className="mt-1">
               <span className="text-[15px] font-bold text-slate-400 uppercase tracking-widest">
                 {timeFilterText[activeTimeFilter]}{" "}
-                {/* Usamos activeTimeFilter */}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="flex bg-slate-100 p-1 rounded-lg">
+          <div className="flex items-center gap-3 w-full xl:w-auto justify-between xl:justify-end overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex bg-slate-100 p-1 rounded-lg whitespace-nowrap">
+              {/* Revertido a las 3 pestañas iniciales */}
               {(["vehiculos", "productos", "empleados"] as TabType[]).map(
                 (tab) => (
                   <button
@@ -160,7 +160,7 @@ export default function DynamicMetricsChart() {
 
             <button
               onClick={handleOpenModal}
-              className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors h-9 w-9 -mt-1 -mr-2"
+              className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-full transition-colors shrink-0 h-9 w-9 -mt-1 -mr-2"
             >
               <i className="bi bi-three-dots-vertical text-lg"></i>
             </button>
