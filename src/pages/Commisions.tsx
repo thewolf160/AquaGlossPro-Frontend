@@ -8,6 +8,7 @@ import { InitialCommission } from "../types/commissions.types";
 import Modal from "../components/Modal/Modal";
 import Input from "../components/Modal/Input";
 import Alert from "../components/Alert";
+import { hasPermission } from "../utils/checkPermissions.utils";
 
 const columnsCommissions = [
   { key: "ci", header: "CI", mobile: true },
@@ -146,8 +147,8 @@ function Commissions() {
               <Table
                 columns={columnsCommissions}
                 data={commissionsData.data}
-                onView={handleOpenDetails}
-                onEdit={handleOpenEdit}
+                onView={hasPermission("COMISSIONS", "R") ? handleOpenDetails : undefined}
+                onEdit={hasPermission("COMISSIONS", "U") ? handleOpenEdit : undefined}
                 canEdit={(item: any) => item.statusPaymentConmission === 'W'}
               />
             )}

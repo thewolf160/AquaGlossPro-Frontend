@@ -375,7 +375,7 @@ function Employees() {
               name="numberPhone"
               label="Télefono:"
               type="text"
-              placeholder="00000000000"
+              placeholder="+58-0000000000"
               onChange={handleChange}
               value={newEmployeeForm.form.numberPhone}
               icon={<i className="bi bi-telephone text-xl" />}
