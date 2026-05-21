@@ -10,7 +10,14 @@ export const useKanban = () => {
     if (!isBackground) setLoading(true); 
     
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const date = new Date();
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      const today = `${year}-${month}-${day}`;
+      
       const data = await getDailySales(today);
       
       setTickets(data.filter(t => t.sale.statusWashing !== 'C'));

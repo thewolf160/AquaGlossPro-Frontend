@@ -16,8 +16,11 @@ export const useHomeDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const today = new Date().toISOString().split('T')[0];
-      const data = await getDailySales(today);
+const date = new Date();
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, '0');
+const day = String(date.getDate()).padStart(2, '0');
+const today = `${year}-${month}-${day}`;      const data = await getDailySales(today);
       
       // Calculate stats based on statusWashing
       let waiting = 0;
@@ -32,8 +35,6 @@ export const useHomeDashboard = () => {
 
       setStats({ waiting, inProgress, done });
 
-      // Get 5 most recent sales (assuming backend returns them sorted desc by date, or we sort them)
-      // Kanban query limits to 100 and sorts by saleDate DESC
       setRecentSales(data.slice(0, 5));
       
     } catch (error) {

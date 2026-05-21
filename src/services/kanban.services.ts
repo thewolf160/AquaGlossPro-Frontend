@@ -2,11 +2,15 @@ import api from '../config/api';
 import type { SaleItem, StatusWashing } from '../types/kanban.types';
 
 export const getDailySales = async (date: string): Promise<SaleItem[]> => {
-  // ISO 8601 completo con Z para pasar el @IsDateString del backend
-  const startDate = `${date}T00:00:00.000Z`;
-  const endDate = `${date}T23:59:59.999Z`;
+  const [year, month, day] = date.split('-');
+
+  const startLocal = new Date(Number(year), Number(month) - 1, Number(day), 0, 0, 0);
+  const endLocal = new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
+
+  const startDate = startLocal.toISOString();
+  const endDate = endLocal.toISOString();
+
   const response = await api.get(`/sales?startDate=${startDate}&endDate=${endDate}&limit=100`);
-  // La respuesta es: { message, data: { data: [...], meta: {...}, statusCounts: {...} } }
   return response.data.data.data;
 };
 
