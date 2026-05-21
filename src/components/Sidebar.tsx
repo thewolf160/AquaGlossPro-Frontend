@@ -69,8 +69,8 @@ const menuItems: SidebarItem[] = [
       { label: "Registro de Servicios", path: "/serviceHistory", module: "SALES" },
     ]
   },
-  { path: "/reports", label: "Reportes", icon: "bi bi-graph-up", module: "SALES" }, // Ajusta según convenga
-  { path: "/settings", label: "Ajustes", icon: "bi bi-gear" }, // Sin módulo = Libre acceso
+  { path: "/reports", label: "Reportes", icon: "bi bi-graph-up", module: "REPORTS" }, // Ajusta según convenga
+  { path: "/settings", label: "Ajustes", icon: "bi bi-gear", }, 
 ];
 
 export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
@@ -82,6 +82,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user_permissions"); // Limpia los permisos al salir
+    localStorage.removeItem("user_role");
     navigate("/login", { replace: true });
   };
 

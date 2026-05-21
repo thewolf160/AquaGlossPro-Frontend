@@ -3,6 +3,7 @@ import type { Item } from "../types/models";
 import { useClientDashboard } from "../hooks/useClientDashboard";
 import type { WashHistory } from "../hooks/useClientDashboard";
 import ClientHeader from "../components/ClientHeader"; 
+import { NotificationListener } from "../components/NotificationListener";
 
 export default function ClientDashboard() {
   const {
@@ -72,6 +73,7 @@ export default function ClientDashboard() {
   return (
     <>
       <ClientHeader vehicles={vehicles} isLoadingVehicles={isLoading} />
+      {/* <NotificationListener /> */}
 
       <div className="max-w-7xl mx-auto p-6 space-y-8 animate-fade-in font-sans">
         

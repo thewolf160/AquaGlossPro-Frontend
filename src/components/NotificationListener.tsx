@@ -17,9 +17,20 @@ export const NotificationListener = () => {
 
   useEffect(() => {
     let isMounted = true;
-    const userRole = "admin";
+    const rawRole = (localStorage.getItem("user_role") || "").toLowerCase().trim();
+    let userRole = "supervisor"; // fallback seguro
+    if (rawRole.includes("admin")) {
+      userRole = "admin";
+    } else if (rawRole.includes("superv")) {
+      userRole = "supervisor";
+    } else if (rawRole.includes("cajer") || rawRole.includes("cashier")) {
+      userRole = "cajero";
+    } else if (rawRole.includes("client")) {
+      userRole = "cliente";
+    }
+
     let reconnectTimeout: number;
-    if (!userRole) return;
+    if (!localStorage.getItem("user_role")) return;
 
     const wsUrl = `ws://127.0.0.1:8080/ws?role=${userRole}`;
 
@@ -98,7 +109,7 @@ export const NotificationListener = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="toast toast-top toast-end z-9999 p-4 space-y-2 ">
+    <div className="toast toast-top toast-end z-[9999] p-4 space-y-2">
       {toasts.map((t) => (
         <div
           key={t.id}
@@ -116,7 +127,6 @@ export const NotificationListener = () => {
           >
             ✕
           </button>
-          ``
         </div>
       ))}
     </div>

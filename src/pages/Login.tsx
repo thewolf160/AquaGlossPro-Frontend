@@ -72,6 +72,7 @@ function Login() {
       localStorage.setItem("user_permissions", JSON.stringify(permissionsData))
 
       const roleName = response.data.role?.name?.toLowerCase()?.trim() || "";
+      localStorage.setItem("user_role", roleName);
       if (roleName === "client" || roleName === "cliente") {
         navigate("/clientHome", { replace: true });
       } else {

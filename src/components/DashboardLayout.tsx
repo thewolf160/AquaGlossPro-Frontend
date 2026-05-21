@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: LayoutProps) {
        
       <main className="flex-1 flex flex-col h-full relative transition-all duration-300">
         <Header onMenuClick={toggleSidebar} />
-         {/* <NotificationListener/>  */}
+         {/* <NotificationListener/> */}
         <div className="flex-1 p-6 overflow-y-auto">{children}</div>
       </main>
     </div>

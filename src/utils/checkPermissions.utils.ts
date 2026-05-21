@@ -14,7 +14,8 @@ export type ModuleName =
   | "SUPPLIERS"
   | "TYPE_VEHICLES"
   | "USERS"
-  | "VEHICLES";
+  | "VEHICLES"
+  | "REPORTS";
 
 export type ActionType = "C" | "R" | "U" | "D" | "ANY";
 

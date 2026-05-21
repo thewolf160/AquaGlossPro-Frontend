@@ -19,6 +19,7 @@ export default function ClientHeader({ vehicles, isLoadingVehicles }: ClientHead
     localStorage.removeItem("user_name");
     localStorage.removeItem("user_email");
     localStorage.removeItem("user_permissions");
+    localStorage.removeItem("user_role");
     navigate("/login", { replace: true });
   };
 
