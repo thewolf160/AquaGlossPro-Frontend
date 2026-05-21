@@ -187,11 +187,7 @@ export default function ClientDashboard() {
         <div className="pt-4">
           <div className="flex justify-between items-end mb-4 px-1">
             <h2 className="text-xl font-bold text-gray-900">Mi Historial de Lavados</h2>
-            {history.length > 5 && (
-              <button className="text-blue-600 font-medium text-sm hover:underline flex items-center gap-1">
-                Ver Historial Completo <i className="bi bi-arrow-right"></i>
-              </button>
-            )}
+
           </div>
           
           <Table 
