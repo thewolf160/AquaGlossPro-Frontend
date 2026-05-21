@@ -6,6 +6,7 @@ export interface Client extends Item {
   names: string;
   lastnames: string;
   numberPhone: string;
+  email: string;
   countVehicles?: number; 
   vehicles?: ClientVehicle[]; 
 }
@@ -22,6 +23,7 @@ export const InitialClient: Client = {
   names: "",
   lastnames: "",
   numberPhone: "",
+  email: "",
   countVehicles: 0, 
   vehicles: [],
 };
@@ -32,6 +34,7 @@ export interface NewClientForm {
     lastnames: string;
     ci: string;
     numberPhone: string;
+    email: string;
   };
   error: boolean;
   errorMsg: string;
@@ -43,6 +46,7 @@ export const InitialNewClientForm: NewClientForm = {
     lastnames: "",
     ci: "",
     numberPhone: "",
+    email: "",
   },
   error: false,
   errorMsg: "",
@@ -78,6 +82,7 @@ export interface ClientApi {
   lastnames: string;
   numberPhone: string;
   ci: string;
+  email: string;
   active: boolean;
   countVehicles?: number; 
   vehicles?: ClientVehicle[];

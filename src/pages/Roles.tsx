@@ -28,8 +28,7 @@ export default function Roles() {
   const [expandedRole, setExpandedRole] = useState<number | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
 
-  // ESTADOS DE PAGINACIÓN CALCULADA
-
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Cantidad de roles visibles por página
 
@@ -42,8 +41,7 @@ export default function Roles() {
   const [nameError, setNameError] = useState(false);
   const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
 
-  // LÓGICA DE RECORTES PARA PAGINACIÓN
-
+  
   const totalPages = Math.ceil(filteredRoles.length / itemsPerPage);
 
   const paginatedRoles = useMemo(() => {
@@ -121,13 +119,11 @@ export default function Roles() {
     );
   };
 
-  // AGRUPACIÓN
-
+  
   const groupedPermissions = permissions.reduce((acc: any, perm: any) => {
     if (!perm || !perm.modul) return acc;
 
     const moduleId = perm.modul.moduleId;
-
     if (moduleId === 3 || moduleId === 6) return acc;
 
     let moduleName = perm.modul.name;
@@ -171,6 +167,7 @@ export default function Roles() {
       {error && !isAddModalOpen && <Alert message={error} type="error" />}
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* Cabecera Responsiva */}
         <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
@@ -219,6 +216,7 @@ export default function Roles() {
           />
         </HeaderPortal>
 
+        {/* Tarjetas de Contadores - Responsive Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4">
           <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-center sm:text-left">
             <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">
@@ -246,14 +244,15 @@ export default function Roles() {
           </div>
         </div>
 
-        <div className="px-6 py-2 border-y border-slate-100 bg-slate-50/50 flex gap-2">
+        {/* Pestañas (Tabs) Responsivas */}
+        <div className="px-4 sm:px-6 py-2 border-y border-slate-100 bg-slate-50/50 flex flex-wrap gap-2">
           <button
             onClick={() => {
               setIsActiveTab(true);
               setSelectedRoles([]);
               setCurrentPage(1);
             }}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex-1 sm:flex-none text-center ${
               isActiveTab
                 ? "bg-white text-blue-600 shadow-sm border border-slate-200"
                 : "text-slate-500 hover:text-slate-800"
@@ -267,16 +266,17 @@ export default function Roles() {
               setSelectedRoles([]);
               setCurrentPage(1);
             }}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex-1 sm:flex-none text-center ${
               !isActiveTab
                 ? "bg-white text-rose-600 shadow-sm border border-slate-200"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            Papelera (Inactivos)
+            Papelera
           </button>
         </div>
 
+        {/* Contenedor de Tabla con Scroll Horizontal Responsivo */}
         <div className="overflow-x-auto w-full">
           <table className="min-w-[700px] w-full table-auto">
             <thead className="bg-slate-50/80">
@@ -334,7 +334,7 @@ export default function Roles() {
                 paginatedRoles.map((role) => (
                   <React.Fragment key={role.roleId}>
                     <tr
-                      className="group hover:bg-blue-50/30 cursor-pointer"
+                      className="group hover:bg-blue-50/30 cursor-pointer transition-colors"
                       onClick={() => handleRowClick(role.roleId)}
                     >
                       {isActiveTab && (
@@ -361,7 +361,7 @@ export default function Roles() {
                         </span>
                       </td>
                       <td className="px-3 py-3">
-                        <span className="text-xs text-slate-500 truncate block max-w-xs">
+                        <span className="text-xs text-slate-500 truncate block max-w-[150px] sm:max-w-xs">
                           {role.modules?.map((m) => m.moduleName).join(" • ") ||
                             "Sin módulos"}
                         </span>
@@ -377,30 +377,32 @@ export default function Roles() {
                               setRoleToRestore(role.roleId);
                               setIsRestoreModalOpen(true);
                             }}
-                            className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded border border-emerald-200"
+                            className="px-3 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold rounded-lg border border-emerald-200 transition-colors"
                           >
                             Restaurar
                           </button>
                         )}
                       </td>
                     </tr>
+
+                    {/* Renderizado Condicional del Acordeón Responsivo */}
                     {isActiveTab && expandedRole === role.roleId && (
                       <tr>
                         <td
                           colSpan={5}
                           className="p-0 bg-slate-50/30 border-none"
                         >
-                          <div className="px-12 py-6 animate-slide-down">
-                            <div className="bg-white rounded-2xl p-6 border shadow-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          <div className="px-4 sm:px-12 py-6 animate-slide-down">
+                            <div className="bg-white rounded-2xl p-4 sm:p-6 border shadow-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                               {role.modules?.map((mod) => (
                                 <div
                                   key={mod.moduleId}
-                                  className="p-3 bg-slate-50 rounded-xl border"
+                                  className="p-3 bg-slate-50 rounded-xl border border-slate-100"
                                 >
                                   <span className="text-xs font-bold text-slate-700 block mb-2">
                                     {mod.moduleName}
                                   </span>
-                                  <div className="flex flex-wrap gap-1">
+                                  <div className="flex flex-wrap gap-1.5">
                                     {mod.permissions.map((p) => (
                                       <span
                                         key={p.permissionId}
@@ -424,10 +426,9 @@ export default function Roles() {
           </table>
         </div>
 
-        {/* FOOTER */}
-
-        <div className="bg-white px-6 py-4 flex items-center justify-between border-t border-slate-200">
-          <p className="text-sm font-medium text-slate-500">
+        {/* FOOTER PAGINACIÓN */}
+        <div className="bg-white px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-200">
+          <p className="text-sm font-medium text-slate-500 text-center sm:text-left">
             Página{" "}
             <span className="font-semibold text-slate-900">{currentPage}</span>{" "}
             de{" "}
@@ -436,11 +437,11 @@ export default function Roles() {
             </span>
           </p>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1 || isLoading}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer disabled:cursor-not-allowed transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer disabled:cursor-not-allowed transition-colors"
             >
               Anterior
             </button>
@@ -452,7 +453,7 @@ export default function Roles() {
               disabled={
                 currentPage >= totalPages || totalPages === 0 || isLoading
               }
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer disabled:cursor-not-allowed transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white cursor-pointer disabled:cursor-not-allowed transition-colors"
             >
               Siguiente
             </button>
@@ -460,6 +461,7 @@ export default function Roles() {
         </div>
       </div>
 
+      {/* MODAL CREAR ROL */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -468,13 +470,13 @@ export default function Roles() {
           <button
             onClick={handleConfirmCreate}
             disabled={isLoading}
-            className="bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg"
+            className="w-full sm:w-auto bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95 disabled:opacity-50"
           >
             Guardar Rol
           </button>
         }
       >
-        <div className="space-y-5 py-2">
+        <div className="space-y-5 py-2 w-full">
           {error && isAddModalOpen && (
             <div className="p-3 bg-red-50 text-red-600 rounded-xl border border-red-200 text-xs font-bold">
               {error}
@@ -487,7 +489,7 @@ export default function Roles() {
             <input
               type="text"
               placeholder="Ej: VENDEDOR"
-              className={`w-full px-4 py-3 bg-slate-50 border rounded-xl uppercase text-sm outline-none focus:ring-4 ${nameError ? "border-red-400 focus:ring-red-100" : "border-slate-200 focus:ring-blue-100"}`}
+              className={`w-full px-4 py-3 bg-slate-50 border rounded-xl uppercase text-sm outline-none focus:ring-4 transition-all ${nameError ? "border-red-400 focus:ring-red-100" : "border-slate-200 focus:ring-blue-100"}`}
               value={newRoleName}
               onChange={handleNameChange}
             />
@@ -506,7 +508,7 @@ export default function Roles() {
                 <span className="loading loading-spinner text-blue-600"></span>
               </div>
             ) : (
-              <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                 {Object.values(groupedPermissions).map(
                   ({ module, permissions: perms }: any) => (
                     <div
@@ -525,7 +527,7 @@ export default function Roles() {
                               e.target.checked,
                             )
                           }
-                          className="w-4 h-4"
+                          className="w-4 h-4 cursor-pointer"
                         />
                         <span className="text-xs font-bold text-slate-800">
                           {module.name}
@@ -535,7 +537,7 @@ export default function Roles() {
                         {perms.map((perm: any) => (
                           <label
                             key={perm.permissionId}
-                            className="flex items-center gap-2 text-[10px] font-medium text-slate-600 cursor-pointer p-1.5 bg-slate-50 rounded border border-slate-100"
+                            className="flex items-center gap-2 text-[10px] font-medium text-slate-600 cursor-pointer p-1.5 bg-slate-50 rounded border border-slate-100 hover:bg-blue-50 transition-colors"
                           >
                             <input
                               type="checkbox"
@@ -548,7 +550,7 @@ export default function Roles() {
                                   e.target.checked,
                                 )
                               }
-                              className="w-3 h-3"
+                              className="w-3 h-3 cursor-pointer"
                             />
                             <span>
                               {perm.typePermission === "C"
@@ -571,6 +573,7 @@ export default function Roles() {
         </div>
       </Modal>
 
+      {/* MODAL DESACTIVAR */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
@@ -579,18 +582,19 @@ export default function Roles() {
           <button
             onClick={handleConfirmDelete}
             disabled={isLoading}
-            className="bg-red-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg"
+            className="w-full sm:w-auto bg-red-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95"
           >
             Sí, Desactivar
           </button>
         }
       >
-        <div className="py-4 text-sm text-slate-600">
+        <div className="py-4 text-sm text-slate-600 text-center sm:text-left">
           ¿Estás seguro de que deseas desactivar {selectedRoles.length} roles?
           Se moverán a la papelera.
         </div>
       </Modal>
 
+      {/* MODAL RESTAURAR */}
       <Modal
         isOpen={isRestoreModalOpen}
         onClose={() => setIsRestoreModalOpen(false)}
@@ -599,13 +603,13 @@ export default function Roles() {
           <button
             onClick={handleConfirmRestore}
             disabled={isLoading}
-            className="bg-emerald-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg"
+            className="w-full sm:w-auto bg-emerald-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg transition-transform active:scale-95"
           >
             Sí, Restaurar
           </button>
         }
       >
-        <div className="py-4 text-sm text-slate-600">
+        <div className="py-4 text-sm text-slate-600 text-center sm:text-left">
           ¿Deseas reactivar este rol? Volverá a estar operativo con sus permisos
           originales.
         </div>

@@ -39,4 +39,9 @@ export const ProductService = {
     const { data } = await api.patch(`/products/restore/${id}`);
     return data;
   },
+
+  decreaseStock: async (payload: { items: { productId: number; stock: number; unitType: string }[] }) => {
+    const { data } = await api.patch(`/stock`, payload);
+    return data;
+  },
 };

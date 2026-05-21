@@ -49,6 +49,7 @@ export default function OperationalCloseChart() {
         label: "Ingreso Neto (Local)",
         data: [120, 140, 110, 160, 210, 280, 230],
         backgroundColor: "#10b981",
+        stack: "Stack 1",
         borderRadius: {
           topLeft: 0,
           topRight: 0,
@@ -61,12 +62,21 @@ export default function OperationalCloseChart() {
         label: "Comisiones Pagadas (25%)",
         data: [40, 46, 36, 53, 70, 93, 76],
         backgroundColor: "#f59e0b",
+        stack: "Stack 1",
         borderRadius: {
           topLeft: 6,
           topRight: 6,
           bottomLeft: 0,
           bottomRight: 0,
         },
+        barThickness: 25,
+      },
+      {
+        label: "Egresos / Pérdida Bruta",
+        data: [75, 80, 60, 90, 130, 180, 120],
+        backgroundColor: "#ef4444",
+        stack: "Stack 2",
+        borderRadius: 6,
         barThickness: 25,
       },
     ],
@@ -138,7 +148,7 @@ export default function OperationalCloseChart() {
           {/* CABECERA LIMPIA */}
           <div>
             <h3 className="font-bold text-slate-800 text-lg leading-tight">
-              Cierre Operativo (Ingresos vs Comisiones)
+              Cierre Operativo (Ingresos vs Egresos)
             </h3>
             <div className="mt-1">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">

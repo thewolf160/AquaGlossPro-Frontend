@@ -9,6 +9,7 @@ function Table({
   canEdit,
   onView,
   onRestore,
+  onDecreaseStock,
   emptyMessage = "No hay datos para mostrar",
 }: TableProps) {
   if (data.length === 0) {
@@ -42,7 +43,7 @@ function Table({
                     {col.render ? (
                       col.render(item)
                     ) : col.key === "actions" ? (
-                      onDelete || onEdit || onView || onRestore ? (
+                      onDelete || onEdit || onView || onRestore || onDecreaseStock ? (
                         <div className="flex justify-center items-center gap-2">
                           {onView && (
                             <button
@@ -83,6 +84,15 @@ function Table({
                                   d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"
                                 />
                               </svg>
+                            </button>
+                          )}
+                          {onDecreaseStock && (
+                            <button
+                              className={`bg-orange-50 rounded-md text-orange-500 hover:bg-orange-100 transition-all cursor-pointer px-2.5 py-2.5 ${col.mobile && "hidden sm:flex"}`}
+                              onClick={() => onDecreaseStock(item)}
+                              title="Decrementar Stock"
+                            >
+                              <i className="bi bi-box-arrow-down text-base" />
                             </button>
                           )}
                           {onDelete && (

@@ -120,7 +120,7 @@ export const useClients = () => {
 
   const registerClient = async () => {
     setIsSubmitting(true);
-    if (!newClientForm.form.ci || !newClientForm.form.lastnames || !newClientForm.form.names || !newClientForm.form.numberPhone) {
+    if (!newClientForm.form.ci || !newClientForm.form.lastnames || !newClientForm.form.names || !newClientForm.form.numberPhone || !newClientForm.form.email) {
       setNewClientForm((prev) => ({ ...prev, error: true, errorMsg: "Todos los campos son obligatorios" }));
       setIsSubmitting(false);
       return;
@@ -132,6 +132,7 @@ export const useClients = () => {
         lastnames: newClientForm.form.lastnames,
         ci: newClientForm.form.ci,
         numberPhone: newClientForm.form.numberPhone,
+        email: newClientForm.form.email,
       });
       getClients(currentPage, debouncedSearch);
       return true;

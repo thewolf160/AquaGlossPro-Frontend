@@ -64,15 +64,19 @@ function Login() {
       });
       console.log(response)
       localStorage.setItem("token", response.data.tokens)
+      
+      localStorage.setItem("user_name", response.data.name)
+      localStorage.setItem("user_email", response.data.email)
 
       const permissionsData = response.data.permissions;
       localStorage.setItem("user_permissions", JSON.stringify(permissionsData))
-      
+
       navigate("/home", { replace: true });
     } catch (error: unknown) {
       let errorMessage = "Ocurrió un error inesperado";
 
       if (axios.isAxiosError(error)) {
+        console.log("EL ERRRORRR:",error)
         if (!error.response) {
           errorMessage = "No se pudo conectar con el servidor";
         } else {
@@ -167,11 +171,12 @@ function Login() {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label className="block font-medium text-sm text-slate-300 mb-2">
-                  Correo Electrónico
+                  Correo Electrónico o Cédula
                 </label>
                 <div className="relative group">
                   <input
-                    placeholder="correo@ejemplo.com"
+                    type="text"
+                    placeholder="correo@ejemplo.com o 12345678"
                     name="email"
                     onChange={handleChange}
                     value={formState.form.email}

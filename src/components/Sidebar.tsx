@@ -1,4 +1,4 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, NavLink } from "react-router-dom";
 // 1. IMPORTA TU FUNCIÓN DE PERMISOS
 import { hasPermission, type ModuleName } from "../utils/checkPermissions.utils";
@@ -53,13 +53,13 @@ const menuItems: SidebarItem[] = [
     ],
   },
   { path: "/clients", label: "Clientes", icon: "bi bi-person", module: "CLIENTS" },
-  { 
-    label: "Lavado", 
-    icon: "bi bi-stars", 
+  {
+    label: "Lavado",
+    icon: "bi bi-stars",
     subItems: [
       { label: "Catálogo de Servicios", path: "/servicesCatalog", module: "SERVICES" },
       { label: "Lavados del dia", path: "/washes", module: "SALES" },
-    ] 
+    ]
   },
   { path: "/sales", label: "Servicios", icon: "bi bi-currency-dollar", module: "SALES" },
   { path: "/reports", label: "Reportes", icon: "bi bi-graph-up", module: "SALES" }, // Ajusta según convenga
@@ -70,7 +70,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -116,14 +116,12 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
       >
         {/* Cabecera del Sidebar */}
         <div
-          className={`flex items-center h-16 border-b border-gray-800 transition-all ${
-            isOpen ? "justify-between px-4" : "justify-center"
-          }`}
+          className={`flex items-center h-16 border-b border-gray-800 transition-all ${isOpen ? "justify-between px-4" : "justify-center"
+            }`}
         >
           <div
-            className={`font-bold text-xl tracking-wide flex items-center gap-2 overflow-hidden whitespace-nowrap ${
-              !isOpen && !isMobile ? "hidden" : "block"
-            }`}
+            className={`font-bold text-xl tracking-wide flex items-center gap-2 overflow-hidden whitespace-nowrap ${!isOpen && !isMobile ? "hidden" : "block"
+              }`}
           >
             <i className="bi bi-droplet-fill text-blue-500"></i>
             <span>AutoLavado</span>
@@ -145,7 +143,7 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-2 px-2 custom-scrollbar">
           {menuItems.map((item) => {
             // 3. LÓGICA FILTRADO DE PERMISOS
-            
+
             // Caso A: Si es un item directo y tiene módulo configurado, verificamos acceso
             if (item.path && item.module && !hasPermission(item.module, "ANY")) {
               return null; // Oculta el enlace completo
@@ -155,10 +153,10 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
             let allowedSubItems = item.subItems || [];
             if (item.subItems) {
               allowedSubItems = item.subItems.filter(sub => hasPermission(sub.module, "ANY"));
-              
+
               // Si no tiene acceso a ningún subItem, ocultamos toda la categoría principal
               if (allowedSubItems.length === 0) {
-                return null; 
+                return null;
               }
             }
 
@@ -188,9 +186,8 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                         </span>
                       </div>
                       <i
-                        className={`bi bi-chevron-down text-sm transition-transform duration-300 ${
-                          !isOpen && !isMobile ? "hidden" : "block"
-                        } ${openMenus[item.label] ? "rotate-180" : ""}`}
+                        className={`bi bi-chevron-down text-sm transition-transform duration-300 ${!isOpen && !isMobile ? "hidden" : "block"
+                          } ${openMenus[item.label] ? "rotate-180" : ""}`}
                       ></i>
                     </button>
 
@@ -211,10 +208,9 @@ export default function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                             onClick={() => isMobile && toggleSidebar()}
                             className={`
                               flex items-center py-2 pl-11 pr-3 rounded-lg transition-colors overflow-hidden whitespace-nowrap text-sm
-                              ${
-                                isSubActive
-                                  ? "bg-blue-600 text-white font-medium"
-                                  : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                              ${isSubActive
+                                ? "bg-blue-600 text-white font-medium"
+                                : "text-gray-400 hover:text-white hover:bg-gray-800/50"
                               }
                             `}
                           >

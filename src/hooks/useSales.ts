@@ -7,7 +7,6 @@ import axios from "axios";
 
 export const useSales = () => {
   const { vehiclesData } = useVehicles();
-  // Traemos combos del hook de catálogo
   const { services, combos } = useCatalog();
   const [error, setError] = useState<{ active: boolean; msg: string }>({
     active: false,
@@ -28,7 +27,6 @@ export const useSales = () => {
     ? selectedVehicle.typeVehicleId
     : null;
 
-  // 1. Filtrar Servicios Individuales
   const availableServices = services
     .filter((s) =>
       s.prices.some((p) => p.typeVehicleId === currentTypeVehicleId),
@@ -38,19 +36,16 @@ export const useSales = () => {
       prices: s.prices.filter((p) => p.typeVehicleId === currentTypeVehicleId),
     }));
 
-  // 2. NUEVO: Filtrar Combos Disponibles
   const availableCombos = combos
     .map((c) => {
-      // Filtramos los servicios internos del combo que apliquen a este vehículo
       const validServices = (c.combosServices ?? []).filter(
         (cs) =>
           cs.servicesTypeVehicle?.typeVehicle?.typeVehicleId ===
-            currentTypeVehicleId ||
+          currentTypeVehicleId ||
           cs.servicesTypeVehicle?.typeVehicleId === currentTypeVehicleId,
       );
       return { ...c, combosServices: validServices };
     })
-    // Solo mantenemos los combos que tengan al menos 1 servicio válido para este vehículo
     .filter((c) => c.combosServices.length > 0);
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -92,7 +87,6 @@ export const useSales = () => {
     });
   };
 
-  // 3. NUEVO: Función para alternar Combos enteros
   const toggleCombo = (
     comboId: number,
     comboServicesData: any[],
@@ -112,7 +106,7 @@ export const useSales = () => {
         // Si no está seleccionado, preparamos todos los servicios de este combo
         const newServicesFromCombo = comboServicesData.map((cs) => {
           return {
-            employeeId: "" as const, // Vacío por defecto
+            employeeId: "" as const,
             serviceTypeVehicleId:
               cs.servicesTypeVehicleId ||
               cs.servicesTypeVehicle?.serviceTypeVehicleId ||
@@ -121,7 +115,6 @@ export const useSales = () => {
           };
         });
 
-        // Limpiamos si el usuario había seleccionado uno de estos servicios individualmente antes
         const newServiceIds = newServicesFromCombo.map(
           (s) => s.serviceTypeVehicleId,
         );
@@ -213,10 +206,10 @@ export const useSales = () => {
     handleSelectChange,
     newSale,
     availableServices,
-    availableCombos, // Lo exportamos
+    availableCombos,
     handleTextTareaChange,
     toggleService,
-    toggleCombo, // Lo exportamos
+    toggleCombo,
     handleEmployeeChange,
     handleGeneralDiscountChange,
     totalAmount,

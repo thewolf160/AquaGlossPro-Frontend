@@ -19,13 +19,16 @@ export const useCatalog = () => {
   const [services, setServices] = useState<CatalogService[]>([]);
   const [combos, setCombos] = useState<ComboApi[]>([]);
   const [categories, setCategories] = useState<CategoryApi[]>([]);
-  const [rawPricesRelations, setRawPricesRelations] = useState<
-    ServicePriceApi[]
-  >([]);
+  const [rawPricesRelations, setRawPricesRelations] = useState<ServicePriceApi[]>([]);
+  const [allTypes, setAllTypes] = useState<TypeVehicleApi[]>([]);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [isActiveServices, setIsActiveServices] = useState<boolean>(true);
+  const [isActiveCombos, setIsActiveCombos] = useState<boolean>(true);
 
   const [newServiceForm, setNewServiceForm] = useState<ServiceFormState>({
     name: "",
@@ -36,110 +39,152 @@ export const useCatalog = () => {
     name: "",
     discountPercentage: "",
     isPromotion: false,
+    expirationDate: "",
     selectedServiceIds: [],
   });
 
-  const fetchData = useCallback(async (param: string = "") => {
-    setIsLoading(true);
-    try {
-      const safeFetch = async <T>(
-        apiCall: Promise<{ data: { data: T[] } }>,
-      ) => {
-        try {
-          return await apiCall;
-        } catch (error: unknown) {
-          if (axios.isAxiosError(error) && error.response?.status === 404)
-            return { data: { data: [] as T[] } };
-          throw error;
+  // --- Carga de datos estáticos (solo una vez al montar) ---
+  const fetchStaticData = useCallback(async () => {
+    const safeFetch = async <T>(
+      apiCall: Promise<{ data: { data: T[]; meta?: unknown } }>,
+    ) => {
+      try {
+        return await apiCall;
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 403)) {
+          console.warn(`Static data fetch failed with status ${error.response.status}`);
+          return { data: { data: [] as T[], meta: { totalPages: 1 } } };
         }
-      };
+        throw error;
+      }
+    };
 
-      const [servicesRes, combosRes, categoriesRes, typesRes, pricesRes] =
-        await Promise.all([
-          safeFetch<ServiceApi>(
-            CatalogServiceApi.getServices({
-              active: "true",
-              limit: "100",
-              param,
-            }),
-          ),
-          safeFetch<ComboApi>(
-            CatalogServiceApi.getCombos({ active: "true", limit: "100" }),
-          ),
-          safeFetch<CategoryApi>(
-            CatalogServiceApi.getCategories({ active: "true", limit: "100" }),
-          ),
-          safeFetch<TypeVehicleApi>(
-            CatalogServiceApi.getTypesVehicles({
-              active: "true",
-              limit: "100",
-            }),
-          ),
-          safeFetch<ServicePriceApi>(
-            CatalogServiceApi.getServicesPrices({
-              active: "true",
-              limit: "100",
-            }),
-          ),
-        ]);
+    try {
+      const [categoriesRes, typesRes, pricesRes] = await Promise.all([
+        safeFetch<CategoryApi>(
+          CatalogServiceApi.getCategories({ active: "true", limit: "100" }),
+        ),
+        safeFetch<TypeVehicleApi>(
+          CatalogServiceApi.getTypesVehicles({ active: "true", limit: "100" }),
+        ),
+        safeFetch<ServicePriceApi>(
+          CatalogServiceApi.getServicesPrices({ active: "true", limit: "100" }),
+        ),
+      ]);
 
       const serviceCategories = categoriesRes.data.data.filter(
         (c: CategoryApi) => c.type === "S",
       );
       setCategories(serviceCategories);
-
-      const types = typesRes.data.data;
-      const allPrices = pricesRes.data.data;
-      setRawPricesRelations(allPrices);
-
-      const formattedServices: CatalogService[] = servicesRes.data.data.map(
-        (srv: ServiceApi) => {
-          // LÓGICA 100% DINÁMICA
-          const servicePrices: CatalogServicePrice[] = types.map(
-            (tv: TypeVehicleApi) => {
-              const existingPrice = allPrices.find(
-                (p: ServicePriceApi) =>
-                  p.serviceId === srv.serviceId &&
-                  p.typeVehicleId === tv.typeVehicleId,
-              );
-              return {
-                relationId: existingPrice
-                  ? existingPrice.serviceTypeVehicleId
-                  : null,
-                typeVehicleId: tv.typeVehicleId,
-                typeVehicleName: tv.name,
-                price: existingPrice ? Number(existingPrice.price) : null,
-              };
-            },
-          );
-
-          return {
-            id: srv.serviceId,
-            name: srv.name,
-            category: srv.category.name,
-            comissionPercentage: srv.comissionPercentage,
-            prices: servicePrices,
-          };
-        },
-      );
-
-      setServices(formattedServices);
-      setCombos(combosRes.data.data);
-      console.log(formattedServices);
-      console.log(combosRes.data.data);
-    } catch (error: unknown) {
-      console.error("Error crítico cargando catálogo:", error);
-    } finally {
-      setIsLoading(false);
+      setAllTypes(typesRes.data.data);
+      setRawPricesRelations(pricesRes.data.data);
+    } catch (error) {
+      console.error("Error loading static data:", error);
     }
   }, []);
 
   useEffect(() => {
+    fetchStaticData();
+  }, [fetchStaticData]);
+
+  // --- Carga de servicios paginados (reactiva a filtros) ---
+  const fetchServices = useCallback(
+    async (param: string = "", page: number = 1, active: boolean = true) => {
+      setIsLoading(true);
+      try {
+        const safeFetch = async <T>(
+          apiCall: Promise<{ data: { data: T[]; meta?: unknown } }>,
+        ) => {
+          try {
+            return await apiCall;
+          } catch (error: unknown) {
+            if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 403)) {
+              console.warn(`Dynamic data fetch failed with status ${error.response.status}`);
+              return { data: { data: [] as T[], meta: { totalPages: 1 } } };
+            }
+            throw error;
+          }
+        };
+
+        const [servicesRes, combosRes] = await Promise.all([
+          safeFetch<ServiceApi>(
+            CatalogServiceApi.getServices({
+              active: active.toString(),
+              limit: "5",
+              page: page.toString(),
+              param,
+            }),
+          ),
+          safeFetch<ComboApi>(
+            CatalogServiceApi.getCombos({
+              active: isActiveCombos.toString(),
+              limit: "50",
+            }),
+          ),
+        ]);
+
+        // Mapear servicios usando los datos estáticos del closure
+        const formattedServices: CatalogService[] = servicesRes.data.data.map(
+          (srv: ServiceApi) => {
+            const servicePrices: CatalogServicePrice[] = allTypes.map(
+              (tv: TypeVehicleApi) => {
+                const existingPrice = rawPricesRelations.find(
+                  (p: ServicePriceApi) =>
+                    p.serviceId === srv.serviceId &&
+                    p.typeVehicleId === tv.typeVehicleId,
+                );
+                return {
+                  relationId: existingPrice
+                    ? existingPrice.serviceTypeVehicleId
+                    : null,
+                  typeVehicleId: tv.typeVehicleId,
+                  typeVehicleName: tv.name,
+                  price: existingPrice ? Number(existingPrice.price) : null,
+                };
+              },
+            );
+
+            return {
+              id: srv.serviceId,
+              name: srv.name,
+              category: srv.category?.name || "Sin Categoría",
+              comissionPercentage: srv.comissionPercentage,
+              prices: servicePrices,
+            };
+          },
+        );
+
+        setServices(formattedServices);
+
+        setCombos(combosRes.data?.data || []);
+        setTotalPages((servicesRes.data as { meta?: { totalPages?: number } })?.meta?.totalPages || 1);
+      } catch (error: unknown) {
+        console.error("Error in fetchServices:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [allTypes, rawPricesRelations, isActiveCombos],
+  );
+
+  // Refetch cuando cambian los datos estáticos también (para que el mapa de precios funcione)
+  const fetchData = useCallback(
+    async (param: string = "", page: number = 1, active: boolean = true) => {
+      await fetchServices(param, page, active);
+    },
+    [fetchServices],
+  );
+
+  useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchData(searchTerm);
-    }, 500);
+      fetchServices(searchTerm, currentPage, isActiveServices);
+    }, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, fetchData]);
+  }, [searchTerm, currentPage, isActiveServices, fetchServices]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -158,7 +203,7 @@ export const useCatalog = () => {
         comissionPercentage: Number(newServiceForm.comissionPercentage),
       });
       setNewServiceForm({ name: "", categoryId: "", comissionPercentage: "" });
-      await fetchData();
+      await fetchData(searchTerm, currentPage, isActiveServices);
       return true;
     } catch (error: unknown) {
       console.error("Error al crear servicio:", error);
@@ -172,10 +217,24 @@ export const useCatalog = () => {
     setIsSubmitting(true);
     try {
       await CatalogServiceApi.deleteService(id);
-      await fetchData();
+      await fetchData(searchTerm, currentPage, isActiveServices);
       return true;
     } catch (error: unknown) {
       console.error("Error al eliminar servicio:", error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const restoreService = async (id: number) => {
+    setIsSubmitting(true);
+    try {
+      await CatalogServiceApi.restoreService(id);
+      await fetchData(searchTerm, currentPage, isActiveServices);
+      return true;
+    } catch (error: unknown) {
+      console.error("Error al restaurar servicio:", error);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -189,7 +248,7 @@ export const useCatalog = () => {
     setIsSubmitting(true);
     try {
       await CatalogServiceApi.updateService(id, payload);
-      await fetchData();
+      await fetchData(searchTerm, currentPage, isActiveServices);
       return true;
     } catch (error: unknown) {
       console.error("Error al actualizar servicio:", error);
@@ -226,7 +285,8 @@ export const useCatalog = () => {
           }
         });
       await Promise.all(promises);
-      await fetchData();
+      // Recargar también datos estáticos (precios actualizados)
+      await fetchStaticData();
       return true;
     } catch (error: unknown) {
       console.error("Error al guardar tarifas:", error);
@@ -260,17 +320,12 @@ export const useCatalog = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const relatedTypeIds = rawPricesRelations
-        .filter((rel) =>
-          newComboForm.selectedServiceIds.includes(rel.serviceId),
-        )
-        .map((rel) => rel.serviceTypeVehicleId);
-
       const payload: CreateComboPayload = {
         name: newComboForm.name,
         discountPercentage: Number(newComboForm.discountPercentage),
         isPromotion: newComboForm.isPromotion,
-        servicesTypeVehicleIds: relatedTypeIds,
+        expirationDate: newComboForm.isPromotion && newComboForm.expirationDate ? new Date(newComboForm.expirationDate).toISOString() : null,
+        serviceIds: newComboForm.selectedServiceIds,
       };
 
       await CatalogServiceApi.createCombo(payload);
@@ -278,9 +333,10 @@ export const useCatalog = () => {
         name: "",
         discountPercentage: "",
         isPromotion: false,
+        expirationDate: "",
         selectedServiceIds: [],
       });
-      await fetchData();
+      await fetchData(searchTerm, currentPage, isActiveServices);
       return true;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -297,19 +353,16 @@ export const useCatalog = () => {
   const editCombo = async (id: number, formData: ComboFormState) => {
     setIsSubmitting(true);
     try {
-      const relatedTypeIds = rawPricesRelations
-        .filter((rel) => formData.selectedServiceIds.includes(rel.serviceId))
-        .map((rel) => rel.serviceTypeVehicleId);
-
       const payload: Partial<CreateComboPayload> = {
         name: formData.name,
         discountPercentage: Number(formData.discountPercentage),
         isPromotion: formData.isPromotion,
-        servicesTypeVehicleIds: relatedTypeIds,
+        expirationDate: formData.isPromotion && formData.expirationDate ? new Date(formData.expirationDate).toISOString() : null,
+        serviceIds: formData.selectedServiceIds,
       };
 
       await CatalogServiceApi.updateCombo(id, payload);
-      await fetchData();
+      await fetchData(searchTerm, currentPage, isActiveServices);
       return true;
     } catch (error: unknown) {
       console.error("Error al actualizar combo:", error);
@@ -323,10 +376,24 @@ export const useCatalog = () => {
     setIsSubmitting(true);
     try {
       await CatalogServiceApi.deleteCombo(id);
-      await fetchData();
+      await fetchData(searchTerm, currentPage, isActiveServices);
       return true;
     } catch (error: unknown) {
       console.error("Error al eliminar combo:", error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const restoreCombo = async (id: number) => {
+    setIsSubmitting(true);
+    try {
+      await CatalogServiceApi.restoreCombo(id);
+      await fetchData(searchTerm, currentPage, isActiveServices);
+      return true;
+    } catch (error: unknown) {
+      console.error("Error al restaurar combo:", error);
       return false;
     } finally {
       setIsSubmitting(false);
@@ -346,13 +413,22 @@ export const useCatalog = () => {
     handleChange,
     createService,
     deleteService,
+    restoreService,
     updateService,
     saveServicePrices,
+    isActiveServices,
+    setIsActiveServices,
+    isActiveCombos,
+    setIsActiveCombos,
     newComboForm,
     handleComboChange,
     toggleServiceInCombo,
     createCombo,
     deleteCombo,
     editCombo,
+    restoreCombo,
+    currentPage,
+    setCurrentPage,
+    totalPages,
   };
 };

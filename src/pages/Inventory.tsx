@@ -11,6 +11,7 @@ import EditProductModal from "../components/inventory/EditProductModal";
 import DeleteProductModal from "../components/inventory/DeleteProductModal";
 import RestoreProductModal from "../components/inventory/RestoreClientModal";
 import ViewProductModal from "../components/inventory/ViewProductModal"; 
+import DecreaseStockModal from "../components/inventory/DecreaseStockModal";
 
 import Alert from "../components/Alert";
 
@@ -46,7 +47,8 @@ export default function Inventory() {
     activeFilter,
     handleFilterChange,
     restoreProduct,
-    inventoryTotals, 
+    inventoryTotals,
+    decreaseStock,
   } = useInventory();
 
   const { modals, toggleModal } = useModals();
@@ -152,10 +154,28 @@ export default function Inventory() {
     return false;
   };
 
+  const handleOpenDecreaseStock = (item: Item) => {
+    setCurrentProduct(item as unknown as Product);
+    toggleModal("decreaseStock", true);
+  };
+
+  const handleDecreaseStockConfirm = async (payload: { items: { productId: number; stock: number; unitType: string }[] }) => {
+    const success = await decreaseStock(payload);
+    if (success) {
+      setSuccessMessage("Stock decrementado con éxito");
+      setTimeout(() => setSuccessMessage(null), 3000);
+      return true;
+    }
+    return false;
+  };
+
   const actionProps = activeFilter !== "INACTIVOS"
     ? {
         ...(hasPermission("PRODUCTS", "R")&&{onView: handleOpenDetails}),
-        ...(hasPermission("PRODUCTS", "U") && {onEdit: handleOpenEdit}),
+        ...(hasPermission("PRODUCTS", "U") && {
+          onEdit: handleOpenEdit,
+          onDecreaseStock: handleOpenDecreaseStock
+        }),
         ...(hasPermission("PRODUCTS", "D") && {onDelete: handleOpenDelete}),
       }
     : {
@@ -351,6 +371,14 @@ export default function Inventory() {
         isOpen={modals.details}
         onClose={() => toggleModal("details", false)}
         product={currentProduct}
+      />
+
+      <DecreaseStockModal
+        isOpen={modals.decreaseStock || false}
+        onClose={() => toggleModal("decreaseStock", false)}
+        product={currentProduct}
+        onDecrease={handleDecreaseStockConfirm}
+        isLoading={isSubmitting}
       />
 
     </>

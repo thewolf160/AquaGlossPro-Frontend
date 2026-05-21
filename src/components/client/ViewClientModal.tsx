@@ -58,6 +58,16 @@ export default function ViewClientModal({ isOpen, onClose, client }: ViewClientM
             readOnly
           />
         </div>
+        <div>
+          <Input
+            name="email"
+            label="Correo Electrónico:"
+            type="email"
+            value={client.email || ""}
+            icon={<i className="bi bi-envelope text-xl" />}
+            readOnly
+          />
+        </div>
       </div>
     </Modal>
   );

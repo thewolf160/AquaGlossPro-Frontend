@@ -1,4 +1,3 @@
-// src/hooks/useServiceHistory.ts
 import { useState, useEffect } from 'react';
 import { SalesService } from '../services/sales.services';
 import type { SaleItem } from '../types/kanban.types';
@@ -6,23 +5,40 @@ import type { SaleItem } from '../types/kanban.types';
 export const useServiceHistory = () => {
   const [sales, setSales] = useState<SaleItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  
-  // Filtros
   const [searchParam, setSearchParam] = useState("");
-  const [statusFilter, setStatusFilter] = useState(""); 
-  const [dateFilter, setDateFilter] = useState(""); 
+  const [dateFilter, setDateFilter] = useState({ startDate: "", endDate: "" });
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearch(searchParam);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchParam]);
+
   const fetchSales = async () => {
     setIsLoading(true);
     try {
-      const response = await SalesService.getAll({
+      const params: any = {
         page: currentPage.toString(),
         limit: "10",
-        param: searchParam,
-        statusWashing: statusFilter,
-        date: dateFilter
-      });
+      };
+
+      if (debouncedSearch) {
+        params.param = debouncedSearch;
+      }
+      if (dateFilter.startDate) {
+        params.startDate = dateFilter.startDate;
+      }
+      if (dateFilter.endDate) {
+        params.endDate = `${dateFilter.endDate}T23:59:59`;
+      }
+
+      const response = await SalesService.getAll(params);
+      
       setSales(response.data);
       setTotalPages(response.meta.totalPages);
     } catch (error) {
@@ -33,21 +49,34 @@ export const useServiceHistory = () => {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => fetchSales(), 500); 
-    return () => clearTimeout(timer);
-  }, [currentPage, searchParam, statusFilter, dateFilter]);
+    fetchSales();
+  }, [currentPage, debouncedSearch, dateFilter]);
+
+  const changeStatus = async (id: number, newStatus: "P" | "C") => {
+    setIsSubmitting(true);
+    try {
+      await SalesService.updateStatusPayment(id, newStatus);
+      await fetchSales(); 
+      return true;
+    } catch (error) {
+      console.error("Error al cambiar estado:", error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return {
     sales,
     isLoading,
+    isSubmitting,
     currentPage,
     setCurrentPage,
     totalPages,
     searchParam,
     setSearchParam,
-    statusFilter,
-    setStatusFilter,
     dateFilter,
-    setDateFilter
+    setDateFilter,
+    changeStatus
   };
 };

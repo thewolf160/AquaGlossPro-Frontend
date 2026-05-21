@@ -80,8 +80,19 @@ export default function AddClientModal({
             name="numberPhone" 
             label="Teléfono:" 
             type="tel" 
-            placeholder="04120000000" 
+            placeholder="+58-4120000000" 
             value={formState.form.numberPhone}
+            onChange={onChange}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          <Input 
+            name="email" 
+            label="Correo Electrónico:" 
+            type="email" 
+            placeholder="cliente@correo.com" 
+            value={formState.form.email}
             onChange={onChange}
           />
         </div>

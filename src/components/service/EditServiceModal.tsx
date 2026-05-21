@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "../Modal/Modal";
 import Input from "../Modal/Input";
 import ActionButton from "../Modal/ActionButton";
@@ -15,13 +15,9 @@ interface EditServiceModalProps {
 
 export default function EditServiceModal({ isOpen, onClose, editingService, categories, onEdit, isLoading }: EditServiceModalProps) {
   const [formData, setFormData] = useState<ServiceFormState>({ name: "", categoryId: "", comissionPercentage: "" });
-  const [prevServiceId, setPrevServiceId] = useState<number | null>(null);
-  const [prevIsOpen, setPrevIsOpen] = useState<boolean>(false);
 
-  if (isOpen !== prevIsOpen || (editingService && editingService.id !== prevServiceId)) {
-    setPrevIsOpen(isOpen);
-    setPrevServiceId(editingService?.id || null);
-
+  // Inicializar el formulario cuando abre el modal o cambian las categorías (que pueden llegar después)
+  useEffect(() => {
     if (isOpen && editingService) {
       const categoryObj = categories.find(c => c.name === editingService.category);
       setFormData({
@@ -32,7 +28,7 @@ export default function EditServiceModal({ isOpen, onClose, editingService, cate
     } else if (!isOpen) {
       setFormData({ name: "", categoryId: "", comissionPercentage: "" });
     }
-  }
+  }, [isOpen, editingService, categories]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));

@@ -12,6 +12,9 @@ interface ServiceDetail {
   serviceName: string;
   typeVehicle: string;
   employee: Employee; 
+  basePrice?: string | number;
+  discount?: string | number;
+  salePrice?: number;
 }
 
 export interface SaleItem {

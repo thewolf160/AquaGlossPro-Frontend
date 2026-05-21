@@ -45,6 +45,10 @@ export const CatalogServiceApi = {
     const { data } = await api.delete(`/services/${id}`);
     return data;
   },
+  restoreService: async (id: number) => {
+    const { data } = await api.patch(`/services/restore/${id}`);
+    return data;
+  },
   updateService: async (id: number, payload: Partial<CreateServicePayload>) => {
     const { data } = await api.patch(`/services/${id}`, payload);
     return data;
@@ -75,6 +79,11 @@ export const CatalogServiceApi = {
   deleteCombo: async (id: number) => {
     const { data } = await api.delete(`/combos/${id}`);
     return data;
-  }
+  },
+
+  restoreCombo: async (id: number) => {
+    const { data } = await api.patch(`/combos/restore/${id}`);
+    return data;
+  },
 
 };

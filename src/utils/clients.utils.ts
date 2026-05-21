@@ -16,6 +16,7 @@ export const transformData = (data: ClientApi[]) => {
       names: capitalizeFull(client.names),
       lastnames: capitalizeFull(client.lastnames),
       numberPhone: client.numberPhone,
+      email: client.email,
       countVehicles: client.countVehicles || 0, 
       vehicles: client.vehicles || [],
     };

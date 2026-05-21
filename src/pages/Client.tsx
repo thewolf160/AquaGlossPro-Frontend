@@ -56,7 +56,9 @@ function Clients() {
   const [vehicleToDelete, setVehicleToDelete] = useState<{ id: string; plate: string } | null>(null);
 
   const globalStats = {
-    totalClients: clientsData.totals?.general || 0,
+    totalClients: isActiveView 
+      ? (clientsData.totals?.active || 0)
+      : (clientsData.totals?.inactive || 0),
     totalVehicles: clientsData.totals?.totalVehicles || 0,
     avgVehicles: clientsData.totals?.vehicleAverage || "0",
     fleets: clientsData.totals?.clientsWith3PlusVehicles || 0,
