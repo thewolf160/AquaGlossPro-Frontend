@@ -79,11 +79,32 @@ export const useClientDashboard = () => {
             else if (sale?.statusWashing === 'I') readableStatus = "En Progreso";
             else if (sale?.statusWashing === 'D') readableStatus = "Completado";
 
+            let dateStr = "Fecha desconocida";
+            if (sale?.saleDate) {
+              // Backend returns "DD-MM-YYYY HH:mm" (in UTC timezone)
+              const parts = sale.saleDate.split(' ');
+              if (parts.length > 0) {
+                const dateParts = parts[0].split('-');
+                if (dateParts.length === 3) {
+                  const day = dateParts[0];
+                  const month = dateParts[1];
+                  const year = dateParts[2];
+                  // Append Z so JS knows this is UTC time, then it converts to Local Time!
+                  const timeStr = parts[1] ? parts[1] + ":00Z" : "00:00:00Z";
+                  const isoString = `${year}-${month}-${day}T${timeStr}`;
+                  const d = new Date(isoString);
+                  if (!isNaN(d.getTime())) {
+                    dateStr = d.toLocaleDateString("es-ES", {
+                      year: 'numeric', month: 'short', day: 'numeric'
+                    });
+                  }
+                }
+              }
+            }
+
             return {
               id: sale?.saleId,
-              date: new Date(sale?.saleDate || new Date()).toLocaleDateString("es-ES", {
-                year: 'numeric', month: 'short', day: 'numeric'
-              }),
+              date: dateStr,
               vehicle: vehicle?.plate || "Vehículo",
               package: packageName,
               status: readableStatus,

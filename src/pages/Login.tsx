@@ -71,8 +71,13 @@ function Login() {
       const permissionsData = response.data.permissions;
       localStorage.setItem("user_permissions", JSON.stringify(permissionsData))
 
-      navigate("/home", { replace: true });
-    } catch (error: unknown) {
+      const roleName = response.data.role?.name?.toLowerCase()?.trim() || "";
+      if (roleName === "client" || roleName === "cliente") {
+        navigate("/clientHome", { replace: true });
+      } else {
+        navigate("/home", { replace: true });
+      }
+    } catch (error: any) {
       let errorMessage = "Ocurrió un error inesperado";
 
       if (axios.isAxiosError(error)) {
@@ -95,6 +100,8 @@ function Login() {
               errorMessage = "Error al procesar la solicitud";
           }
         }
+      } else if (error && error.message) {
+        errorMessage = "Error JS: " + error.message;
       }
 
       setFormState((prev) => ({

@@ -52,7 +52,7 @@ export default function ClientHeader({ vehicles, isLoadingVehicles }: ClientHead
             <div className="relative">
               <div 
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-3 border-l border-gray-300 pl-4 cursor-pointer bg-blue-700 hover:bg-blue-800 p-1 pr-3 rounded-lg transition-colors"
+                className="flex items-center gap-3 cursor-pointer bg-blue-700 hover:bg-blue-800 p-1 px-3 rounded-lg transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold text-sm border border-slate-200">
                   {userInitials}
@@ -92,7 +92,7 @@ export default function ClientHeader({ vehicles, isLoadingVehicles }: ClientHead
             </div>
           ) : (
             <>
-              {vehicles.map((vehiculo, index) => (
+              {(vehicles || []).map((vehiculo, index) => (
                 <div key={index} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-4 rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl shadow-sm">
@@ -108,7 +108,7 @@ export default function ClientHeader({ vehicles, isLoadingVehicles }: ClientHead
                 </div>
               ))}
 
-              {vehicles.length === 0 && (
+              {(vehicles || []).length === 0 && (
                 <p className="text-center text-slate-500 py-4 italic">No tienes vehículos registrados.</p>
               )}
             </>

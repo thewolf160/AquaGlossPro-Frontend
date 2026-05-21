@@ -53,7 +53,14 @@ const menuItems: SidebarItem[] = [
       { label: "Lavados del dia", path: "/washes", module: "SALES" },
     ]
   },
-  { path: "/sales", label: "Servicios", icon: "bi bi-currency-dollar", module: "SALES" },
+  {
+    label: "Gestion de Servicios",
+    icon: "bi bi-currency-dollar",
+    subItems: [
+      { label: "Servicios", path: "/sales", module: "SALES" },
+      { label: "Registro de Servicios", path: "/serviceHistory", module: "SALES" },
+    ]
+  },
   { path: "/reports", label: "Reportes", icon: "bi bi-graph-up", module: "SALES" }, // Ajusta según convenga
   { path: "/settings", label: "Ajustes", icon: "bi bi-gear" }, // Sin módulo = Libre acceso
 ];

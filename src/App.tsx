@@ -9,7 +9,6 @@ import Users from "./pages/Users";
 import Vehicles from "./pages/Vehicles";
 import Roles from "./pages/Roles";
 import ClientDisplay from "./pages/ClientHome";
-import ClientHeader from "./components/ClientHeader";
 import Clients from "./pages/Client";
 import ProtectedRoute from "./routes/ProtectedRoutes";
 import Reports from "./pages/Reports";import SettingsMenu from "./pages/Settings/SettingsMenu";
@@ -26,11 +25,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
+      <Route
           path="/clientHome"
           element={
             <div className="min-h-screen bg-gray-50">
-              <ClientHeader />
               <ClientDisplay />
             </div>
           }

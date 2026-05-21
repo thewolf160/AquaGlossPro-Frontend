@@ -22,7 +22,7 @@ export default function ClientDashboard() {
       header: "PAQUETE DE SERVICIO", 
       key: "package", 
       render: (item: Item) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <div className="w-2 h-2 rounded-full bg-blue-500"></div>
           <span className="font-medium text-gray-800">{(item as unknown as WashHistory).package}</span>
         </div>
@@ -45,16 +45,7 @@ export default function ClientDashboard() {
         )
       }
     },
-    { header: "PRECIO", key: "price", render: (item: Item) => <span className="font-bold text-gray-900">${(item as unknown as WashHistory).price.toFixed(2)}</span> },
-    { 
-      header: "", 
-      key: "download", 
-      render: () => (
-        <button className="text-gray-400 hover:text-blue-600 transition-colors">
-          <i className="bi bi-download text-lg"></i>
-        </button>
-      ) 
-    }
+    { header: "PRECIO", key: "price", render: (item: Item) => <span className="font-bold text-gray-900">${(item as unknown as WashHistory).price.toFixed(2)}</span> }
   ];
 
   if (isLoading) {
@@ -135,10 +126,11 @@ export default function ClientDashboard() {
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-gray-50 rounded-xl p-6">
                     <div className="rounded-xl bg-slate-800 h-44 lg:h-full min-h-40 relative overflow-hidden flex items-end p-6 shadow-inner">
+                      <img src="/login.webp" alt="Vehículo" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay" />
                       <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent z-10"></div>
                       <div className="relative z-20">
                         <h4 className="text-white font-black text-xl">{activeWash.package}</h4>
-                        <p className="text-gray-300 text-sm">Servicio: #{activeWash.id}</p>
+                        <p className="text-gray-300 text-sm">Venta: #{activeWash.id}</p>
                       </div>
                     </div>
 
