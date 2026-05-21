@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import Modal from "../components/Modal/Modal";
@@ -6,26 +6,22 @@ import Modal from "../components/Modal/Modal";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
-type ChartTabType = "ingresos" | "egresos";
+
+
+interface SalesData {
+  paymentMethodId: number;
+  name: string;
+  total: number;
+}
+
 
 interface PaymentMethodChartProps {
-  efectivoAmount?: number;
-  pagoMovilAmount?: number;
-  divisaAmount?: number;
-  puntoAmount?: number;
-  comprasInventarioAmount?: number;
-  pagoPersonalAmount?: number;
+  salesData?: SalesData[];
 }
 
 export default function PaymentMethodChart({
-  efectivoAmount = 0,
-  pagoMovilAmount = 0,
-  divisaAmount = 0,
-  puntoAmount = 0,
-  comprasInventarioAmount = 250,
-  pagoPersonalAmount = 180,
+  salesData = [],
 }: PaymentMethodChartProps) {
-  const [activeTab, setActiveTab] = useState<ChartTabType>("ingresos");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeTimeFilter, setActiveTimeFilter] =
@@ -44,33 +40,41 @@ export default function PaymentMethodChart({
     custom: "total esp",
   };
 
-  const isIngresos = activeTab === "ingresos";
+  
+  const montos = useMemo(() => {
+    const getMonto = (nombresPermitidos: string[]) => {
+      const metodo = salesData.find((s) =>
+        nombresPermitidos.includes(s.name.toUpperCase()),
+      );
+      return metodo ? Number(metodo.total) : 0;
+    };
 
-  const totalIngresos =
-    (efectivoAmount || 0) +
-    (pagoMovilAmount || 0) +
-    (divisaAmount || 0) +
-    (puntoAmount || 0);
-  const totalEgresos =
-    (comprasInventarioAmount || 0) + (pagoPersonalAmount || 0);
+    return {
+      efectivo: getMonto(["EFECTIVO"]),
+      pagoMovil: getMonto(["PAGO MOVIL", "PAGO MÓVIL", "PAGOMOVIL"]),
+      divisa: getMonto(["DIVISA", "DIVISAS", "DOLARES"]),
+      punto: getMonto(["PUNTO", "PUNTO DE VENTA", "TARJETA"]),
+    };
+  }, [salesData]);
 
-  const currentTotal = isIngresos ? totalIngresos : totalEgresos;
+  
+  const currentTotal =
+    montos.efectivo + montos.pagoMovil + montos.divisa + montos.punto;
 
-  const currentData = isIngresos
-    ? [efectivoAmount, pagoMovilAmount, divisaAmount, puntoAmount]
-    : [comprasInventarioAmount, pagoPersonalAmount];
-
-  const currentLabels = isIngresos
-    ? ["Efectivo", "Pago Móvil", "Divisa", "Punto"]
-    : ["Compras (Inv.)", "Nómina y Comisiones"];
-
-  const currentColorsHex = isIngresos
-    ? ["#3b82f6", "#8b5cf6", "#a16207", "#06b6d4"]
-    : ["#ef4444", "#f97316"];
-
-  const currentColorsTailwind = isIngresos
-    ? ["bg-blue-500", "bg-violet-500", "bg-yellow-700", "bg-cyan-500"]
-    : ["bg-red-500", "bg-orange-500"];
+  const currentData = [
+    montos.efectivo,
+    montos.pagoMovil,
+    montos.divisa,
+    montos.punto,
+  ];
+  const currentLabels = ["Efectivo", "Pago Móvil", "Divisa", "Punto"];
+  const currentColorsHex = ["#3b82f6", "#8b5cf6", "#a16207", "#06b6d4"];
+  const currentColorsTailwind = [
+    "bg-blue-500",
+    "bg-violet-500",
+    "bg-yellow-700",
+    "bg-cyan-500",
+  ];
 
   const getPercentage = (amount: number) => {
     if (currentTotal === 0) return 0;
@@ -82,12 +86,16 @@ export default function PaymentMethodChart({
       ? `${(currentTotal / 1000).toFixed(1)}k`
       : `$${currentTotal}`;
 
+  // 4. Lógica Anti-Cero (Para que no desaparezca la dona si no hay ventas)
+  const displayData = currentTotal === 0 ? [1] : currentData;
+  const displayColors = currentTotal === 0 ? ["#f1f5f9"] : currentColorsHex;
+
   const data = {
     labels: currentLabels,
     datasets: [
       {
-        data: currentData,
-        backgroundColor: currentColorsHex,
+        data: displayData,
+        backgroundColor: displayColors,
         borderWidth: 0,
         cutout: "80%",
       },
@@ -102,9 +110,10 @@ export default function PaymentMethodChart({
       tooltip: {
         callbacks: {
           label: (context: any) => {
+            if (currentTotal === 0) return " Sin datos en este periodo";
             const label = context.label || "";
             const value = context.parsed || 0;
-            return `${label}: $${value} (${getPercentage(value)}%)`;
+            return ` ${label}: $${value.toFixed(2)} (${getPercentage(value)}%)`;
           },
         },
       },
@@ -120,35 +129,13 @@ export default function PaymentMethodChart({
 
   return (
     <>
-      {/* 1. Fijamos la altura de la tarjeta principal (h-[520px]) para que no salte */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 h-[520px] flex flex-col transition-all">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="font-bold text-slate-800 text-lg">
-              Flujo de Capital
+              Flujo de Ingresos
             </h3>
-            <div className="flex bg-slate-100 p-1 rounded-lg mt-2 w-max">
-              <button
-                onClick={() => setActiveTab("ingresos")}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
-                  isIngresos
-                    ? "bg-white shadow-sm text-blue-600"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                Ingresos
-              </button>
-              <button
-                onClick={() => setActiveTab("egresos")}
-                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
-                  !isIngresos
-                    ? "bg-white shadow-sm text-red-600"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                Egresos
-              </button>
-            </div>
+            {/* Las pestañas de Ingresos/Egresos han sido removidas */}
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -158,13 +145,10 @@ export default function PaymentMethodChart({
           </button>
         </div>
 
-        {/* 2. Fijamos la altura del contenedor del gráfico (h-60) */}
         <div className="relative h-60 w-60 mx-auto flex items-center justify-center">
           <Doughnut data={data} options={options} />
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <p
-              className={`text-3xl font-black leading-none ${isIngresos ? "text-slate-900" : "text-rose-950"}`}
-            >
+            <p className="text-3xl font-black leading-none text-slate-900">
               {formattedTotal}
             </p>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -173,7 +157,6 @@ export default function PaymentMethodChart({
           </div>
         </div>
 
-        {/* 3. Fijamos la altura de la leyenda (h-[160px]) para que el espacio de 4 filas siempre se respete */}
         <div className="pt-6 border-t border-slate-100 mt-auto h-[160px] flex flex-col justify-start gap-4">
           {currentLabels.map((label, index) => (
             <div
@@ -182,7 +165,11 @@ export default function PaymentMethodChart({
             >
               <div className="flex items-center gap-3">
                 <span
-                  className={`w-3 h-3 rounded-full ${currentColorsTailwind[index]}`}
+                  className={`w-3 h-3 rounded-full ${
+                    currentTotal === 0
+                      ? "bg-slate-200"
+                      : currentColorsTailwind[index]
+                  }`}
                 ></span>
                 <span className="font-medium text-slate-700">{label}</span>
               </div>
@@ -194,7 +181,6 @@ export default function PaymentMethodChart({
         </div>
       </div>
 
-      {/* MODAL DE FILTROS */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

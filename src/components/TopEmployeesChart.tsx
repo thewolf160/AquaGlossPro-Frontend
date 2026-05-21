@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +14,20 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
-export default function TopEmployeesChart() {
+
+interface TopEmployeeVehiclesData {
+  employeeId: number;
+  fullName: string;
+  vehiclesWashed: number;
+}
+
+interface TopEmployeesChartProps {
+  employeesData?: TopEmployeeVehiclesData[];
+}
+
+export default function TopEmployeesChart({
+  employeesData = [],
+}: TopEmployeesChartProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeTimeFilter, setActiveTimeFilter] =
@@ -33,18 +46,35 @@ export default function TopEmployeesChart() {
     custom: "rango específico",
   };
 
+  // 2. Procesamos la data dinámicamente
+  const chartInfo = useMemo(() => {
+    if (!employeesData || employeesData.length === 0) {
+      return { labels: [], dataCounts: [] };
+    }
+
+    const labels = employeesData.map((e) => {
+      // Convertimos "MAURICIO VALERA" a "Mauricio V."
+      const parts = e.fullName.trim().split(" ");
+      const firstName = parts[0]
+        ? parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase()
+        : "";
+      const lastNameInitial = parts[1]
+        ? parts[1].charAt(0).toUpperCase() + "."
+        : "";
+      return `${firstName} ${lastNameInitial}`.trim();
+    });
+
+    const dataCounts = employeesData.map((e) => Number(e.vehiclesWashed));
+
+    return { labels, dataCounts };
+  }, [employeesData]);
+
   const data = {
-    labels: [
-      "Mauricio V.",
-      "José V.",
-      "Hendelberth E.",
-      "Keiber O.",
-      "Cristofer A.",
-    ],
+    labels: chartInfo.labels,
     datasets: [
       {
         label: "Vehículos Lavados",
-        data: [42, 35, 28, 24, 19],
+        data: chartInfo.dataCounts,
         backgroundColor: "#8b5cf6",
         borderRadius: 20,
         barThickness: 15,
@@ -79,8 +109,10 @@ export default function TopEmployeesChart() {
         ticks: {
           color: "#94a3b8",
           font: { size: 12 },
-          stepSize: 10,
+          stepSize: 5,
         },
+        
+        max: chartInfo.dataCounts.length === 0 ? 10 : undefined,
       },
       y: {
         grid: { display: false },
@@ -109,9 +141,8 @@ export default function TopEmployeesChart() {
 
   return (
     <>
-      <div className="bg-white p-6 pb-2 rounded-2xl shadow-sm border border-slate-50 h-full flex flex-col">
+      <div className="bg-white p-6 pb-2 rounded-2xl shadow-sm border border-slate-50 h-[520px] flex flex-col">
         <div className="flex justify-between items-start mb-6">
-          {/* CABECERA ULTRA LIMPIA (Idéntica a Servicios) */}
           <div>
             <h3 className="font-bold text-slate-800 text-lg leading-tight">
               Top Empleados (Vehículos Lavados)
@@ -131,12 +162,19 @@ export default function TopEmployeesChart() {
           </button>
         </div>
 
-        <div className="flex-grow h-[340px] w-full">
-          <Bar data={data} options={options} />
+        <div className="flex-grow h-full w-full relative">
+          {chartInfo.dataCounts.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="text-slate-400 font-medium">
+                No hay vehículos lavados en este periodo
+              </p>
+            </div>
+          ) : (
+            <Bar data={data} options={options} />
+          )}
         </div>
       </div>
 
-      {/* MODAL DE FILTROS */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -188,9 +226,7 @@ export default function TopEmployeesChart() {
               </button>
             </div>
           </div>
-
           <div className="divider my-0">Ó</div>
-
           <div>
             <p className="text-slate-700 font-medium mb-3">Elegir fechas:</p>
             <div className="flex flex-col sm:flex-row gap-4">

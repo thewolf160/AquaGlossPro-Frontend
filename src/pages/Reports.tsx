@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PaymentMethodChart from "../components/PaymentMethodChart";
 import MostRequestedServices from "../components/MostRequestedServices";
 import DynamicMetricsChart from "../components/DynamicMetricsChart";
@@ -8,15 +8,27 @@ import OperationalCloseChart from "../components/OperationalCloseChart";
 import Modal from "../components/Modal/Modal";
 import { hasPermission } from "../utils/checkPermissions.utils";
 
+import { useReports } from "../hooks/useReports";
+
+import {
+  exportReportsToExcel,
+  exportReportsToPDF,
+} from "../utils/exportReports";
+
 export default function Reports() {
+  const { fetchAllReports, metrics, isLoading } = useReports();
+
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportType, setExportType] = useState<"pdf" | "excel" | null>(null);
 
   const [activeTab, setActiveTab] = useState<"generales" | "operativos">(
     "generales",
   );
-
   const [selectedReports, setSelectedReports] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetchAllReports({ period: "today" });
+  }, [fetchAllReports]);
 
   const reportesGenerales = [
     { id: "ventas_metodo", name: "Ventas por Método de Pago" },
@@ -36,40 +48,47 @@ export default function Reports() {
     },
   ];
 
-  // Identificamos qué lista usar dependiendo de la pestaña activa
   const currentAvailableReports =
     activeTab === "generales" ? reportesGenerales : reportesOperativos;
 
   const handleOpenExportModal = (type: "pdf" | "excel") => {
     setExportType(type);
-    // Al abrir el modal, pre-seleccionamos todos los reportes por defecto
     setSelectedReports(currentAvailableReports.map((report) => report.id));
     setIsExportModalOpen(true);
   };
 
-  // Función para marcar/desmarcar un reporte
   const toggleReportSelection = (id: string) => {
-    setSelectedReports(
-      (prev) =>
-        prev.includes(id)
-          ? prev.filter((reportId) => reportId !== id) // Si ya está, lo quitamos
-          : [...prev, id], // Si no está, lo agregamos
+    setSelectedReports((prev) =>
+      prev.includes(id)
+        ? prev.filter((reportId) => reportId !== id)
+        : [...prev, id],
     );
   };
 
   const handleConfirmExport = () => {
-    console.log(`Exportando datos en formato: ${exportType?.toUpperCase()}`);
-    console.log("Reportes seleccionados para exportar:", selectedReports);
-    alert(
-      `¡Se han exportado ${selectedReports.length} reportes a ${exportType?.toUpperCase()} exitosamente!`,
-    );
+    const tabLabel = activeTab === "generales" ? "Generales" : "Operativos";
+
+    if (exportType === "excel") {
+      exportReportsToExcel(selectedReports, metrics, tabLabel);
+    } else if (exportType === "pdf") {
+      exportReportsToPDF(selectedReports, metrics, tabLabel);
+    }
+
     setIsExportModalOpen(false);
     setExportType(null);
   };
 
   return (
     <div className="p-6">
-      {/* 1. SECCIÓN FIJA: CARTAS DE ESTADÍSTICAS */}
+      {isLoading && (
+        <div className="fixed top-4 right-4 bg-white px-4 py-2 rounded-lg shadow-md border border-slate-100 flex items-center gap-3 z-50 animate-fade-in">
+          <span className="loading loading-spinner loading-sm text-blue-600"></span>
+          <span className="text-sm font-bold text-slate-700">
+            Actualizando métricas...
+          </span>
+        </div>
+      )}
+
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* PRODUCTOS MÁS UTILIZADOS */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-rose-200 hover:shadow-md transition-shadow flex items-center gap-4">
@@ -89,9 +108,11 @@ export default function Reports() {
           </div>
           <div>
             <p className="font-medium text-sm text-rose-700 leading-tight">
-              Productos Más Utilizados
+              Producto Más Utilizado
             </p>
-            <p className="text-2xl font-bold text-rose-900">Champú</p>
+            <p className="text-2xl font-bold text-rose-900 capitalize">
+              {metrics.topProducts[0]?.name?.toLowerCase() || "Sin datos"}
+            </p>
           </div>
         </div>
 
@@ -102,9 +123,11 @@ export default function Reports() {
           </div>
           <div>
             <p className="font-medium text-sm text-orange-500 leading-tight">
-              Total Servicios del Dia
+              Total Servicios del Día
             </p>
-            <p className="text-2xl font-bold text-orange-900">45</p>
+            <p className="text-2xl font-bold text-orange-900">
+              {metrics.totalServicesToday}
+            </p>
           </div>
         </div>
 
@@ -115,9 +138,11 @@ export default function Reports() {
           </div>
           <div>
             <p className="font-medium text-sm text-blue-500 leading-tight">
-              Metodo de Pago Más usado
+              Método Más Usado
             </p>
-            <p className="text-2xl font-bold text-blue-900">Efectivo</p>
+            <p className="text-2xl font-bold text-blue-900 capitalize">
+              {metrics.mostUsedPayment?.name?.toLowerCase() || "Sin datos"}
+            </p>
           </div>
         </div>
 
@@ -128,14 +153,15 @@ export default function Reports() {
           </div>
           <div>
             <p className="font-medium text-sm text-purple-500 leading-tight">
-              Vehiculo Más Frecuente
+              Vehículo Frecuente
             </p>
-            <p className="text-2xl font-bold text-purple-900">MED/Sedan</p>
+            <p className="text-xl font-bold text-purple-900 capitalize truncate w-32">
+              {metrics.mostFrequentVehicle?.name?.toLowerCase() || "Sin datos"}
+            </p>
           </div>
         </div>
       </section>
 
-      {/* 2. SELECTOR DE PESTAÑAS */}
       <section className="mt-8 mb-6 flex justify-center">
         <div className="inline-flex bg-slate-200/60 p-1.5 rounded-xl border border-slate-200">
           <button
@@ -146,10 +172,8 @@ export default function Reports() {
                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"
             }`}
           >
-            <i className="bi bi-bar-chart-fill"></i>
-            Reportes Generales
+            <i className="bi bi-bar-chart-fill"></i> Reportes Gerenciales
           </button>
-
           <button
             onClick={() => setActiveTab("operativos")}
             className={`px-8 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 flex items-center gap-2 ${
@@ -158,8 +182,7 @@ export default function Reports() {
                 : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"
             }`}
           >
-            <i className="bi bi-gear-fill"></i>
-            Reportes Operativos
+            <i className="bi bi-gear-fill"></i> Reportes Operativos
           </button>
         </div>
       </section>
@@ -170,19 +193,18 @@ export default function Reports() {
           <section className="grid grid-cols-1 xl:grid-cols-[1.2fr,2fr] gap-6 items-start">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
               <div className="lg:col-span-4">
-                <PaymentMethodChart
-                  efectivoAmount={720}
-                  pagoMovilAmount={300}
-                  divisaAmount={180}
-                  puntoAmount={450}
-                />
+                <PaymentMethodChart salesData={metrics.salesByPayment} />
               </div>
               <div className="lg:col-span-8">
-                <MostRequestedServices />
+                <MostRequestedServices servicesData={metrics.topServices} />
               </div>
             </div>
             <section className="mt-6 mb-10">
-              <DynamicMetricsChart />
+              <DynamicMetricsChart
+                vehiclesData={metrics.vehiclesByType}
+                productsData={metrics.topProducts}
+                employeesData={metrics.topEmployeesCommission}
+              />
             </section>
           </section>
         </div>
@@ -193,47 +215,37 @@ export default function Reports() {
         <div className="animate-fade-in">
           <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-4">
-              <WashedVehiclesChart
-                sedanAmount={45}
-                suvAmount={32}
-                camionetaAmount={18}
-                motoAmount={12}
-                compactoAmount={45}
-              />
+              <WashedVehiclesChart vehiclesData={metrics.vehiclesByType} />
             </div>
             <div className="lg:col-span-8">
-              <TopEmployeesChart />
+              <TopEmployeesChart employeesData={metrics.topEmployeesVehicles} />
             </div>
           </section>
 
           <section className="mt-6 mb-10">
-            <OperationalCloseChart />
+            <OperationalCloseChart closureData={metrics.operationalClosure} />
           </section>
         </div>
       )}
 
-      {/* 4. BOTONES DE EXPORTACIÓN - Solo si tiene permiso de lectura */}
       {hasPermission("COMISSIONS", "R") && (
         <section className="mt-8 flex flex-col sm:flex-row justify-end items-center gap-4 border-t border-slate-200 pt-6">
           <button
             onClick={() => handleOpenExportModal("pdf")}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-2.5 bg-red-50 border border-red-400 text-red-600 font-semibold rounded-lg hover:bg-red-100 transition-colors"
           >
-            <i className="bi bi-file-earmark-pdf text-lg"></i>
-            Exportar a PDF
+            <i className="bi bi-file-earmark-pdf text-lg"></i> Exportar a PDF
           </button>
-
           <button
             onClick={() => handleOpenExportModal("excel")}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-2.5 bg-green-50 border border-green-400 text-green-600 font-semibold rounded-lg hover:bg-green-100 transition-colors"
           >
-            <i className="bi bi-file-earmark-excel text-lg"></i>
-            Exportar a EXCEL
+            <i className="bi bi-file-earmark-excel text-lg"></i> Exportar a
+            EXCEL
           </button>
         </section>
       )}
 
-      {/* MODAL DE CONFIRMACIÓN DE EXPORTACIÓN */}
       <Modal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
@@ -267,29 +279,17 @@ export default function Reports() {
             </span>
             :
           </p>
-
-          {/* LISTA DE CHECKBOXES ESTILIZADOS */}
           <div className="space-y-2.5">
             {currentAvailableReports.map((report) => {
               const isSelected = selectedReports.includes(report.id);
-
               return (
                 <div
                   key={report.id}
                   onClick={() => toggleReportSelection(report.id)}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                    isSelected
-                      ? "border-blue-500 bg-blue-50/50"
-                      : "border-slate-100 hover:border-slate-200 hover:bg-slate-50"
-                  }`}
+                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${isSelected ? "border-blue-500 bg-blue-50/50" : "border-slate-100 hover:border-slate-200 hover:bg-slate-50"}`}
                 >
-                  {/* Icono de Check  */}
                   <div
-                    className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-                      isSelected
-                        ? "bg-blue-600 border-blue-600 text-white"
-                        : "border-2 border-slate-300 bg-white"
-                    }`}
+                    className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${isSelected ? "bg-blue-600 border-blue-600 text-white" : "border-2 border-slate-300 bg-white"}`}
                   >
                     {isSelected && (
                       <svg
@@ -306,7 +306,6 @@ export default function Reports() {
                       </svg>
                     )}
                   </div>
-
                   <span
                     className={`text-sm font-semibold ${isSelected ? "text-blue-900" : "text-slate-700"}`}
                   >

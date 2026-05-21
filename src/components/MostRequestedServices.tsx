@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +14,21 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
-export default function MostRequestedServices() {
+
+interface TopServiceData {
+  serviceId: number;
+  name: string;
+  count: number;
+}
+
+
+interface MostRequestedServicesProps {
+  servicesData?: TopServiceData[];
+}
+
+export default function MostRequestedServices({
+  servicesData = [],
+}: MostRequestedServicesProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeTimeFilter, setActiveTimeFilter] =
@@ -33,20 +47,26 @@ export default function MostRequestedServices() {
     custom: "rango de fechas especificas",
   };
 
+  
+  const chartInfo = useMemo(() => {
+    
+    if (!servicesData || servicesData.length === 0) {
+      return { labels: [], dataCounts: [] };
+    }
+
+    
+    const labels = servicesData.map((s) => s.name.toLowerCase());
+    const dataCounts = servicesData.map((s) => Number(s.count));
+
+    return { labels, dataCounts };
+  }, [servicesData]);
+
   const data = {
-    labels: [
-      "Lavado Express",
-      "Pulitura",
-      "Lavado de Motor",
-      "Detallado",
-      "Aspirado Interno",
-      "Aplicación de Cera",
-      "Descontaminación",
-    ],
+    labels: chartInfo.labels,
     datasets: [
       {
         label: "Servicios",
-        data: [35, 28, 22, 18, 15, 10, 6],
+        data: chartInfo.dataCounts,
         backgroundColor: "#3b82f6",
         borderRadius: 20,
         barThickness: 15,
@@ -83,6 +103,8 @@ export default function MostRequestedServices() {
           font: { size: 12 },
           stepSize: 10,
         },
+        
+        max: chartInfo.dataCounts.length === 0 ? 10 : undefined,
       },
       y: {
         grid: { display: false },
@@ -90,6 +112,11 @@ export default function MostRequestedServices() {
         ticks: {
           color: "#64748b",
           font: { weight: "bold" as const, size: 12 },
+          // Esto capitaliza la primera letra de cada servicio en la etiqueta Y
+          callback: function (value: any, index: number, values: any) {
+            const labelStr = data.labels[index] || "";
+            return labelStr.charAt(0).toUpperCase() + labelStr.slice(1);
+          },
         },
       },
     },
@@ -111,7 +138,7 @@ export default function MostRequestedServices() {
 
   return (
     <>
-      <div className="bg-white p-6 pb-2 rounded-2xl shadow-sm border border-slate-50 h-full flex flex-col">
+      <div className="bg-white p-6 pb-2 rounded-2xl shadow-sm border border-slate-50 h-[520px] flex flex-col">
         <div className="flex justify-between items-start mb-6">
           {/* CABECERA LIMPIA: Título y Franja de tiempo */}
           <div>
@@ -119,7 +146,6 @@ export default function MostRequestedServices() {
               Servicios más Solicitados
             </h3>
             <div className="mt-1">
-              {/* Mostramos el texto del filtro activo con la tipografía solicitada */}
               <span className="text-[15px] font-bold text-slate-400 uppercase tracking-widest">
                 {timeFilterText[activeTimeFilter]}
               </span>
@@ -134,8 +160,18 @@ export default function MostRequestedServices() {
           </button>
         </div>
 
-        <div className="flex-grow h-[340px] w-full">
-          <Bar data={data} options={options} />
+        {/* CONTENEDOR DEL GRÁFICO */}
+        <div className="flex-grow h-full w-full relative">
+          {/* Si no hay datos, mostramos un mensaje amistoso en medio del contenedor */}
+          {chartInfo.dataCounts.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="text-slate-400 font-medium">
+                No hay servicios registrados en este periodo
+              </p>
+            </div>
+          ) : (
+            <Bar data={data} options={options} />
+          )}
         </div>
       </div>
 
@@ -189,32 +225,6 @@ export default function MostRequestedServices() {
               >
                 Mes
               </button>
-            </div>
-          </div>
-
-          <div className="divider my-0">Ó</div>
-
-          <div>
-            <p className="text-slate-700 font-medium mb-3">Elegir fechas:</p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <input
-                type="date"
-                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm"
-                value={tempDateFrom}
-                onChange={(e) => {
-                  setTempDateFrom(e.target.value);
-                  setTempTimeFilter("custom");
-                }}
-              />
-              <input
-                type="date"
-                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm"
-                value={tempDateTo}
-                onChange={(e) => {
-                  setTempDateTo(e.target.value);
-                  setTempTimeFilter("custom");
-                }}
-              />
             </div>
           </div>
         </div>
