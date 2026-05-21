@@ -38,11 +38,8 @@ export const useSales = () => {
 
   const availableCombos = combos
     .map((c) => {
-      const validServices = (c.combosServices ?? []).filter(
-        (cs) =>
-          cs.servicesTypeVehicle?.typeVehicle?.typeVehicleId ===
-          currentTypeVehicleId ||
-          cs.servicesTypeVehicle?.typeVehicleId === currentTypeVehicleId,
+      const validServices = (c.combosServices ?? []).filter((cs) =>
+        availableServices.some((avail) => avail.id === cs.serviceId),
       );
       return { ...c, combosServices: validServices };
     })
@@ -65,14 +62,14 @@ export const useSales = () => {
   const toggleService = (relationId: number) => {
     setNewSale((prev) => {
       const isAlreadySelected = prev.services.some(
-        (s) => s.serviceTypeVehicleId === relationId,
+        (s) => s.serviceId === relationId,
       );
 
       if (isAlreadySelected) {
         return {
           ...prev,
           services: prev.services.filter(
-            (s) => s.serviceTypeVehicleId !== relationId,
+            (s) => s.serviceId !== relationId,
           ),
         };
       } else {
@@ -80,7 +77,7 @@ export const useSales = () => {
           ...prev,
           services: [
             ...prev.services,
-            { employeeId: "" as const, serviceTypeVehicleId: relationId },
+            { employeeId: "" as const, serviceId: relationId },
           ],
         };
       }
@@ -107,19 +104,16 @@ export const useSales = () => {
         const newServicesFromCombo = comboServicesData.map((cs) => {
           return {
             employeeId: "" as const,
-            serviceTypeVehicleId:
-              cs.servicesTypeVehicleId ||
-              cs.servicesTypeVehicle?.serviceTypeVehicleId ||
-              0,
+            serviceId: cs.serviceId,
             comboOriginId: comboId,
           };
         });
 
         const newServiceIds = newServicesFromCombo.map(
-          (s) => s.serviceTypeVehicleId,
+          (s) => s.serviceId,
         );
         const cleanPrevServices = prev.services.filter(
-          (s) => !newServiceIds.includes(s.serviceTypeVehicleId),
+          (s) => !newServiceIds.includes(s.serviceId),
         );
 
         return {
@@ -134,12 +128,14 @@ export const useSales = () => {
     setNewSale((prev) => ({
       ...prev,
       services: prev.services.map((s) =>
-        s.serviceTypeVehicleId === relationId ? { ...s, employeeId } : s,
+        s.serviceId === relationId ? { ...s, employeeId } : s,
       ),
     }));
   };
 
-  const handleGeneralDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGeneralDiscountChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const value = e.target.value;
     setNewSale((prev) => ({
       ...prev,
@@ -149,8 +145,7 @@ export const useSales = () => {
 
   const totalAmount = newSale.services.reduce((acumulado, currentService) => {
     const serviceDetail = availableServices.find(
-      (s) =>
-        (s.prices[0]?.relationId ?? 0) === currentService.serviceTypeVehicleId,
+      (s) => s.id === currentService.serviceId,
     );
 
     const price = serviceDetail?.prices[0]?.price || 0;
