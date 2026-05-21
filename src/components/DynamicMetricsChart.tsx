@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,11 +12,39 @@ import Modal from "../components/Modal/Modal";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-
 type TabType = "vehiculos" | "productos" | "empleados";
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
-export default function DynamicMetricsChart() {
+
+interface VehicleData {
+  typeVehicleId: number;
+  name: string;
+  count: number;
+}
+
+interface ProductData {
+  productId: number;
+  name: string;
+  totalUsed: number;
+}
+
+interface EmployeeCommissionData {
+  employeeId: number;
+  fullName: string;
+  totalCommission: number;
+}
+
+interface DynamicMetricsChartProps {
+  vehiclesData?: VehicleData[];
+  productsData?: ProductData[];
+  employeesData?: EmployeeCommissionData[];
+}
+
+export default function DynamicMetricsChart({
+  vehiclesData = [],
+  productsData = [],
+  employeesData = [],
+}: DynamicMetricsChartProps) {
   const [activeTab, setActiveTab] = useState<TabType>("vehiculos");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -29,31 +57,57 @@ export default function DynamicMetricsChart() {
   const [tempDateFrom, setTempDateFrom] = useState("");
   const [tempDateTo, setTempDateTo] = useState("");
 
+  
+  const chartInfo = useMemo(() => {
+    // Procesar Vehículos
+    const vLabels = vehiclesData.map((v) => v.name.toLowerCase());
+    const vData = vehiclesData.map((v) => Number(v.count));
+
+    
+    const pLabels = productsData.map((p) => p.name.toLowerCase());
+    const pData = productsData.map((p) => Number(p.totalUsed));
+
+    
+    const eLabels = employeesData.map((e) => {
+     
+      const parts = e.fullName.split(" ");
+      const firstName = parts[0]
+        ? parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase()
+        : "";
+      const lastNameInitial = parts[1]
+        ? parts[1].charAt(0).toUpperCase() + "."
+        : "";
+      return `${firstName} ${lastNameInitial}`.trim();
+    });
+    const eData = employeesData.map((e) => Number(e.totalCommission));
+
+    return {
+      vehiculos: { labels: vLabels, data: vData },
+      productos: { labels: pLabels, data: pData },
+      empleados: { labels: eLabels, data: eData },
+    };
+  }, [vehiclesData, productsData, employeesData]);
+
+  
   const chartDataSets = {
     vehiculos: {
       title: "Resumen de Vehículos Frecuentes",
-      labels: ["Sedan", "SUV", "Camioneta", "Moto", "Compacto"],
-      data: [150, 120, 85, 60, 45],
+      labels: chartInfo.vehiculos.labels,
+      data: chartInfo.vehiculos.data,
       color: "#3b82f6",
       labelName: "Cantidad Atendida",
     },
     productos: {
       title: "Top 5 Productos más Utilizados",
-      labels: ["Champú", "Cera", "Desengrasante", "Silicona", "Ambientador"],
-      data: [320, 210, 180, 150, 90],
+      labels: chartInfo.productos.labels,
+      data: chartInfo.productos.data,
       color: "#10b981",
       labelName: "Unidades",
     },
     empleados: {
       title: "Top 5 Empleados por Comisiones",
-      labels: [
-        "Yonathan N.",
-        "Jesus C.",
-        "Mauricio V.",
-        "Fabian D.",
-        "Jose V.",
-      ],
-      data: [450, 380, 320, 290, 210],
+      labels: chartInfo.empleados.labels,
+      data: chartInfo.empleados.data,
       color: "#8b5cf6",
       labelName: "Comisiones ($)",
     },
@@ -94,12 +148,25 @@ export default function DynamicMetricsChart() {
         ticks: {
           color: "#64748b",
           font: { weight: "bold" as const, size: 12 },
+          
+          callback: function (value: any, index: number) {
+            const labelStr = data.labels[index] || "";
+            return labelStr.charAt(0).toUpperCase() + labelStr.slice(1);
+          },
         },
       },
       y: {
         border: { display: false },
         grid: { color: "#cbd5e1", drawTicks: false },
-        ticks: { color: "#94a3b8", stepSize: 100 },
+        ticks: {
+          color: "#94a3b8",
+         
+          callback: function (value: any) {
+            return activeTab === "empleados" ? `$${value}` : value;
+          },
+        },
+        // Si no hay datos, fijamos un máximo para que el gráfico no se vea vacío o con escala rota
+        max: currentData.data.length === 0 ? 10 : undefined,
       },
     },
   };
@@ -116,16 +183,11 @@ export default function DynamicMetricsChart() {
     setActiveDateFrom(tempDateFrom);
     setActiveDateTo(tempDateTo);
     setIsModalOpen(false);
-    console.log("Filtros aplicados:", {
-      tempTimeFilter,
-      tempDateFrom,
-      tempDateTo,
-    });
   };
 
   return (
     <>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 w-full">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 w-full relative">
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
           <div>
             <h3 className="font-bold text-slate-800 text-lg leading-tight">
@@ -140,7 +202,6 @@ export default function DynamicMetricsChart() {
 
           <div className="flex items-center gap-3 w-full xl:w-auto justify-between xl:justify-end overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <div className="flex bg-slate-100 p-1 rounded-lg whitespace-nowrap">
-              {/* Revertido a las 3 pestañas iniciales */}
               {(["vehiculos", "productos", "empleados"] as TabType[]).map(
                 (tab) => (
                   <button
@@ -167,8 +228,16 @@ export default function DynamicMetricsChart() {
           </div>
         </div>
 
-        <div className="h-72 w-full mt-4">
-          <Bar data={data} options={options} />
+        <div className="h-72 w-full mt-4 relative">
+          {currentData.data.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="text-slate-400 font-medium">
+                No hay datos registrados en este periodo
+              </p>
+            </div>
+          ) : (
+            <Bar data={data} options={options} />
+          )}
         </div>
       </div>
 

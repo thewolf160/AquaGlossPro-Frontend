@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +14,22 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
-export default function OperationalCloseChart() {
+
+interface OperationalClosureData {
+  date: string;
+  grossIncome: number;
+  commissionsPaid: number;
+  expenses: number;
+  netIncome: number;
+}
+
+interface OperationalCloseChartProps {
+  closureData?: OperationalClosureData[];
+}
+
+export default function OperationalCloseChart({
+  closureData = [],
+}: OperationalCloseChartProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [activeTimeFilter, setActiveTimeFilter] =
@@ -34,21 +49,35 @@ export default function OperationalCloseChart() {
     custom: "rango específico",
   };
 
+  
+  const chartInfo = useMemo(() => {
+    if (!closureData || closureData.length === 0) {
+      return { labels: [], netIncome: [], commissions: [], expenses: [] };
+    }
+
+    const labels = closureData.map((d) => {
+      
+      const parts = d.date.split("-");
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}`;
+      return d.date;
+    });
+
+    const netIncome = closureData.map((d) => Number(d.netIncome.toFixed(2)));
+    const commissions = closureData.map((d) =>
+      Number(d.commissionsPaid.toFixed(2)),
+    );
+    const expenses = closureData.map((d) => Number(d.expenses.toFixed(2)));
+
+    return { labels, netIncome, commissions, expenses };
+  }, [closureData]);
+
   const data = {
-    labels: [
-      "Lunes",
-      "Martes",
-      "Miércoles",
-      "Jueves",
-      "Viernes",
-      "Sábado",
-      "Domingo",
-    ],
+    labels: chartInfo.labels,
     datasets: [
       {
         label: "Ingreso Neto (Local)",
-        data: [120, 140, 110, 160, 210, 280, 230],
-        backgroundColor: "#10b981",
+        data: chartInfo.netIncome,
+        backgroundColor: "#10b981", // Esmeralda
         stack: "Stack 1",
         borderRadius: {
           topLeft: 0,
@@ -59,9 +88,9 @@ export default function OperationalCloseChart() {
         barThickness: 25,
       },
       {
-        label: "Comisiones Pagadas (25%)",
-        data: [40, 46, 36, 53, 70, 93, 76],
-        backgroundColor: "#f59e0b",
+        label: "Comisiones Pagadas",
+        data: chartInfo.commissions,
+        backgroundColor: "#f59e0b", // Ámbar
         stack: "Stack 1",
         borderRadius: {
           topLeft: 6,
@@ -72,9 +101,9 @@ export default function OperationalCloseChart() {
         barThickness: 25,
       },
       {
-        label: "Egresos / Pérdida Bruta",
-        data: [75, 80, 60, 90, 130, 180, 120],
-        backgroundColor: "#ef4444",
+        label: "Egresos / Inventario",
+        data: chartInfo.expenses,
+        backgroundColor: "#ef4444", // Rojo
         stack: "Stack 2",
         borderRadius: 6,
         barThickness: 25,
@@ -145,7 +174,6 @@ export default function OperationalCloseChart() {
     <>
       <div className="bg-white p-6 pb-2 rounded-2xl shadow-sm border border-slate-50 h-full flex flex-col">
         <div className="flex justify-between items-start mb-2">
-          {/* CABECERA LIMPIA */}
           <div>
             <h3 className="font-bold text-slate-800 text-lg leading-tight">
               Cierre Operativo (Ingresos vs Egresos)
@@ -165,12 +193,19 @@ export default function OperationalCloseChart() {
           </button>
         </div>
 
-        <div className="flex-grow h-[320px] w-full mt-2">
-          <Bar data={data} options={options} />
+        <div className="flex-grow h-[320px] w-full mt-2 relative">
+          {chartInfo.labels.length === 0 ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <p className="text-slate-400 font-medium">
+                No hay cierres operativos registrados en este periodo
+              </p>
+            </div>
+          ) : (
+            <Bar data={data} options={options} />
+          )}
         </div>
       </div>
 
-      {/* MODAL DE FILTROS */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

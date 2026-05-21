@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 import Modal from "../components/Modal/Modal";
@@ -7,20 +7,38 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
-interface WashedVehiclesChartProps {
-  sedanAmount: number;
-  suvAmount: number;
-  camionetaAmount: number;
-  motoAmount: number;
-  compactoAmount: number;
+
+interface VehicleData {
+  typeVehicleId: number;
+  name: string;
+  count: number;
+  percentage: number;
 }
 
+interface WashedVehiclesChartProps {
+  vehiclesData?: VehicleData[];
+}
+
+
+const PALETTE_HEX = [
+  "#3b82f6",
+  "#10b981",
+  "#8b5cf6",
+  "#f43f5e",
+  "#f59e0b",
+  "#06b6d4",
+];
+const PALETTE_TW = [
+  "bg-blue-500",
+  "bg-emerald-500",
+  "bg-violet-500",
+  "bg-rose-500",
+  "bg-amber-500",
+  "bg-cyan-500",
+];
+
 export default function WashedVehiclesChart({
-  sedanAmount,
-  suvAmount,
-  camionetaAmount,
-  motoAmount,
-  compactoAmount,
+  vehiclesData = [],
 }: WashedVehiclesChartProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -40,35 +58,42 @@ export default function WashedVehiclesChart({
     custom: "total esp",
   };
 
-  const total =
-    sedanAmount + suvAmount + camionetaAmount + motoAmount + compactoAmount;
+  
+  const chartInfo = useMemo(() => {
+    const labels = vehiclesData.map(
+      (v) => v.name.charAt(0).toUpperCase() + v.name.slice(1).toLowerCase(),
+    );
+    const dataCounts = vehiclesData.map((v) => Number(v.count));
+    const total = dataCounts.reduce((acc, curr) => acc + curr, 0);
+
+    return { labels, dataCounts, total };
+  }, [vehiclesData]);
+
+  const currentTotal = chartInfo.total;
 
   const getPercentage = (amount: number) => {
-    if (total === 0) return 0;
-    return Math.round((amount / total) * 100);
+    if (currentTotal === 0) return 0;
+    return Math.round((amount / currentTotal) * 100);
   };
 
   const formattedTotal =
-    total >= 1000 ? `${(total / 1000).toFixed(1)}k` : total;
+    currentTotal >= 1000
+      ? `${(currentTotal / 1000).toFixed(1)}k`
+      : currentTotal;
+
+  
+  const displayData = currentTotal === 0 ? [1] : chartInfo.dataCounts;
+  const displayColors =
+    currentTotal === 0
+      ? ["#f1f5f9"]
+      : PALETTE_HEX.slice(0, chartInfo.dataCounts.length);
 
   const data = {
-    labels: ["Sedan", "SUV", "Camioneta", "Moto", "Compacto"], // Etiqueta agregada
+    labels: chartInfo.labels,
     datasets: [
       {
-        data: [
-          sedanAmount,
-          suvAmount,
-          camionetaAmount,
-          motoAmount,
-          compactoAmount,
-        ],
-        backgroundColor: [
-          "#3b82f6",
-          "#10b981",
-          "#8b5cf6",
-          "#f43f5e",
-          "#f59e0b",
-        ],
+        data: displayData,
+        backgroundColor: displayColors,
         borderWidth: 0,
         cutout: "80%",
       },
@@ -83,9 +108,10 @@ export default function WashedVehiclesChart({
       tooltip: {
         callbacks: {
           label: (context: any) => {
+            if (currentTotal === 0) return " Sin datos en este periodo";
             const label = context.label || "";
             const value = context.parsed || 0;
-            return `${label}: ${value} unds (${getPercentage(value)}%)`;
+            return ` ${label}: ${value} unds (${getPercentage(value)}%)`;
           },
         },
       },
@@ -108,7 +134,7 @@ export default function WashedVehiclesChart({
 
   return (
     <>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 h-full flex flex-col">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-50 h-[520px] flex flex-col transition-all">
         <div className="flex justify-between items-start mb-6">
           <h3 className="font-bold text-slate-800 text-lg">
             Total de Vehículos Lavados
@@ -121,60 +147,49 @@ export default function WashedVehiclesChart({
           </button>
         </div>
 
-        <div className="relative h-60 w-60 mx-auto mb-8">
+        <div className="relative h-60 w-60 mx-auto flex items-center justify-center">
           <Doughnut data={data} options={options} />
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <p className="text-3xl font-black text-slate-900 leading-none">
               {formattedTotal}
             </p>
-            <p className="text-[13px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
               {centerLabelText[activeTimeFilter]}
             </p>
           </div>
         </div>
 
-        <div className="space-y-3 pt-4 border-t border-slate-100">
-          {[
-            {
-              label: "Sedan",
-              color: "bg-blue-500",
-              pct: getPercentage(sedanAmount),
-            },
-            {
-              label: "SUV",
-              color: "bg-emerald-500",
-              pct: getPercentage(suvAmount),
-            },
-            {
-              label: "Camioneta",
-              color: "bg-violet-500",
-              pct: getPercentage(camionetaAmount),
-            },
-            {
-              label: "Moto",
-              color: "bg-rose-500",
-              pct: getPercentage(motoAmount),
-            },
-            {
-              label: "Compacto",
-              color: "bg-amber-500",
-              pct: getPercentage(compactoAmount),
-            }, // Elemento en la lista
-          ].map((item) => (
+        {/* Leyenda Dinámica con altura fija para no desarmar el layout */}
+        <div className="pt-6 border-t border-slate-100 mt-auto h-[160px] flex flex-col justify-start gap-4 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+          {chartInfo.labels.map((label, index) => (
             <div
-              key={item.label}
+              key={label}
               className="flex items-center justify-between text-sm"
             >
               <div className="flex items-center gap-3">
-                <span className={`w-3 h-3 rounded-full ${item.color}`}></span>
-                <span className="font-medium text-slate-700">{item.label}</span>
+                <span
+                  className={`w-3 h-3 rounded-full shrink-0 ${currentTotal === 0 ? "bg-slate-200" : PALETTE_TW[index % PALETTE_TW.length]}`}
+                ></span>
+                <span className="font-medium text-slate-700 truncate w-32">
+                  {label}
+                </span>
               </div>
-              <span className="font-bold text-slate-900">{item.pct}%</span>
+              <span className="font-bold text-slate-900">
+                {getPercentage(chartInfo.dataCounts[index])}%
+              </span>
             </div>
           ))}
+
+          {/* Mensaje si no hay registros */}
+          {currentTotal === 0 && (
+            <p className="text-sm text-slate-400 text-center font-medium mt-2">
+              No hay vehículos registrados
+            </p>
+          )}
         </div>
       </div>
 
+      {/* MODAL DE FILTROS */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
