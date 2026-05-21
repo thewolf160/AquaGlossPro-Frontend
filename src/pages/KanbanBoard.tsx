@@ -63,10 +63,10 @@ export default function KanbanBoard() {
     const placa = ticket.vehicle?.plate || "Sin Placa";
     const modelo = ticket.vehicle?.typeVehicle || "Vehículo";
 
-    const allServices = [
-      ...(ticket.details?.comboServices || []),
-      ...(ticket.details?.independentServices || [])
-    ];
+    const comboServicesArr = (ticket.details?.comboServices || []).flatMap((combo: any) => combo.services || []);
+    const independentServicesArr = ticket.details?.independentServices || [];
+
+    const allServices = [...comboServicesArr, ...independentServicesArr];
 
     const employeeNames = Array.from(
       new Set(allServices.map(s => `${s.employee.names} ${s.employee.lastnames}`))
