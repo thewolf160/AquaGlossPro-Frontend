@@ -1,6 +1,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import { NotificationListener } from "./NotificationListener";
 
 interface LayoutProps {
   children: ReactNode;
@@ -27,10 +28,10 @@ export default function DashboardLayout({ children }: LayoutProps) {
   return (
     <div className="flex h-screen font-sans bg-slate-50 overflow-hidden">
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-
+       
       <main className="flex-1 flex flex-col h-full relative transition-all duration-300">
         <Header onMenuClick={toggleSidebar} />
-
+         {/* <NotificationListener/>  */}
         <div className="flex-1 p-6 overflow-y-auto">{children}</div>
       </main>
     </div>

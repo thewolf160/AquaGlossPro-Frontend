@@ -6,6 +6,7 @@ function Table({
   data,
   onDelete,
   onEdit,
+  canEdit,
   onView,
   onRestore,
   onDecreaseStock,
@@ -63,7 +64,7 @@ function Table({
                               </svg>
                             </button>
                           )}
-                          {onEdit && (
+                          {onEdit && (!canEdit || canEdit(item)) && (
                             <button
                               className={`bg-sky-50 rounded-md p-4 text-sky-600 hover:bg-blue-100 cursor-pointer transition-all px-2.5 py-2.5 ${col.mobile && "hidden sm:flex"}`}
                               onClick={() => onEdit(item)}

@@ -39,14 +39,12 @@ function Sales() {
         const comboDetail = availableCombos?.find(
           (c) => c.comboId === currentItem.comboOriginId,
         );
-        const comboServiceDetail = comboDetail?.combosServices?.find(
-          (cs) =>
-            (cs.servicesTypeVehicle?.serviceTypeVehicleId ||
-              cs.servicesTypeVehicleId) === currentItem.serviceTypeVehicleId,
+        const serviceDetail = availableServices.find(
+          (s) => s.id === currentItem.serviceId,
         );
         
-        basePrice = comboServiceDetail
-          ? Number(comboServiceDetail.servicesTypeVehicle?.price ?? 0)
+        basePrice = serviceDetail
+          ? Number(serviceDetail.prices[0]?.price ?? 0)
           : 0;
 
         if (comboDetail) {
@@ -55,8 +53,7 @@ function Sales() {
       } else {
         // Si es un servicio individual
         const serviceDetail = availableServices.find(
-          (s) =>
-            (s.prices[0]?.relationId ?? 0) === currentItem.serviceTypeVehicleId,
+          (s) => s.id === currentItem.serviceId,
         );
         basePrice = serviceDetail
           ? Number(serviceDetail.prices[0]?.price ?? 0)
@@ -188,8 +185,10 @@ function Sales() {
                       );
 
                       const originalTotal = (combo.combosServices ?? []).reduce(
-                        (sum, cs) =>
-                          sum + Number(cs.servicesTypeVehicle?.price || 0),
+                        (sum, cs) => {
+                          const serviceDetail = availableServices.find((s) => s.id === cs.serviceId);
+                          return sum + Number(serviceDetail?.prices[0]?.price ?? 0);
+                        },
                         0,
                       );
                       const discountAmount =
@@ -234,8 +233,7 @@ function Sales() {
                                   Incluye:{" "}
                                   {combo.combosServices
                                     ?.map(
-                                      (cs) =>
-                                        cs.servicesTypeVehicle?.service?.name,
+                                      (cs) => cs.service?.name,
                                     )
                                     .join(", ")}
                                 </p>
@@ -260,15 +258,11 @@ function Sales() {
                                 Asigna al personal para este combo:
                               </p>
                               {combo.combosServices?.map((cs) => {
-                                const relationId =
-                                  cs.servicesTypeVehicle
-                                    ?.serviceTypeVehicleId ||
-                                  cs.servicesTypeVehicleId ||
-                                  0;
+                                const relationId = cs.serviceId;
                                 const selectedServiceData =
                                   newSale.services.find(
                                     (s) =>
-                                      s.serviceTypeVehicleId === relationId,
+                                      s.serviceId === relationId,
                                   );
 
                                 return (
@@ -277,7 +271,7 @@ function Sales() {
                                     className="flex justify-between items-center bg-white p-2 rounded border border-amber-100"
                                   >
                                     <span className="text-sm font-medium text-slate-600 w-1/2">
-                                      {cs.servicesTypeVehicle?.service?.name}
+                                      {cs.service?.name}
                                     </span>
                                     <select
                                       value={
@@ -320,9 +314,9 @@ function Sales() {
                 Servicios Individuales
               </h3>
               {availableServices.map((ser) => {
-                const relationId = ser.prices[0]?.relationId ?? 0;
+                const serviceId = ser.id;
                 const selectedServiceData = newSale.services?.find(
-                  (s) => s.serviceTypeVehicleId === relationId,
+                  (s) => s.serviceId === serviceId,
                 );
                 const isSelected = !!selectedServiceData;
 
@@ -333,7 +327,7 @@ function Sales() {
                 return (
                   <div
                     key={ser.id}
-                    onClick={() => toggleService(relationId)}
+                    onClick={() => toggleService(serviceId)}
                     className={`p-2 rounded-md shadow-sm border-2 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2 cursor-pointer ${isSelected
                         ? "border-blue-600 bg-blue-50"
                         : "border-slate-300 bg-slate-50"
@@ -370,7 +364,7 @@ function Sales() {
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) =>
                           handleEmployeeChange(
-                            relationId,
+                            serviceId,
                             Number(e.target.value),
                           )
                         }
@@ -475,25 +469,17 @@ function Sales() {
                       (c) => c.comboId === selectedItem.comboOriginId,
                     );
                     const internalSvc = comboSvc?.combosServices?.find(
-                      (cs) =>
-                        (cs.servicesTypeVehicle?.serviceTypeVehicleId ||
-                          cs.servicesTypeVehicleId) ===
-                        selectedItem.serviceTypeVehicleId,
+                      (cs) => cs.serviceId === selectedItem.serviceId,
                     );
 
                     if (internalSvc) {
-                      serviceName =
-                        internalSvc.servicesTypeVehicle?.service?.name ||
-                        "Servicio de Combo";
-                      basePrice = Number(
-                        internalSvc.servicesTypeVehicle?.price ?? 0,
-                      );
+                      serviceName = internalSvc.service?.name || "Servicio de Combo";
+                      const serviceDetail = availableServices.find((s) => s.id === selectedItem.serviceId);
+                      basePrice = Number(serviceDetail?.prices[0]?.price ?? 0);
                     }
                   } else {
                     const individualSvc = availableServices.find(
-                      (s) =>
-                        (s.prices[0]?.relationId ?? 0) ===
-                        selectedItem.serviceTypeVehicleId,
+                      (s) => s.id === selectedItem.serviceId,
                     );
 
                     if (individualSvc) {
@@ -576,16 +562,17 @@ function Sales() {
                 Descuento Adicional
               </span>
               <div className="flex items-center gap-1">
-                <span className="text-slate-500 font-medium">$</span>
                 <input 
                   type="number"
                   min="0"
+                  max="100"
                   name="discount"
                   value={newSale.discount || ""}
                   onChange={handleGeneralDiscountChange}
                   className="w-20 px-2 py-1 text-sm border border-slate-300 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
-                  placeholder="0.00"
+                  placeholder="0"
                 />
+                <span className="text-slate-500 font-medium">%</span>
               </div>
             </div>
 
@@ -594,7 +581,7 @@ function Sales() {
                 Total
               </span>
               <span className="text-2xl font-bold text-blue-600">
-                ${Math.max(0, ticketCalculations.total - Number(newSale.discount || 0)).toFixed(2)}
+                ${Math.max(0, ticketCalculations.total - (ticketCalculations.total * (Number(newSale.discount || 0) / 100))).toFixed(2)}
               </span>
             </div>
           </div>

@@ -6,7 +6,7 @@ export interface NewSale {
   discount?: number | "";
   services: {
     employeeId: number | "";
-    serviceTypeVehicleId: number;
+    serviceId: number;
     comboOriginId?: number;
     discount?: number;
     notes?: string;

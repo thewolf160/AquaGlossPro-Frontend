@@ -25,6 +25,7 @@ const columns = [
   { key: "actions", header: "Acciones", mobile: true },
 ];
 
+
 function Employees() {
   const {
     employeesData,
@@ -310,6 +311,7 @@ function Employees() {
             </div>
           </section>
         </div>
+
       </div>
       <Modal
         isOpen={modals.register}
@@ -373,7 +375,7 @@ function Employees() {
               name="numberPhone"
               label="Télefono:"
               type="text"
-              placeholder="00000000000"
+              placeholder="+58-0000000000"
               onChange={handleChange}
               value={newEmployeeForm.form.numberPhone}
               icon={<i className="bi bi-telephone text-xl" />}
