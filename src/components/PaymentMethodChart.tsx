@@ -7,17 +7,33 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 type TimeFilterType = "hoy" | "semana" | "mes" | "custom";
 
-
 interface SalesData {
   paymentMethodId: number;
   name: string;
   total: number;
 }
 
-
 interface PaymentMethodChartProps {
   salesData?: SalesData[];
 }
+
+
+const PALETTE_HEX = [
+  "#3b82f6",
+  "#8b5cf6",
+  "#a16207",
+  "#06b6d4",
+  "#10b981",
+  "#f43f5e",
+];
+const PALETTE_TW = [
+  "bg-blue-500",
+  "bg-violet-500",
+  "bg-yellow-700",
+  "bg-cyan-500",
+  "bg-emerald-500",
+  "bg-rose-500",
+];
 
 export default function PaymentMethodChart({
   salesData = [],
@@ -41,40 +57,23 @@ export default function PaymentMethodChart({
   };
 
   
-  const montos = useMemo(() => {
-    const getMonto = (nombresPermitidos: string[]) => {
-      const metodo = salesData.find((s) =>
-        nombresPermitidos.includes(s.name.toUpperCase()),
-      );
-      return metodo ? Number(metodo.total) : 0;
-    };
+  const chartInfo = useMemo(() => {
+    
+    const labels = salesData.map((s) => {
+      const lower = s.name.toLowerCase();
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    });
 
-    return {
-      efectivo: getMonto(["EFECTIVO"]),
-      pagoMovil: getMonto(["PAGO MOVIL", "PAGO MÓVIL", "PAGOMOVIL"]),
-      divisa: getMonto(["DIVISA", "DIVISAS", "DOLARES"]),
-      punto: getMonto(["PUNTO", "PUNTO DE VENTA", "TARJETA"]),
-    };
+    
+    const dataCounts = salesData.map((s) => Number(s.total));
+
+    
+    const total = dataCounts.reduce((acc, curr) => acc + curr, 0);
+
+    return { labels, dataCounts, total };
   }, [salesData]);
 
-  
-  const currentTotal =
-    montos.efectivo + montos.pagoMovil + montos.divisa + montos.punto;
-
-  const currentData = [
-    montos.efectivo,
-    montos.pagoMovil,
-    montos.divisa,
-    montos.punto,
-  ];
-  const currentLabels = ["Efectivo", "Pago Móvil", "Divisa", "Punto"];
-  const currentColorsHex = ["#3b82f6", "#8b5cf6", "#a16207", "#06b6d4"];
-  const currentColorsTailwind = [
-    "bg-blue-500",
-    "bg-violet-500",
-    "bg-yellow-700",
-    "bg-cyan-500",
-  ];
+  const currentTotal = chartInfo.total;
 
   const getPercentage = (amount: number) => {
     if (currentTotal === 0) return 0;
@@ -84,14 +83,17 @@ export default function PaymentMethodChart({
   const formattedTotal =
     currentTotal >= 1000
       ? `${(currentTotal / 1000).toFixed(1)}k`
-      : `$${currentTotal}`;
+      : `$${currentTotal.toFixed(2)}`;
 
-  // 4. Lógica Anti-Cero (Para que no desaparezca la dona si no hay ventas)
-  const displayData = currentTotal === 0 ? [1] : currentData;
-  const displayColors = currentTotal === 0 ? ["#f1f5f9"] : currentColorsHex;
+  
+  const displayData = currentTotal === 0 ? [1] : chartInfo.dataCounts;
+  const displayColors =
+    currentTotal === 0
+      ? ["#f1f5f9"]
+      : PALETTE_HEX.slice(0, chartInfo.dataCounts.length);
 
   const data = {
-    labels: currentLabels,
+    labels: chartInfo.labels,
     datasets: [
       {
         data: displayData,
@@ -135,7 +137,6 @@ export default function PaymentMethodChart({
             <h3 className="font-bold text-slate-800 text-lg">
               Flujo de Ingresos
             </h3>
-            {/* Las pestañas de Ingresos/Egresos han sido removidas */}
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -157,27 +158,37 @@ export default function PaymentMethodChart({
           </div>
         </div>
 
-        <div className="pt-6 border-t border-slate-100 mt-auto h-[160px] flex flex-col justify-start gap-4">
-          {currentLabels.map((label, index) => (
+        {/* 3. Leyenda Dinámica (Solo mostrará los métodos que realmente llegaron) */}
+        <div className="pt-6 border-t border-slate-100 mt-auto h-[160px] flex flex-col justify-start gap-4 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+          {chartInfo.labels.map((label, index) => (
             <div
               key={label}
               className="flex items-center justify-between text-sm"
             >
               <div className="flex items-center gap-3">
                 <span
-                  className={`w-3 h-3 rounded-full ${
+                  className={`w-3 h-3 rounded-full shrink-0 ${
                     currentTotal === 0
                       ? "bg-slate-200"
-                      : currentColorsTailwind[index]
+                      : PALETTE_TW[index % PALETTE_TW.length]
                   }`}
                 ></span>
-                <span className="font-medium text-slate-700">{label}</span>
+                <span className="font-medium text-slate-700 truncate w-32">
+                  {label}
+                </span>
               </div>
               <span className="font-bold text-slate-900">
-                {getPercentage(currentData[index])}%
+                {getPercentage(chartInfo.dataCounts[index])}%
               </span>
             </div>
           ))}
+
+          {/* Mensaje si no hay registros */}
+          {currentTotal === 0 && (
+            <p className="text-sm text-slate-400 text-center font-medium mt-2">
+              No hay ventas registradas
+            </p>
+          )}
         </div>
       </div>
 
