@@ -148,8 +148,8 @@ function Commissions() {
                 columns={columnsCommissions}
                 data={commissionsData.data}
                 onView={hasPermission("COMISSIONS", "R") ? handleOpenDetails : undefined}
-                onEdit={hasPermission("COMISSIONS", "U") ? handleOpenEdit : undefined}
-                canEdit={(item: any) => item.statusPaymentConmission === 'W'}
+                onEdit={handleOpenEdit}
+                // canEdit={(item: any) => item.statusPaymentConmission === 'W'}
               />
             )}
           </div>
